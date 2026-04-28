@@ -223,7 +223,7 @@ To create Core or Pro skeletons from the Spark base:
 | Scale factor `S` | 1.2 | 1.5 |
 | Compute | Replace Pico W cavity with Pi 5 | Same as Core |
 
-For the STS3215 and Dynamixel servo dimensions, see `hawabot_reference/servo_mapping.json`.
+For the STS3215 and Dynamixel servo dimensions, see `docs/reference_robot/servo_mapping.json`.
 
 ---
 

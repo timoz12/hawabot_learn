@@ -11,14 +11,18 @@ build/
 .DS_Store
 Thumbs.db
 
-# Generated test files (pipeline outputs)
+# Generated pipeline outputs (regenerable)
 *.stl
 *.obj
 *.glb
 *.3mf
 preview_*.png
 
-# Web uploads
+# Keep the Excel and equations files in skeleton_exports
+!pipeline/skeleton_exports/*.xlsx
+!pipeline/skeleton_exports/*.txt
+
+# Web uploads (user-generated content)
 web/uploads/
 
 # Environment
