@@ -32,6 +32,9 @@ web/                          Design platform prototype
 ├── app.py                    Flask backend (Meshy API + pipeline)
 └── templates/index.html      Three.js frontend
 
+firmware/                     Microcontroller firmware
+└── pico_w/main.py            MicroPython servo controller for Pi Pico W
+
 missions/                     Curriculum content (5 months)
 ├── month_01/ ... month_05/
 
@@ -93,4 +96,23 @@ python -m pipeline.shell_pipeline sculpture.stl skeleton.stl output_shell.stl
 HAWABOT_MOCK=1             # Force simulation mode (default)
 ANTHROPIC_API_KEY=sk-...   # Required for AI tutor
 MESHY_API_KEY=...          # Required for real 3D generation
+```
+
+## Hardware Setup (Spark Tier)
+
+To run on real hardware instead of simulation:
+
+```bash
+pip install pyserial        # Required for PicoDriver
+```
+
+1. Flash MicroPython onto Pi Pico W (hold BOOTSEL, drag `.uf2`)
+2. Copy `firmware/pico_w/main.py` to the Pico W (via Thonny or mpremote)
+3. Wire servos to GP0-GP4 (see `docs/ARCHITECTURE.md` for pin map)
+4. Connect Pico W via USB
+
+```python
+from hawabot import Robot
+robot = Robot(mock=False)   # Connects to Pico W on /dev/ttyACM0
+robot.head.pan(45)          # Physical servo moves!
 ```

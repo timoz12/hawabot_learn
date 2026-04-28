@@ -245,12 +245,14 @@ BaseDriver (ABC)
   +-- Pi5Driver        # I2C/UART to smart servos (STS3215/Dynamixel)
 ```
 
-All drivers implement:
-- `move_joint(name, angle, speed)` — move a single joint
-- `get_joint_position(name)` — read current angle
-- `set_compliance(name, enabled)` — enable teach-by-demo mode (smart servos only)
-- `shutdown()` — return all joints to rest
-- `get_event_log()` — for curriculum validation
+All drivers implement the `BaseDriver` ABC (`hawabot/drivers/base.py`):
+- `set_angle(joint_name, angle)` — command a joint to a target angle (degrees)
+- `get_angle(joint_name)` — read current angle (degrees)
+- `get_temperature(joint_name)` — actuator temperature in °C, or None if unsupported
+- `get_voltage()` — supply voltage, or None if unsupported
+- `wait(seconds)` — block for animation timing
+- `get_event_log()` — ordered list of events for curriculum validation
+- `shutdown()` — return all joints to rest and release resources
 
 #### Character Profile System
 
@@ -420,9 +422,58 @@ Each tier defines:
 
 | Tier | Compute | Protocol | Servos | Connection |
 |------|---------|----------|--------|------------|
-| Spark | Pi Pico W | USB Serial / WiFi | PWM (SG90/MG90S) | Direct GPIO |
+| Spark | Pi Pico W | USB Serial (115200 baud) | PWM (SG90/MG90S) | Direct GPIO (GP0-GP4) |
 | Core | Pi 5 | Local | UART/TTL bus (STS3215) | Feetech bus adapter |
 | Pro | Pi 5 | Local | UART/TTL bus (Dynamixel) | U2D2 adapter |
+
+### PicoDriver — Spark Tier Hardware (`hawabot/drivers/pico.py`)
+
+The PicoDriver enables the Spark tier by communicating with a Raspberry Pi Pico W over USB serial. The Pico W runs MicroPython firmware that drives PWM signals to 5 hobby servos.
+
+**Architecture:**
+
+```
+Host (laptop)                          Pi Pico W (MicroPython)
+  PicoDriver  ─── USB serial ───►  firmware/pico_w/main.py
+              ◄── responses ────         │
+                                         ├─ GP0  → waist_yaw (SG90)
+                                         ├─ GP1  → left_shoulder_pitch (MG90S)
+                                         ├─ GP2  → right_shoulder_pitch (MG90S)
+                                         ├─ GP3  → head_pan (SG90)
+                                         ├─ GP4  → head_tilt (SG90)
+                                         └─ GP26 → VSYS ADC (battery voltage, optional)
+```
+
+**Serial Protocol (115200 baud, newline-terminated text):**
+
+| Command | Response | Description |
+|---------|----------|-------------|
+| `S <pin> <pulse_us>` | `OK` | Set servo PWM pulse width |
+| `V` | `V <float>` or `V NONE` | Read supply voltage via ADC |
+| `P` | `PONG` | Ping / health check |
+
+**PWM Calibration:**
+
+Hobby servos (SG90/MG90S) accept 500–2500 µs pulses at 50 Hz:
+- -90° → 500 µs
+- 0° (centre) → 1500 µs
+- +90° → 2500 µs
+- Linear mapping: `pulse_us = 1500 + (angle / 90) * 1000`
+
+**Key Design Decisions:**
+
+| Decision | Rationale |
+|----------|-----------|
+| Track angles locally (no servo feedback) | SG90/MG90S have no position readback; store last-commanded angle |
+| Simple text protocol | Easy to debug via serial monitor; MicroPython-friendly |
+| Ping handshake on connect | Detects firmware issues immediately rather than failing on first command |
+| Configurable pin map | Same driver works with alternative wiring; defaults match reference design |
+
+**Firmware Installation:**
+
+1. Flash MicroPython onto Pi Pico W (hold BOOTSEL, drag `.uf2` file)
+2. Copy `firmware/pico_w/main.py` as `main.py` on the Pico W filesystem (via Thonny, mpremote, or rshell)
+3. Power-cycle — firmware starts listening on USB serial immediately
 
 ### Sensor Abstraction
 
@@ -473,10 +524,10 @@ Student Python Script
     |       +-- Build body parts (Head, Arms, Waist, Legs)
     |
     +-- robot.head.pan(45)
-    |       +-- Driver.move_joint("head_pan", 45, speed)
-    |       +-- [Mock]: update state + log event
-    |       +-- [Pico]: send serial command -> PWM signal -> servo moves
-    |       +-- [Pi5]: send UART packet -> smart servo moves
+    |       +-- Driver.set_angle("head_pan", 45)
+    |       +-- [Mock]: clamp angle, update state dict, log event
+    |       +-- [Pico]: clamp angle → pulse_us → serial "S <pin> <us>" → PWM → servo moves
+    |       +-- [Pi5]: clamp angle → UART packet → smart servo moves
     |
     +-- robot.express("happy")
     |       +-- Look up animation in character profile
@@ -551,7 +602,8 @@ Student Python Script
 | Web Prototype | Flask, Three.js, Jinja2 | Built |
 | AI Tutor | Anthropic Claude API (Haiku + Sonnet) | Scaffolded |
 | Curriculum | YAML mission definitions + Python validation | Scaffolded |
-| Hardware Drivers | Pi Pico W serial, Pi 5 I2C/UART | Scaffolded |
+| PicoDriver (Spark) | pyserial, MicroPython PWM firmware | Built |
+| Pi5Driver (Core/Pro) | Pi 5 UART/TTL for smart servos | Scaffolded |
 | Production Web | Next.js, React, Three.js Fiber | Planned |
 | Payment | Stripe | Planned |
 | Auth | Clerk or Auth0 | Planned |

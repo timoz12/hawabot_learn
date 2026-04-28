@@ -63,7 +63,7 @@ class Robot:
             self._tier = get_tier(tier)
             if self._tier.name == TierName.SPARK:
                 from hawabot.drivers.pico import PicoDriver
-                self._driver = PicoDriver()
+                self._driver = PicoDriver(self._tier)
             else:
                 from hawabot.drivers.pi5 import Pi5Driver
                 self._driver = Pi5Driver()

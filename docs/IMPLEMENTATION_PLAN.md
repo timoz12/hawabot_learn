@@ -9,7 +9,8 @@
 | SDK core (`Robot` class) | `hawabot/robot.py` | Functional | Entry point, tier detection, body parts, teach-by-demo |
 | Character profile system | `hawabot/character/` | Functional | YAML profiles, animations, expressions |
 | Joint abstractions | `hawabot/joints/` | Functional | Head, Arms, Waist, Leg modules |
-| Driver abstraction | `hawabot/drivers/` | Functional (mock) | MockDriver complete; Pico/Pi5 scaffolded |
+| Driver abstraction | `hawabot/drivers/` | Functional (mock + pico) | MockDriver complete; PicoDriver implemented; Pi5 scaffolded |
+| Pico W firmware | `firmware/pico_w/main.py` | Implemented | MicroPython servo controller, USB serial protocol |
 | Simulation engine | `hawabot/sim/` | Functional | Joint state tracking, matplotlib visualizer |
 | Tier config | `hawabot/config/tiers.py` | Functional | Spark/Core/Pro definitions, joint specs |
 | Shell pipeline | `pipeline/shell_pipeline.py` | Functional | Scale, subtract, trim, validate — tested on real meshes |
@@ -24,7 +25,8 @@
 
 | Component | Priority | Effort | Dependency |
 |-----------|----------|--------|------------|
-| Hardware drivers (Pico, Pi5) | P0 | 3-4 weeks | Physical hardware in hand |
+| ~~PicoDriver (Spark)~~ | ~~P0~~ | ~~Done~~ | ~~Implemented 2026-04-28~~ |
+| Pi5Driver (Core/Pro) | P2 | 3-4 weeks | Physical hardware in hand |
 | AI tutor implementation | P0 | 2-3 weeks | Anthropic API key, prompt engineering |
 | Curriculum content (25 missions) | P0 | 6-8 weeks | SDK stable, tutor working |
 | Production web platform | P1 | 8-12 weeks | Design finalized, Stripe integration |
@@ -47,7 +49,7 @@
 |------|-------|----------|--------|
 | Order Spark hardware (5x SG90/MG90S, Pi Pico W, sensors) | Hardware | Week 1 | TODO |
 | 3D print first skeleton from `pipeline/skeleton.py` output | Hardware | Week 1-2 | TODO |
-| Implement PicoDriver (serial protocol for PWM servos) | Firmware | Week 1-3 | Scaffolded |
+| ~~Implement PicoDriver (serial protocol for PWM servos)~~ | ~~Firmware~~ | ~~Done~~ | **Complete** — `hawabot/drivers/pico.py` + `firmware/pico_w/main.py` |
 | Test SDK -> PicoDriver -> physical servo movement | Integration | Week 3 | TODO |
 | Print first character shell using pipeline output | Pipeline | Week 2-3 | Pipeline proven on meshes |
 | Validate shell fits skeleton, magnets hold, joints clear | Hardware | Week 3-4 | TODO |
@@ -216,7 +218,7 @@ Phase 0: Physical Prototype
                                    +---> Phase 4: Full Platform
 ```
 
-**Single biggest risk:** Physical prototype (Phase 0). If the shell does not fit the skeleton reliably, or the PicoDriver has latency issues, everything downstream is delayed. This is why Phase 0 is 4 weeks of focused hardware work before anything else.
+**Single biggest risk:** Physical prototype (Phase 0). If the shell does not fit the skeleton reliably, everything downstream is delayed. PicoDriver is now implemented and ready for hardware testing — the remaining risk is mechanical (skeleton fit, magnet attachment, joint clearances).
 
 ---
 
