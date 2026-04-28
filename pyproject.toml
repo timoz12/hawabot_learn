@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hawabot"
+version = "0.1.0"
+description = "Physical AI robotics SDK for kids — design, build, code, and teach your own robot character"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Hawa Labs", email = "hello@hawalabs.com" }]
+keywords = ["robotics", "education", "stem", "ai", "kids"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Education",
+    "Programming Language :: Python :: 3",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+sim = ["matplotlib>=3.7"]
+tutor = ["anthropic>=0.30"]
+studio = ["streamlit>=1.30"]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4",
+]
+all = ["hawabot[sim,tutor,studio,dev]"]
+
+[tool.setuptools.packages.find]
+include = ["hawabot*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 99

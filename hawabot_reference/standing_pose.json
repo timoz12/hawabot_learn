@@ -1,0 +1,122 @@
+{
+  "1": {
+    "id": 1,
+    "part_name": "l_ankle_y",
+    "group": "lower",
+    "goal_position": 2031
+  },
+  "2": {
+    "id": 2,
+    "part_name": "r_ankle_y",
+    "group": "lower",
+    "goal_position": 2090
+  },
+  "3": {
+    "id": 3,
+    "part_name": "l_knee_y",
+    "group": "lower",
+    "goal_position": 1916
+  },
+  "4": {
+    "id": 4,
+    "part_name": "r_knee_y",
+    "group": "lower",
+    "goal_position": 2191
+  },
+  "9": {
+    "id": 9,
+    "part_name": "l_hip_x",
+    "group": "lower",
+    "goal_position": 2370
+  },
+  "10": {
+    "id": 10,
+    "part_name": "r_hip_x",
+    "group": "lower",
+    "goal_position": 982
+  },
+  "5": {
+    "id": 5,
+    "part_name": "l_hip_y",
+    "group": "lower",
+    "goal_position": 3081
+  },
+  "6": {
+    "id": 6,
+    "part_name": "r_hip_y",
+    "group": "lower",
+    "goal_position": 974
+  },
+  "7": {
+    "id": 7,
+    "part_name": "l_hip_z",
+    "group": "lower",
+    "goal_position": 3167
+  },
+  "8": {
+    "id": 8,
+    "part_name": "r_hip_z",
+    "group": "lower",
+    "goal_position": 2041
+  },
+  "22": {
+    "id": 22,
+    "part_name": "abs_z",
+    "group": "lower",
+    "goal_position": 2012
+  },
+  "11": {
+    "id": 11,
+    "part_name": "l_shoulder_y",
+    "group": "upper",
+    "goal_position": 2036
+  },
+  "12": {
+    "id": 12,
+    "part_name": "r_shoulder_y",
+    "group": "upper",
+    "goal_position": 1022
+  },
+  "17": {
+    "id": 17,
+    "part_name": "l_shoulder_x",
+    "group": "upper",
+    "goal_position": 3043
+  },
+  "14": {
+    "id": 14,
+    "part_name": "r_shoulder_x",
+    "group": "upper",
+    "goal_position": 1052
+  },
+  "15": {
+    "id": 15,
+    "part_name": "l_arm_z",
+    "group": "upper",
+    "goal_position": 2056
+  },
+  "16": {
+    "id": 16,
+    "part_name": "r_arm_z",
+    "group": "upper",
+    "goal_position": 1989
+  },
+  "13": {
+    "id": 13,
+    "part_name": "l_elbow_y",
+    "group": "upper",
+    "goal_position": 2109
+  },
+  "18": {
+    "id": 18,
+    "part_name": "r_elbow_y",
+    "group": "upper",
+    "goal_position": 2007
+  },
+  "30": {
+    "id": 30,
+    "part_name": "head_z",
+    "group": "upper",
+    "goal_position": 1021
+  }
+}

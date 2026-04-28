@@ -1,0 +1,42 @@
+{
+  "_comment": "Source of truth: user servo ID -> Poppy joint name + Dynamixel model. Use this to cross-reference with Poppy_Humanoid.URDF.",
+  "_poppy_urdf": "poppy reference files/Poppy_Humanoid.URDF",
+  "_robot_height_m": 0.80,
+  "_axis_convention": "Poppy _x = frontal-plane roll, _y = sagittal-plane pitch, _z = transverse-plane yaw",
+  "servos": {
+    "1":  {"poppy_joint": "l_ankle_y",     "dxl_model": "XH540-W150-T", "model_id": 1110, "group": "lower"},
+    "2":  {"poppy_joint": "r_ankle_y",     "dxl_model": "XM540-W150-T", "model_id": 1130, "group": "lower"},
+    "3":  {"poppy_joint": "l_knee_y",      "dxl_model": "XM540-W270-T", "model_id": 1120, "group": "lower"},
+    "4":  {"poppy_joint": "r_knee_y",      "dxl_model": "XM540-W270-T", "model_id": 1120, "group": "lower"},
+    "5":  {"poppy_joint": "l_hip_y",       "dxl_model": "XM540-W270-T", "model_id": 1120, "group": "lower"},
+    "6":  {"poppy_joint": "r_hip_y",       "dxl_model": "XH540-W270-T", "model_id": 1100, "group": "lower"},
+    "7":  {"poppy_joint": "l_hip_z",       "dxl_model": "XM430-W350-T", "model_id": 1020, "group": "lower"},
+    "8":  {"poppy_joint": "r_hip_z",       "dxl_model": "XM430-W350-T", "model_id": 1020, "group": "lower"},
+    "9":  {"poppy_joint": "l_hip_x",       "dxl_model": "XM540-W150-T", "model_id": 1130, "group": "lower"},
+    "10": {"poppy_joint": "r_hip_x",       "dxl_model": "XM540-W150-T", "model_id": 1130, "group": "lower"},
+    "11": {"poppy_joint": "l_shoulder_y",  "dxl_model": "XH430-W210-T", "model_id": 1010, "group": "upper"},
+    "12": {"poppy_joint": "r_shoulder_y",  "dxl_model": "XM430-W210-T", "model_id": 1030, "group": "upper"},
+    "13": {"poppy_joint": "l_elbow_y",     "dxl_model": "XH430-W210-T", "model_id": 1010, "group": "upper"},
+    "14": {"poppy_joint": "r_shoulder_x",  "dxl_model": "XH430-W210-T", "model_id": 1010, "group": "upper"},
+    "15": {"poppy_joint": "l_arm_z",       "dxl_model": "XM430-W210-T", "model_id": 1030, "group": "upper"},
+    "16": {"poppy_joint": "r_arm_z",       "dxl_model": "XH430-W210-T", "model_id": 1010, "group": "upper"},
+    "17": {"poppy_joint": "l_shoulder_x",  "dxl_model": "XM430-W210-T", "model_id": 1030, "group": "upper"},
+    "18": {"poppy_joint": "r_elbow_y",     "dxl_model": "XH430-W210-T", "model_id": 1010, "group": "upper"},
+    "22": {"poppy_joint": "abs_z",         "dxl_model": "XH540-W150-T", "model_id": 1110, "group": "lower"},
+    "30": {"poppy_joint": "head_z",        "dxl_model": "XM430-W350-T", "model_id": 1020, "group": "upper"}
+  },
+  "poppy_joints_absent": [
+    "abs_y", "abs_x", "bust_y", "bust_x",
+    "head_y"
+  ],
+  "model_specs": {
+    "1000": {"name": "XH430-W350-T", "mass_g": 82,  "stall_torque_Nm": 4.1, "no_load_rpm": 46},
+    "1010": {"name": "XH430-W210-T", "mass_g": 82,  "stall_torque_Nm": 3.4, "no_load_rpm": 77},
+    "1020": {"name": "XM430-W350-T", "mass_g": 82,  "stall_torque_Nm": 4.1, "no_load_rpm": 46},
+    "1030": {"name": "XM430-W210-T", "mass_g": 82,  "stall_torque_Nm": 3.0, "no_load_rpm": 77},
+    "1100": {"name": "XH540-W270-T", "mass_g": 165, "stall_torque_Nm": 10.6, "no_load_rpm": 33},
+    "1110": {"name": "XH540-W150-T", "mass_g": 165, "stall_torque_Nm": 7.3,  "no_load_rpm": 60},
+    "1120": {"name": "XM540-W270-T", "mass_g": 165, "stall_torque_Nm": 10.6, "no_load_rpm": 33},
+    "1130": {"name": "XM540-W150-T", "mass_g": 165, "stall_torque_Nm": 7.3,  "no_load_rpm": 60}
+  }
+}

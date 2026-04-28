@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HawaBot — Design Your Robot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .header span {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .main {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* Left panel — design controls */
+        .panel-left {
+            width: 380px;
+            min-width: 380px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        /* Step indicators */
+        .steps {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .step {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #334155;
+            transition: background 0.3s;
+        }
+
+        .step.active { background: #3b82f6; }
+        .step.done { background: #10b981; }
+
+        /* Input methods */
+        .input-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { border-color: #3b82f6; color: #e2e8f0; }
+        .tab.active { border-color: #3b82f6; background: #1e3a5f; color: #3b82f6; }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+        }
+
+        textarea:focus { outline: none; border-color: #3b82f6; }
+
+        .upload-area {
+            border: 2px dashed #334155;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover { border-color: #3b82f6; }
+        .upload-area.has-file { border-color: #10b981; border-style: solid; }
+
+        .upload-area input { display: none; }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Tier cards */
+        .tier-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tier-card {
+            padding: 12px 16px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tier-card:hover { border-color: #3b82f6; }
+        .tier-card.selected { border-color: #3b82f6; background: #1e3a5f; }
+
+        .tier-name { font-weight: 600; font-size: 15px; }
+        .tier-desc { font-size: 12px; color: #64748b; }
+        .tier-price { font-size: 18px; font-weight: 700; color: #3b82f6; }
+
+        /* Plan options */
+        .plan-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .plan-option {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .plan-option:hover { border-color: #3b82f6; }
+        .plan-option.selected { border-color: #10b981; background: #064e3b; }
+
+        .plan-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; }
+        .plan-price { font-size: 20px; font-weight: 700; margin: 4px 0; }
+        .plan-detail { font-size: 11px; color: #64748b; }
+
+        /* Right panel — 3D viewer */
+        .panel-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+
+        .viewer-header {
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .viewer-btn {
+            padding: 6px 12px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .viewer-btn.active { border-color: #3b82f6; color: #3b82f6; }
+
+        #viewer {
+            flex: 1;
+            position: relative;
+        }
+
+        #viewer canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Loading state */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .metrics-bar {
+            padding: 12px 24px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+        }
+
+        .metric {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .metric-label { color: #64748b; }
+        .metric-value { color: #e2e8f0; font-weight: 600; }
+
+        .hidden { display: none !important; }
+
+        /* Status messages */
+        .status-msg {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #1e3a5f;
+            border: 1px solid #3b82f6;
+        }
+
+        .status-msg.success {
+            background: #064e3b;
+            border-color: #10b981;
+        }
+
+        .status-msg.error {
+            background: #4c1d2e;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>HawaBot</h1>
+    <span>Design Your Robot Character</span>
+</div>
+
+<div class="main">
+    <!-- Left Panel -->
+    <div class="panel-left">
+        <!-- Progress steps -->
+        <div class="steps">
+            <div class="step active" id="step1"></div>
+            <div class="step" id="step2"></div>
+            <div class="step" id="step3"></div>
+        </div>
+
+        <!-- Step 1: Design -->
+        <div id="design-section">
+            <div class="section-title">1. Design Your Character</div>
+
+            <div class="input-tabs">
+                <div class="tab active" onclick="setInputMode('text')">Describe It</div>
+                <div class="tab" onclick="setInputMode('upload')">Upload Sketch</div>
+            </div>
+
+            <div id="text-input">
+                <textarea id="prompt" placeholder="Describe your robot character...&#10;&#10;e.g. 'A friendly dragon warrior with spiky armor'"></textarea>
+            </div>
+
+            <div id="upload-input" class="hidden">
+                <div class="upload-area" id="dropzone" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" accept="image/*,.stl,.obj" onchange="handleFileUpload(this)">
+                    <p style="font-size: 14px; margin-bottom: 8px;">Drop your sketch or photo here</p>
+                    <p style="font-size: 12px; color: #64748b;">PNG, JPG, or 3D file (STL, OBJ)</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="generate-btn" onclick="generateModel()">
+                Generate 3D Model
+            </button>
+        </div>
+
+        <!-- Step 2: Preview (shown after generation) -->
+        <div id="preview-section" class="hidden">
+            <div class="section-title">2. Preview Your Robot</div>
+            <div id="status-message" class="status-msg"></div>
+
+            <div style="margin-top: 12px;">
+                <div class="section-title" style="margin-top: 16px;">Sections</div>
+                <div id="sections-list"></div>
+            </div>
+        </div>
+
+        <!-- Step 3: Order (shown after preview) -->
+        <div id="order-section" class="hidden">
+            <div class="section-title">3. Choose Your Tier</div>
+
+            <div class="tier-cards">
+                <div class="tier-card selected" onclick="selectTier('spark', this)">
+                    <div>
+                        <div class="tier-name">Spark</div>
+                        <div class="tier-desc">Tabletop companion — 5 DOF, head + arms</div>
+                    </div>
+                    <div class="tier-price">$99</div>
+                </div>
+                <div class="tier-card" onclick="selectTier('core', this)">
+                    <div>
+                        <div class="tier-name">Core</div>
+                        <div class="tier-desc">Enhanced — 10 DOF, elbows + teach-by-demo</div>
+                    </div>
+                    <div class="tier-price">$249</div>
+                </div>
+                <div class="tier-card" onclick="selectTier('pro', this)">
+                    <div>
+                        <div class="tier-name">Pro</div>
+                        <div class="tier-desc">Bipedal humanoid — 21 DOF, full curriculum</div>
+                    </div>
+                    <div class="tier-price">$499</div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 16px;">Choose Your Plan</div>
+
+            <div class="plan-options">
+                <div class="plan-option selected" onclick="selectPlan('full', this)">
+                    <div class="plan-label">Full Kit</div>
+                    <div class="plan-price" id="full-price">$99</div>
+                    <div class="plan-detail">Ships complete</div>
+                </div>
+                <div class="plan-option" onclick="selectPlan('monthly', this)">
+                    <div class="plan-label">Monthly</div>
+                    <div class="plan-price" id="monthly-price">$25/mo</div>
+                    <div class="plan-detail">5 monthly kits</div>
+                </div>
+            </div>
+
+            <button class="btn btn-success" style="margin-top: 16px;" onclick="checkout()">
+                Pre-Order Your HawaBot
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Panel — 3D Viewer -->
+    <div class="panel-right">
+        <div class="viewer-header">
+            <span style="font-size: 14px; color: #94a3b8;" id="viewer-title">Your character will appear here</span>
+            <div class="viewer-controls">
+                <button class="viewer-btn active" onclick="setView('assembled')">Assembled</button>
+                <button class="viewer-btn" onclick="setView('exploded')">Exploded</button>
+                <button class="viewer-btn" onclick="setView('skeleton')">Skeleton</button>
+            </div>
+        </div>
+
+        <div id="viewer">
+            <div class="loading hidden" id="loading-indicator">
+                <div class="spinner"></div>
+                <p>Generating your robot...</p>
+                <p style="font-size: 12px; color: #64748b; margin-top: 4px;" id="loading-detail">This takes about 60 seconds</p>
+            </div>
+            <!-- Three.js canvas will be injected here -->
+        </div>
+
+        <div class="metrics-bar" id="metrics-bar" style="display: none;">
+            <div class="metric">
+                <span class="metric-label">Sections:</span>
+                <span class="metric-value" id="m-sections">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">All watertight:</span>
+                <span class="metric-value" id="m-watertight">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Print volume:</span>
+                <span class="metric-value" id="m-volume">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Est. weight:</span>
+                <span class="metric-value" id="m-weight">-</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">PLA cost:</span>
+                <span class="metric-value" id="m-cost">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Three.js -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+
+// -- Three.js setup --
+const container = document.getElementById('viewer');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 10000);
+camera.position.set(150, 100, 200);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x404060, 1.5);
+scene.add(ambientLight);
+
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight1.position.set(100, 200, 150);
+scene.add(dirLight1);
+
+const dirLight2 = new THREE.DirectionalLight(0x8888ff, 0.6);
+dirLight2.position.set(-100, 50, -100);
+scene.add(dirLight2);
+
+// Grid
+const grid = new THREE.GridHelper(300, 30, 0x334155, 0x1e293b);
+grid.rotation.x = 0; // XZ plane
+scene.add(grid);
+
+// Animation loop
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+// Resize handler
+window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// -- Model loading --
+const loader = new STLLoader();
+let currentModels = [];
+
+function clearModels() {
+    currentModels.forEach(m => scene.remove(m));
+    currentModels = [];
+}
+
+function loadSTL(url, color, opacity = 1.0, offset = null) {
+    return new Promise((resolve, reject) => {
+        loader.load(url, (geometry) => {
+            geometry.computeVertexNormals();
+
+            // Center the geometry
+            geometry.computeBoundingBox();
+            const center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.translate(-center.x, -center.z, center.y); // Swap Y/Z for Three.js
+
+            const material = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(color),
+                roughness: 0.4,
+                metalness: 0.1,
+                transparent: opacity < 1.0,
+                opacity: opacity,
+                side: opacity < 1.0 ? THREE.DoubleSide : THREE.FrontSide,
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            if (offset) {
+                mesh.position.set(offset[0], offset[1], offset[2]);
+            }
+            scene.add(mesh);
+            currentModels.push(mesh);
+
+            // Fit camera
+            const box = new THREE.Box3().setFromObject(mesh);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            camera.position.set(maxDim * 1.5, maxDim * 1.0, maxDim * 1.5);
+            controls.target.set(0, size.y * 0.3, 0);
+            controls.update();
+
+            resolve(mesh);
+        }, undefined, reject);
+    });
+}
+
+// Expose to global scope for the UI
+window.viewer = { loadSTL, clearModels, scene, camera, controls };
+</script>
+
+<script>
+    // -- UI State --
+    let inputMode = 'text';
+    let selectedFile = null;
+    let currentDesignId = null;
+    let selectedTier = 'spark';
+    let selectedPlan = 'full';
+
+    const prices = {
+        spark: { full: 99, monthly: 25 },
+        core: { full: 249, monthly: 55 },
+        pro: { full: 499, monthly: 110 },
+    };
+
+    function setInputMode(mode) {
+        inputMode = mode;
+        document.querySelectorAll('.input-tabs .tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('text-input').classList.toggle('hidden', mode !== 'text');
+        document.getElementById('upload-input').classList.toggle('hidden', mode !== 'upload');
+    }
+
+    function handleFileUpload(input) {
+        if (input.files.length > 0) {
+            selectedFile = input.files[0];
+            const dropzone = document.getElementById('dropzone');
+            dropzone.classList.add('has-file');
+            dropzone.innerHTML = `<input type="file" id="file-input" accept="image/*,.stl,.obj" onchange="handleFileUpload(this)">
+                <p style="font-size: 14px;">${selectedFile.name}</p>
+                <p style="font-size: 12px; color: #10b981;">Ready to generate</p>`;
+        }
+    }
+
+    async function generateModel() {
+        const btn = document.getElementById('generate-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        document.getElementById('loading-indicator').classList.remove('hidden');
+
+        // Update steps
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step1').classList.add('done');
+        document.getElementById('step2').classList.add('active');
+
+        const formData = new FormData();
+        formData.append('prompt', document.getElementById('prompt').value);
+        if (selectedFile) {
+            formData.append('image', selectedFile);
+        }
+
+        try {
+            const resp = await fetch('/api/generate', { method: 'POST', body: formData });
+            const data = await resp.json();
+
+            document.getElementById('loading-indicator').classList.add('hidden');
+
+            if (data.status === 'success') {
+                currentDesignId = data.design_id;
+
+                // Show preview section
+                document.getElementById('preview-section').classList.remove('hidden');
+                document.getElementById('order-section').classList.remove('hidden');
+
+                const statusMsg = document.getElementById('status-message');
+                statusMsg.className = 'status-msg success';
+                statusMsg.textContent = 'Your robot shell is ready! All sections are printable.';
+
+                // Load 3D model
+                window.viewer.clearModels();
+                await window.viewer.loadSTL(data.shell_url, '#3b82f6', 0.6);
+                await window.viewer.loadSTL(data.skeleton_url, '#ef4444', 1.0);
+
+                document.getElementById('viewer-title').textContent = 'Your HawaBot — Shell + Skeleton';
+
+                // Update metrics
+                const m = data.metrics;
+                document.getElementById('metrics-bar').style.display = 'flex';
+                document.getElementById('m-sections').textContent = Object.keys(data.sections).length;
+                document.getElementById('m-watertight').textContent = m.all_watertight ? 'Yes' : 'No';
+                document.getElementById('m-volume').textContent = m.total_volume_cm3 + ' cm³';
+                document.getElementById('m-weight').textContent = m.est_weight_g + 'g';
+                document.getElementById('m-cost').textContent = '$' + m.est_pla_cost;
+
+                // List sections
+                const sectionsList = document.getElementById('sections-list');
+                sectionsList.innerHTML = '';
+                for (const [name, info] of Object.entries(data.sections)) {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'padding: 6px 0; font-size: 13px; display: flex; justify-content: space-between;';
+                    div.innerHTML = `<span>${name}</span>
+                        <span style="color: ${info.watertight ? '#10b981' : '#ef4444'}">
+                            ${info.watertight ? 'watertight' : 'needs repair'} — ${info.volume_cm3 || '?'} cm³
+                        </span>`;
+                    sectionsList.appendChild(div);
+                }
+
+                // Update steps
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step2').classList.add('done');
+                document.getElementById('step3').classList.add('active');
+            } else {
+                const statusMsg = document.getElementById('status-message');
+                statusMsg.className = 'status-msg error';
+                statusMsg.textContent = 'Generation failed. Please try again.';
+                document.getElementById('preview-section').classList.remove('hidden');
+            }
+        } catch (err) {
+            document.getElementById('loading-indicator').classList.add('hidden');
+            alert('Error: ' + err.message);
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Regenerate';
+    }
+
+    function selectTier(tier, el) {
+        selectedTier = tier;
+        document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('full-price').textContent = '$' + prices[tier].full;
+        document.getElementById('monthly-price').textContent = '$' + prices[tier].monthly + '/mo';
+    }
+
+    function selectPlan(plan, el) {
+        selectedPlan = plan;
+        document.querySelectorAll('.plan-option').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    async function setView(mode) {
+        if (!currentDesignId) return;
+
+        document.querySelectorAll('.viewer-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        window.viewer.clearModels();
+
+        const base = `/api/model/${currentDesignId}`;
+
+        if (mode === 'assembled') {
+            await window.viewer.loadSTL(`${base}/shell.stl`, '#3b82f6', 0.6);
+            await window.viewer.loadSTL(`${base}/skeleton.stl`, '#ef4444', 1.0);
+            document.getElementById('viewer-title').textContent = 'Assembled — Shell + Skeleton';
+        } else if (mode === 'exploded') {
+            // Load sections with offsets
+            const colors = { head: '#3b82f6', torso: '#ef4444', left_arm: '#10b981', right_arm: '#f59e0b', base: '#8b5cf6' };
+            const offsets = { head: [0, 40, 0], torso: [0, 0, 0], left_arm: [-30, 15, 0], right_arm: [30, 15, 0], base: [0, -30, 0] };
+            for (const name of Object.keys(colors)) {
+                try {
+                    await window.viewer.loadSTL(`${base}/section_${name}.stl`, colors[name], 0.8, offsets[name]);
+                } catch(e) { /* section might not exist */ }
+            }
+            document.getElementById('viewer-title').textContent = 'Exploded — Printable Sections';
+        } else if (mode === 'skeleton') {
+            await window.viewer.loadSTL(`${base}/skeleton.stl`, '#ef4444', 1.0);
+            document.getElementById('viewer-title').textContent = 'Skeleton — Servo Frame';
+        }
+    }
+
+    function checkout() {
+        const price = selectedPlan === 'full' ? prices[selectedTier].full : prices[selectedTier].monthly;
+        const planText = selectedPlan === 'full' ? 'Full Kit' : '5-Month Subscription';
+        alert(`Pre-order placed!\n\nTier: ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)}\nPlan: ${planText}\nPrice: $${price}${selectedPlan === 'monthly' ? '/mo' : ''}\nDesign ID: ${currentDesignId}\n\nThis is a prototype — no charge was made.`);
+    }
+</script>
+
+</body>
+</html>

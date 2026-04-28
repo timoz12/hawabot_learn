@@ -1,76 +1,83 @@
-# HawaBot SDK
+# HawaBot
 
 Physical AI robotics platform for kids. Part of [Hawa Labs](https://hawalabs.com).
 
-## What This Is
+Kids design a custom robot character, Hawa Labs 3D prints and ships it, then kids code and teach their robot using Python + an AI tutor.
 
-An SDK, curriculum engine, and AI tutor — all in one Python package.
-Students write real Python code that controls a real robot, guided by an AI tutor
-that teaches **robotics concepts first, coding second**.
+## What's Here
 
-## Quick Start
+### 1. HawaBot SDK (`hawabot/`)
+Python package that ships with every kit. Controls the robot, runs the curriculum, powers the AI tutor.
 
 ```python
 from hawabot import Robot
 
-robot = Robot()          # Auto-detects hardware tier
-robot.head.pan(45)       # Move head 45° right
-robot.arm.left.wave()    # Wave left arm
-robot.shutdown()         # Return to rest
+robot = Robot()              # Loads character profile, simulation mode
+robot.head.pan(45)           # Turn head right
+robot.arm.left.wave()        # Wave animation
+robot.waist.turn(-20)        # Turn upper body
+robot.express("happy")       # Character-specific expression
+
+recording = robot.teach(5)   # Record 5 seconds of motion (teach-by-demo)
+robot.play(recording)        # Play it back
+
+robot.shutdown()             # Return to rest
 ```
 
-## Launch the Studio
+### 2. Shell Pipeline (`pipeline/`)
+The moat: takes any 3D sculpture (from AI generation), subtracts the standard servo skeleton, and outputs printable shell sections.
 
 ```bash
-pip install -e .
-streamlit run hawabot/studio/app.py
+python -m pipeline.shell_pipeline sculpture.stl skeleton.stl output_shell.stl
+python -m pipeline.joint_cuts output_shell.stl
+```
+
+Pipeline: **Scale** skeleton to fit → **Subtract** from sculpture → **Cut** joint clearances → **Split** into printable sections → **Validate** watertightness.
+
+### 3. Design Platform (`web/`)
+Web prototype for the customer-facing design platform. Three.js 3D viewer, Meshy API integration (mock or real), tier/plan selection.
+
+```bash
+python web/app.py
+# Open http://localhost:5001
 ```
 
 ## Hardware Tiers
 
-| Tier | Servos | Compute | Cost |
-|------|--------|---------|------|
-| Spark (default) | SG90 / MG90S | Pi Pico W | ~$69 BOM |
-| Core | Feetech STS3215 | Pi 5 | ~$200 BOM |
-| Studio | Dynamixel XL430/330 | Pi 5 | ~$400 BOM |
+| Tier | Form | DOF | Servos | Compute | BOM |
+|------|------|-----|--------|---------|-----|
+| **Spark** | Tabletop companion | 5 | SG90/MG90S | Pi Pico W | ~$69 |
+| **Core** | Enhanced upper body | 10 | Feetech STS3215 | Pi 5 | ~$200 |
+| **Pro** | Full bipedal | 21 | Dynamixel XL430/330 | Pi 5 | ~$400 |
 
-The SDK auto-detects tier. Student code never changes between tiers.
+Spark is a desk companion (head + arms + waist). Core adds elbows and teach-by-demo. Pro adds legs for walking.
 
-## Curriculum Structure
+## Curriculum (5 months)
 
-```
-missions/
-  month_01/  — Joints, DOF, basic motion
-  month_02/  — Sensing (ultrasonic, IMU)
-  month_03/  — Feedback loops (sensor → motion)
-  month_04/  — Computer vision
-  month_05+  — Robot brain architecture, LLMs
-```
+| Month | Topic | Tier Required |
+|-------|-------|---------------|
+| 1 | Joints, DOF, basic motion | Spark+ |
+| 2 | Sensing: ultrasonic, reactions | Spark+ |
+| 3 | Feedback loops, IMU balance | Core+ |
+| 4 | Computer vision | Pro |
+| 5 | Robot brain: RL, LLM integration | Pro |
 
-## Safety
-
-The AI tutor has a dedicated child safety layer:
-- Every student message is classified before reaching the tutor LLM
-- Emotional distress events flag to parent dashboard (no message content stored)
-- Tutor stays strictly on robotics/science/math topics
-- Uses Claude Haiku for safety classification, Claude Sonnet for tutoring
-
-## Project Structure
-
-```
-hawabot/
-├── robot.py              # Student entry point
-├── joints/               # Head, Arm, Leg body parts
-├── drivers/              # Hardware tier abstraction
-├── sensors/              # Ultrasonic, IMU, Camera
-├── curriculum/           # Mission loader + progress tracker
-├── tutor/                # AI tutor + safety filter
-└── studio/               # Streamlit IDE
-```
+## Reference (`hawabot_reference/`)
+Specs and engineering lessons from the full-scale development robot (Poppy-based, 20 DOF, 913mm). Used to derive joint limits, servo specs, and curriculum content for the educational versions.
 
 ## Environment Variables
 
 ```bash
+HAWABOT_MOCK=1             # Force simulation mode (default)
 ANTHROPIC_API_KEY=sk-...   # Required for AI tutor
-HAWABOT_MOCK=1             # Force simulation mode (no hardware)
+MESHY_API_KEY=...          # Required for real 3D generation
+```
+
+## Setup
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[sim]"
+pip install flask trimesh manifold3d scipy shapely rtree
 ```

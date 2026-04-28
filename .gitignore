@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated test files (pipeline outputs)
+*.stl
+*.obj
+*.glb
+*.3mf
+preview_*.png
+
+# Web uploads
+web/uploads/
+
+# Environment
+.env

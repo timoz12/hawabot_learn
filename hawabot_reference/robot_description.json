@@ -1,0 +1,108 @@
+{
+  "_comment": "Hawabot physical description. Legs + arms = Poppy_Humanoid.URDF (direct match). Torso + head = measured/custom (simpler than Poppy).",
+  "_poppy_urdf": "poppy reference files/Poppy_Humanoid.URDF",
+  "_measurement_date": "2026-04-21",
+  "_units": "mm for length, grams for mass",
+  "_axis_convention": "ROS FLU: +X forward, +Y left, +Z up",
+
+  "overall": {
+    "standing_height_total_mm": 913,
+    "floor_to_pelvis_top_mm": 440,
+    "torso_plus_head_stack_mm": 473,
+    "notes": "Total = 440 (floor→pelvis, Poppy-standard legs) + 473 (measured torso+head)."
+  },
+
+  "legs_and_pelvis": {
+    "source": "poppy reference files/Poppy_Humanoid.URDF",
+    "notes": "Mechanically identical to Poppy. All dimensions, masses, inertias, collision meshes in Poppy URDF.",
+    "key_values_from_urdf_mm": {
+      "thigh_length": 182,
+      "shin_length": 180,
+      "hip_separation_half": 22.5,
+      "floor_to_pelvis_top_approx": 440
+    }
+  },
+
+  "torso": {
+    "_note": "Custom — simpler than Poppy (1 servo: abs_z only; Poppy has abs_y/abs_x/abs_z/bust_y/bust_x).",
+    "cross_section_mm": { "width": 152, "depth": 76 },
+    "segments": {
+      "pelvis_top_to_abs_z_axis": {
+        "length_mm": 83,
+        "description": "Bottom of torso column up to abs_z servo (ID 22) rotation axis.",
+        "measured_inches": 3.25
+      },
+      "abs_z_to_shoulder_y_axis": {
+        "length_mm": 140,
+        "description": "abs_z axis up to shoulder_y (IDs 11/12) rotation axis centerline.",
+        "measured_inches": 5.5
+      }
+    },
+    "components": {
+      "aluminum_extrusion_rod_g": 200,
+      "abs_z_servo_XH540_W150_T_g": 165,
+      "printed_shells_g": 200,
+      "_printed_shells_note": "Estimate — consistent with Poppy URDF chest mass (~200g) and scaling from the measured 500g head shell."
+    },
+    "future_additions": {
+      "backpack": {
+        "_note": "Not yet installed; will house Thor 1, Thor 2, battery.",
+        "planned_contents": ["jetson_thor_1", "jetson_thor_2", "battery_pack"],
+        "planned_mass_g": null,
+        "offset_from_torso_centerline_mm": null
+      }
+    },
+    "bare_mass_current_estimate_g": 565
+  },
+
+  "neck": {
+    "_note": "Rotating neck section between chest and head.",
+    "shoulder_y_axis_to_head_z_axis_mm": 35,
+    "measured_inches": 1.375
+  },
+
+  "head": {
+    "_note": "Custom — 1 servo (head_z only; Poppy has head_z + head_y).",
+    "dimensions_mm": {
+      "height": 216,
+      "width": 184,
+      "depth": 229
+    },
+    "measured_inches": { "height": 8.5, "width": 7.25, "depth": 9 },
+    "components": {
+      "printed_shell_g": 500,
+      "head_z_servo_XM430_W350_T_g": 82,
+      "realsense_d455_g": 72,
+      "livox_mid360_g": 265,
+      "cables_estimate_g": 75
+    },
+    "total_mass_estimate_g": 994
+  },
+
+  "arms": {
+    "source": "poppy reference files/Poppy_Humanoid.URDF",
+    "notes": "Mechanically identical to Poppy. 4 servos per arm (shoulder_y, shoulder_x, arm_z, elbow_y). See URDF for link lengths, masses, inertias.",
+    "key_values_from_urdf_mm": {
+      "upper_arm_length_approx": 148,
+      "shoulder_separation_half": 77.1
+    }
+  },
+
+  "simplifications_vs_poppy": {
+    "torso": {
+      "poppy_has": ["abs_y", "abs_x", "abs_z", "bust_y", "bust_x"],
+      "hawabot_has": ["abs_z"],
+      "absent": ["abs_y", "abs_x", "bust_y", "bust_x"]
+    },
+    "head": {
+      "poppy_has": ["head_z", "head_y"],
+      "hawabot_has": ["head_z"],
+      "absent": ["head_y"]
+    }
+  },
+
+  "pending_measurements": [
+    "Confirm torso printed-shell mass when convenient (currently estimated 200g)",
+    "Backpack mass + offset (once Thors/battery installed)"
+  ]
+}
