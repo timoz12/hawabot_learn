@@ -283,13 +283,13 @@ TIERS: dict[TierName, TierDefinition] = {
         compute="Raspberry Pi Pico W",
         bom_cost_usd=69,
         dof=5,
-        sensors=("ultrasonic", "microphone", "speaker"),
+        sensors=("ultrasonic", "buzzer"),
         joints=_spark_joints(),
         has_legs=False,
         has_waist=True,
         description=(
             "Tabletop companion: head + arms + waist on a desk base. "
-            "AI-powered office buddy that talks, listens, waves, and looks around."
+            "Buzzer for feedback sounds. AI tutor runs on laptop via Studio app."
         ),
     ),
     TierName.CORE: TierDefinition(
@@ -305,7 +305,7 @@ TIERS: dict[TierName, TierDefinition] = {
         has_waist=True,
         description=(
             "Enhanced companion: smart servos with feedback + compliance for "
-            "teach-by-demo, elbows for richer gestures, IMU for tilt sensing."
+            "teach-by-demo, elbows for richer gestures, IMU, voice AI (mic + speaker)."
         ),
     ),
     TierName.PRO: TierDefinition(
@@ -315,13 +315,13 @@ TIERS: dict[TierName, TierDefinition] = {
         compute="Raspberry Pi 5",
         bom_cost_usd=400,
         dof=21,
-        sensors=("ultrasonic", "imu", "camera", "microphone", "speaker", "temperature"),
+        sensors=("ultrasonic", "imu", "camera", "microphone", "speaker_hq", "temperature"),
         joints=_pro_joints(),
         has_legs=True,
         has_waist=True,
         description=(
-            "Full bipedal humanoid: 20 DOF matching the Hawabot reference design. "
-            "Legs, walking, computer vision, full curriculum."
+            "Full bipedal humanoid: 21 DOF, camera, high-quality voice (mic array + "
+            "40mm speaker), walking, computer vision, full curriculum."
         ),
     ),
 }
