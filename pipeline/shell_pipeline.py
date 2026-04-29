@@ -154,53 +154,67 @@ def run_pipeline(
             hollow_results[zone_name] = result
             warnings.extend(result.warnings)
 
-            if result.shell is not None:
-                print(f"  {zone_name}: {result.metrics.get('estimated_weight_g', 0):.1f}g estimated")
-            else:
-                errors.append(f"Hollowing failed for {zone_name}")
+            n_shells = result.metrics.get("shell_count", 1)
+            weight = result.metrics.get("estimated_weight_g", 0)
+            clam = " (clamshell)" if result.metrics.get("clamshell") else ""
+            print(f"  {zone_name}: {weight:.1f}g, {n_shells} piece(s){clam}")
         except Exception as e:
             errors.append(f"Hollowing failed for {zone_name}: {e}")
 
     # ── Step 4: Select magnets and add bosses ─────────────────────────
     print("\nSelecting magnets and adding bosses...")
     for zone_name, h_result in hollow_results.items():
-        if h_result.shell is None:
+        if not h_result.shells:
             continue
 
+        # Select magnets using the first (or only) shell piece
+        primary_shell = h_result.shells[0]
         try:
-            selection = select_magnets(h_result.shell, zone_name)
+            selection = select_magnets(primary_shell, zone_name)
             magnet_selections[zone_name] = selection
             warnings.extend(selection.warnings)
 
             print(f"  {zone_name}: {len(selection.selected)} magnets "
                   f"({selection.total_pull_force_kg:.1f}kg pull)")
 
-            # Add bosses to shell
-            shell_with_bosses = add_magnet_bosses(h_result.shell, selection)
-            shells[zone_name] = shell_with_bosses
+            # Add bosses to each shell piece
+            processed = []
+            for shell_piece in h_result.shells:
+                piece_with_bosses = add_magnet_bosses(shell_piece, selection)
+                processed.append(piece_with_bosses)
+            shells[zone_name] = processed
         except Exception as e:
             warnings.append(f"Magnet processing failed for {zone_name}: {e}")
-            # Use shell without bosses as fallback
-            shells[zone_name] = h_result.shell
+            shells[zone_name] = h_result.shells
 
     # ── Step 5: Validate ──────────────────────────────────────────────
     print("\nValidating shells...")
-    for zone_name, shell in shells.items():
+    for zone_name, shell_list in shells.items():
         magnet_count = len(magnet_selections.get(zone_name, MagnetSelection(
             zone=zone_name, selected=[], rejected=[], total_pull_force_kg=0, warnings=[]
         )).selected)
 
-        report = validate_shell(shell, zone_name, magnet_count)
-        validation_reports[zone_name] = report
-        print(print_report(report))
+        # Validate each piece
+        for i, shell_piece in enumerate(shell_list):
+            suffix = f" (piece {i+1}/{len(shell_list)})" if len(shell_list) > 1 else ""
+            report = validate_shell(shell_piece, zone_name, magnet_count)
+            validation_reports[f"{zone_name}{suffix}"] = report
+            print(print_report(report))
 
     # ── Step 6: Export ────────────────────────────────────────────────
     print("\nExporting STL files...")
-    for zone_name, shell in shells.items():
-        stl_path = out / f"{zone_name}_shell.stl"
-        shell.export(str(stl_path))
-        export_paths[zone_name] = str(stl_path)
-        print(f"  {stl_path} ({len(shell.faces)} faces)")
+    for zone_name, shell_list in shells.items():
+        for i, shell_piece in enumerate(shell_list):
+            if len(shell_list) == 1:
+                filename = f"{zone_name}_shell.stl"
+            else:
+                part_name = "front" if i == 0 else "back"
+                filename = f"{zone_name}_{part_name}_shell.stl"
+
+            stl_path = out / filename
+            shell_piece.export(str(stl_path))
+            export_paths[f"{zone_name}_{i}"] = str(stl_path)
+            print(f"  {stl_path} ({len(shell_piece.faces)} faces)")
 
     # Overall success
     all_passed = all(r.passed for r in validation_reports.values())

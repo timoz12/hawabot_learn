@@ -145,14 +145,34 @@ New shell set only, shipped.
 - Complex: characters with fine details, thin features (spiky hair, weapons, capes)
 - Software auto-classifies based on mesh complexity
 
-#### AI Tutor Subscription — $9.99/mo or $79.99/yr
+#### AI Tutor — Bundled (No Separate Subscription)
 
-**Includes:**
-- Interactive coding lessons (progressive difficulty)
-- AI-powered hints and explanations
-- Code validation before running on robot
-- Creative project prompts
-- Progress tracking
+The AI tutor is **NOT** a separate subscription. It's bundled into the kit and extended through character purchases.
+
+**How it works:**
+
+| Action | AI Tutor Access |
+|---|---|
+| Buy Starter Kit | **6 months included** |
+| Buy new character shell | **+6 months extension** + character-specific lessons unlocked |
+| Run out of tutor access? | Buy a **credit pack** (no subscription needed) |
+
+**Credit Packs** (for AI tutor usage beyond included periods):
+
+| Pack | Credits | Price | Cost/Credit |
+|---|---|---|---|
+| Starter | 100 | $4.99 | $0.050 |
+| Explorer | 500 | $14.99 | $0.030 |
+| Builder | 2,000 | $39.99 | $0.020 |
+
+**Credit consumption:** Each AI tutor interaction (hint, explanation, code check) costs 1 credit. A typical lesson session uses ~10-15 credits. Heavy users (~daily) consume ~400 credits/month.
+
+**Why this works:**
+- No subscription fatigue — parents hate recurring charges for kids' products
+- Character purchases are the natural recurring revenue (kids always want new characters)
+- Each character extends tutor access AND unlocks character-specific content (e.g., samurai → sword animation lessons, dragon → creature movement patterns)
+- Credit packs are a safety net, not the primary model — most families re-up through characters
+- Credits never expire
 
 ---
 
@@ -168,14 +188,15 @@ New shell set only, shipped.
 | Monthly kit revenue | $8,900 |
 | Monthly kit gross profit | $4,600 |
 | | |
-| Additional characters/mo (estimate 0.5 per customer) | 50 |
-| Revenue per character | $34 (avg) |
+| Additional characters/mo (0.5 per customer avg) | 50 |
+| Revenue per character (includes +6mo tutor) | $34 (avg) |
 | Monthly character revenue | $1,700 |
 | Monthly character gross profit | $700 |
 | | |
-| Tutor subscribers (30% convert after free month) | 30 |
-| Monthly tutor revenue | $300 |
-| Monthly tutor gross profit | $240 |
+| Credit pack purchases (20% of base buy packs) | 20 |
+| Avg pack size | $14.99 (Explorer) |
+| Monthly credit revenue | $300 |
+| Monthly credit gross profit | $240 (AI API cost ~$2/user/mo) |
 | | |
 | **Total monthly revenue** | **$10,900** |
 | **Total monthly gross profit** | **$5,540** |
@@ -192,15 +213,17 @@ New shell set only, shipped.
 | Monthly kit gross profit | $61,000 |
 | | |
 | Additional characters (1 per customer) | 1,000 |
+| Revenue per character (includes +6mo tutor) | $34 (avg) |
 | Monthly character revenue | $34,000 |
 | Monthly character gross profit | $24,500 |
 | | |
-| Tutor subscribers (50% conversion) | 500 |
-| Monthly tutor revenue | $5,000 |
-| Monthly tutor gross profit | $4,000 |
+| Credit pack purchases (30% of base) | 300 |
+| Avg pack | $14.99 |
+| Monthly credit revenue | $4,500 |
+| Monthly credit gross profit | $3,900 |
 | | |
-| **Total monthly revenue** | **$128,000** |
-| **Total monthly gross profit** | **$89,500** |
+| **Total monthly revenue** | **$127,500** |
+| **Total monthly gross profit** | **$89,400** |
 | **Blended gross margin** | **70%** |
 
 ---
@@ -239,27 +262,40 @@ Offer shell STL files as a download ($14.99 per character) instead of printing +
 ## 8. Revenue Model Summary
 
 ```
-┌─────────────────────────────────┐
-│         HARDWARE SALE           │  One-time
-│  Skeleton Kit: $79-99           │
-│  Character Shells: $29-39 each  │
-│  STL Download: $14.99 each      │
-└──────────────┬──────────────────┘
+┌──────────────────────────────────────────┐
+│            STARTER KIT                   │  One-time purchase
+│  Skeleton + 1st character + 6mo tutor    │
+│  $79-99                                  │
+└──────────────┬───────────────────────────┘
                │
                ▼
-┌─────────────────────────────────┐
-│      RECURRING SUBSCRIPTION     │  Monthly/Annual
-│  AI Tutor: $9.99/mo             │
-│  (or $79.99/yr)                 │
-│  ~80% gross margin              │
-└──────────────┬──────────────────┘
+┌──────────────────────────────────────────┐
+│         CHARACTER PURCHASES              │  Recurring (organic demand)
+│  New shell set: $29-39 each              │
+│  +6 months AI tutor per purchase         │
+│  +Character-specific lesson content      │
+│  STL-only download: $14.99               │
+└──────────────┬───────────────────────────┘
                │
                ▼
-┌─────────────────────────────────┐
-│       FUTURE EXPANSION          │
-│  Character marketplace (%)      │
-│  Classroom licenses             │
-│  Core/Pro tier upgrades         │
-│  Sensor add-on packs            │
-└─────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│         AI TUTOR CREDITS                 │  Top-up (no subscription)
+│  100 credits: $4.99                      │
+│  500 credits: $14.99                     │
+│  2,000 credits: $39.99                   │
+│  Credits never expire                    │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
+│         FUTURE EXPANSION                 │
+│  Character marketplace (% cut)           │
+│  Classroom licenses (bulk pricing)       │
+│  Core/Pro tier upgrades                  │
+│  Sensor add-on packs                     │
+└──────────────────────────────────────────┘
 ```
+
+**Key insight:** Characters ARE the subscription. Kids naturally want new characters
+every few months. Each purchase extends their tutor access and unlocks new content.
+No subscription fatigue, no cancellation anxiety — just "I want a new character."

@@ -272,3 +272,85 @@ MAGNET_BOSS_OD = 10.0       # Shell-side boss outer diameter
 MAGNET_BOSS_H = 4.0         # Shell-side boss height
 MIN_WALL_BEHIND_BOSS = 1.5  # Don't punch through shell
 MIN_SHELL_THICKNESS_FOR_BOSS = 6.0  # Boss needs 4mm + 2mm wall behind
+
+
+# ── Removal Directions ────────────────────────────────────────────────────
+# Each zone has a removal direction (how the shell slides on/off)
+# and a draft angle applied along that axis for easy release.
+
+@dataclass(frozen=True)
+class RemovalSpec:
+    """How a shell zone is removed from the skeleton."""
+    zone: str
+    direction: tuple[float, float, float]  # Unit vector: direction to REMOVE
+    draft_angle_deg: float                 # Taper angle along removal direction
+    is_clamshell: bool                     # True = split into front/back halves
+    split_plane: str | None                # "XZ" or "YZ" — where clamshell splits
+
+
+REMOVAL_SPECS = {
+    "head": RemovalSpec("head", (0, 0, 1), 2.0, False, None),
+    # Head lifts straight up. 2° draft taper on internal cavity.
+
+    "torso": RemovalSpec("torso", (0, -1, 0), 1.0, True, "XZ"),
+    # Torso is clamshell: front half pulls forward (-Y), back half pulls backward (+Y).
+    # Split along XZ plane (Y=0). Each half has its own magnets.
+
+    "left_arm": RemovalSpec("left_arm", (-1, 0, 0), 2.0, False, None),
+    # Left arm slides outward (-X direction).
+
+    "right_arm": RemovalSpec("right_arm", (1, 0, 0), 2.0, False, None),
+    # Right arm slides outward (+X direction).
+
+    "base": RemovalSpec("base", (0, 0, -1), 1.5, False, None),
+    # Base lifts off downward (flip robot, pull off).
+}
+
+
+# ── Skeleton Clearance Volume Geometry ────────────────────────────────────
+# These define the skeleton solid per zone — used for boolean subtraction.
+# Each entry is a list of (shape, position, dimensions) tuples that get
+# unioned together to form the clearance volume for that zone.
+
+# Clearance expansion: how much bigger than the actual skeleton frame
+# the subtraction volume should be, to ensure the shell slides on/off.
+CLEARANCE_EXPANSION = 1.5  # mm per side beyond the physical frame
+
+# Joint rotation sweep volumes
+JOINT_SWEEPS = {
+    "waist_yaw": {
+        "center": (0, 0, 10),
+        "axis": "Z",
+        "range_deg": (-90, 90),
+        "radius": 50,  # Sweep radius — must clear torso shell at waist
+        "height": 6,   # Thin disc at the joint boundary
+    },
+    "head_pan_yaw": {
+        "center": (0, 0, 115),  # At head/torso cut boundary
+        "axis": "Z",
+        "range_deg": (-90, 90),
+        "radius": 25,
+        "height": 6,
+    },
+    "head_tilt_pitch": {
+        "center": (0, 0, 148),
+        "axis": "Y",
+        "range_deg": (-30, 30),
+        "radius": 20,
+        "height": 6,
+    },
+    "left_shoulder_pitch": {
+        "center": (-40, 0, 110),
+        "axis": "X",
+        "range_deg": (-90, 90),
+        "radius": 25,
+        "height": 6,
+    },
+    "right_shoulder_pitch": {
+        "center": (40, 0, 110),
+        "axis": "X",
+        "range_deg": (-90, 90),
+        "radius": 25,
+        "height": 6,
+    },
+}
