@@ -1,6 +1,6 @@
 # HawaBot — Project Save State
 
-**Last updated:** 2026-04-29
+**Last updated:** 2026-04-29 (evening)
 **Purpose:** Complete reference of everything implemented, decided, and in-progress. Portable to any platform.
 
 ---
@@ -99,12 +99,13 @@ All in `pipeline/`. Dependencies: `trimesh`, `manifold3d`, `numpy`.
 
 | Module | Purpose | Status |
 |---|---|---|
-| `skeleton.py` | Central dimensions, magnet grid, cut planes, envelopes | **Done** |
+| `skeleton.py` | Dimensions, magnet grid, cut planes, clearance volumes, removal specs | **Done** |
 | `dissect.py` | Slice character mesh into 5 body zones | **Done** |
-| `hollow.py` | Hollow solid zones into printable shells | **Done** |
+| `hollow.py` | Boolean-subtract skeleton clearance from zones + clamshell torso | **Done** |
 | `magnets.py` | Select optimal magnets + generate boss geometry | **Done** |
 | `validate.py` | Wall thickness, clearance, weight, watertight checks | **Done** |
 | `shell_pipeline.py` | Orchestrator — runs full pipeline end-to-end | **Done** |
+| `generate_3d.py` | Tripo3D + Meshy API wrapper (image/text → 3D mesh) | **Done** |
 | `generate_skeleton_step.py` | CadQuery script to generate skeleton STEP/STL | **Done** |
 | `joint_cuts.py` | Joint clearance cuts (legacy, needs update) | Needs rework |
 
@@ -117,14 +118,41 @@ python -m pipeline.shell_pipeline path/to/character.stl output/shells/
 ### Pipeline Flow
 
 ```
-load_and_prepare()     → Scale, center, repair mesh
+load_and_prepare()     → Scale to 200mm, center, repair mesh
 dissect_character()    → Cut into 5 zones at adjustable planes
-hollow_zone()          → Offset inward, boolean subtract, open attachment face
+hollow_zone()          → Boolean-subtract skeleton clearance volume from each zone
+                         Torso → clamshell split (front/back halves)
+                         Each zone gets draft taper for easy removal
 select_magnets()       → Pick optimal magnet positions from skeleton grid
 add_magnet_bosses()    → Boolean union boss cylinders onto shell interior
 validate_shell()       → Wall thickness, weight, clearance, watertight checks
-export STL             → One file per zone
+export STL             → 6 files (head, torso_front, torso_back, L arm, R arm, base)
 ```
+
+### T-Pose Requirement
+
+All character models must be in **T-pose** (arms straight out, legs apart) before entering the pipeline. Without this, arm zone cuts grab almost nothing.
+
+- **Text-to-3D:** System pre-prompt enforces T-pose
+- **Image-to-3D:** If source isn't T-pose, regenerate reference views in T-pose first
+- **Uploaded STL:** Detect arm angle, flag if not T-pose, offer to regenerate
+
+### Shell Removal Mechanics
+
+| Zone | Removal Direction | Notes |
+|---|---|---|
+| Head | Lifts up (+Z) | 2° draft taper, neck opening clears magnet ring |
+| Torso | Clamshell (front/back) | Split at Y=0 plane, each half has magnets |
+| Arms | Slide outward (±X) | 2° draft taper, inboard face is open |
+| Base | Lifts off downward (-Z) | 1.5° draft taper |
+
+### E2E Test Results (Naruto mesh, 2026-04-29)
+
+- All 6 shells watertight and exported
+- Torso correctly split into front/back clamshell
+- Head: 32.7g, Torso: 66.6g total, Arms: 3.3-3.6g, Base: 3.5g
+- Magnet selection needs tuning (too conservative on thin shells)
+- Thin wall warnings on narrow features (legs/feet) — expected, needs customer confirmation step
 
 ---
 
@@ -172,11 +200,16 @@ robot.wave()
 |---|---|---|
 | Skeleton height | 200mm | SG90 servos need room; 150mm too cramped for aesthetics |
 | Skeleton approach | Standalone frame + magnetic snap-on shells | Cleaner separation, swappable characters, simpler manufacturing |
+| Shell hollowing | Boolean subtract skeleton clearance from character | Exact fit guaranteed; old vertex-offset was fragile on detailed meshes |
 | Shell attachment | 6×3mm neodymium disc magnets | No tools, instant snap-on/off, works with any character |
 | Magnet strategy | 40 predefined seats, software selects subset | One skeleton design, infinite shell compatibility |
+| Torso shell | Clamshell (front/back split) | Can't slide over shoulder brackets as one piece |
 | Frame printing | Single part, not sectioned | Only shells get split into body zones |
 | Cut planes | Customer-adjustable during guided dissection | Different characters have different proportions |
+| T-pose standard | All models must be T-pose for generation | Clean arm/torso separation; enforced via pre-prompts |
 | 3D gen platform | Tripo3D (primary), Meshy (fallback) | Best value watertight mesh for 3D printing |
+| Pricing model | Bundled — no separate AI subscription | Kit = 6mo tutor; each character = +6mo; credits for extras |
+| Credits scope | Fortnite-style add-ons (skills, voices, animations) | Credits power the robot, not just tutoring — drives engagement |
 | Tier strategy | Spark only for now; Core/Pro later | Ship one thing well first |
 | Skeleton variant | Humanoid only for now; stumpy/creature later | Focus on action figure market first |
 
@@ -208,8 +241,12 @@ hawabot_learn/
 │   ├── magnets.py              # Magnet selection + boss gen
 │   ├── validate.py             # Quality checks
 │   ├── shell_pipeline.py       # Orchestrator
+│   ├── generate_3d.py          # Tripo3D + Meshy API wrapper
 │   ├── generate_skeleton_step.py  # CadQuery STEP generator
 │   ├── joint_cuts.py           # Legacy — needs rework
+│   ├── test_meshes/            # Test character meshes
+│   │   └── teen-naruto.stl     # E2E test mesh (175mm, 500k faces)
+│   ├── output/                 # Pipeline output (gitignored)
 │   ├── skeleton_exports/       # Generated CAD files
 │   │   ├── spark_skeleton_frame.step
 │   │   ├── spark_skeleton_frame.stl
@@ -245,6 +282,8 @@ hawabot_learn/
 trimesh          # Mesh loading, manipulation
 manifold3d       # Robust boolean operations
 numpy            # Geometry math
+scipy            # Sparse matrices for trimesh internals
+rtree            # Spatial indexing for ray casting (wall thickness checks)
 cadquery          # Parametric CAD (STEP generation) — Python 3.13 required
 flask            # Web app
 ```

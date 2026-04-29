@@ -82,23 +82,36 @@ End-to-end flow from character idea to printable shell parts.
 **Goal:** Turn the 2D concept into a watertight 3D mesh.
 
 ### Process
-1. Send reference views + text description to 3D generation API (Meshy, or similar)
-2. Receive raw 3D mesh (OBJ/GLB/STL)
-3. **Auto-processing:**
-   - Scale to match skeleton height (150mm total)
+1. **Enforce T-pose:** All generation prompts include T-pose instructions ("arms straight out to sides, legs shoulder-width apart, facing forward"). This is mandatory for clean zone dissection.
+2. Send reference views + text description to 3D generation API (Tripo3D primary, Meshy fallback)
+3. Receive raw 3D mesh (GLB/OBJ/STL)
+4. **Auto-processing:**
+   - Scale to match skeleton height (200mm total)
    - Center on origin
    - Orient: +Z up, +Y forward, character facing -Y
    - Repair mesh: close holes, remove degenerate faces, ensure manifold
+   - Validate T-pose: check arm zones are ≥15mm wide at cut planes
    - Remesh to uniform triangle size if needed
 
+### T-Pose Enforcement
+
+All character models must be in **T-pose** for the pipeline to produce clean cuts:
+
+| Input Method | T-Pose Enforcement |
+|---|---|
+| Text-to-3D | System pre-prompt: "standing in T-pose, arms straight out to sides, legs apart" |
+| Image-to-3D | If source image isn't T-pose, regenerate reference views in T-pose first |
+| Uploaded STL | Detect arm angle; if not T-pose, flag and offer to regenerate |
+
 ### Output
-- Watertight 3D mesh, correctly scaled and oriented
+- Watertight 3D mesh in T-pose, correctly scaled and oriented
 - Ready for dissection
 
 ### Failure Cases
 | Issue | Resolution |
 |---|---|
 | Mesh not watertight | Auto-repair (trimesh.repair) |
+| Mesh not in T-pose | Regenerate with T-pose pre-prompt |
 | Mesh too thin in places | Flag to customer in dissection step |
 | Mesh has internal geometry | Remove internal faces |
 | Proportions don't match skeleton | Scale X/Y/Z independently to fit |
@@ -119,10 +132,10 @@ Software analyzes the mesh and proposes initial cut positions using defaults fro
 
 ```python
 cuts = {
-    "head_torso": {"type": "horizontal", "z": 62, "range": (55, 70)},
-    "torso_base": {"type": "horizontal", "z": 5, "range": (0, 15)},
-    "left_arm":   {"type": "vertical",   "x": -22, "range": (-28, -18)},
-    "right_arm":  {"type": "vertical",   "x": 22, "range": (18, 28)},
+    "head_torso": {"type": "horizontal", "z": 115, "range": (105, 130)},
+    "torso_base": {"type": "horizontal", "z": 10, "range": (0, 20)},
+    "left_arm":   {"type": "vertical",   "x": -28, "range": (-35, -24)},
+    "right_arm":  {"type": "vertical",   "x": 28, "range": (24, 35)},
 }
 ```
 
@@ -147,7 +160,7 @@ For each cut, the UI shows:
 3. Right arm (vertical)
 4. Torso / Base (horizontal)
 
-After all 4 cuts: customer sees the **exploded view** — all 5 pieces separated, colored by zone. Confirm to proceed.
+After all 4 cuts: customer sees the **exploded view** — all 6 pieces separated, colored by zone (torso = front + back clamshell). Confirm to proceed.
 
 #### 5c. Validation
 
@@ -169,17 +182,22 @@ After all cuts are confirmed, validate:
 
 ### Process per Zone
 
-#### 6a. Hollow the shell
+#### 6a. Hollow the shell (Skeleton Subtraction Method)
 
-1. **Offset inward** by wall thickness (2.0mm default) to create inner surface
-2. **Boolean subtract** inner volume from outer → hollow shell
-3. **Open the attachment face** — the side that faces the skeleton gets removed so the shell can slide on:
-   - Head: open at bottom (neck opening)
-   - Torso: open at top and bottom, arm cutouts on sides
-   - Arms: open on the inboard face (shoulder side)
-   - Base: open at top
+1. **Build clearance volume** for this zone — the skeleton geometry (servos, brackets, column) expanded by 1.5mm clearance per side, plus joint rotation sweep volumes
+2. **Apply draft taper** along the removal direction (1.5-2° angle so shell slides on/off easily)
+3. **Boolean subtract** clearance volume from the solid zone piece → shell with exact skeleton-shaped cavity
+4. **Torso special case:** Split into front/back clamshell halves along the XZ plane (Y=0), since the torso can't slide over shoulder brackets as one piece
+5. **Validate wall thickness** — scan for any region thinner than 2mm after subtraction. Flag thin spots to customer or auto-thicken.
 
-4. **Validate wall thickness** — scan for any region thinner than 2mm after hollowing. Flag or auto-thicken.
+**Shell removal directions:**
+
+| Zone | Removal | Draft Angle | Notes |
+|---|---|---|---|
+| Head | Lifts up (+Z) | 2° | Neck opening must clear magnet ring |
+| Torso | Clamshell front/back | 1° | Each half pulls away along ±Y |
+| Arms | Slide outward (±X) | 2° | Inboard face is open |
+| Base | Lifts off (-Z) | 1.5° | Top face is open |
 
 #### 6b. Select magnet positions
 
@@ -230,11 +248,12 @@ Check each joint's range of motion. If the shell would collide with an adjacent 
 
 2. **Generate supports** (or mark support-free orientation)
 
-3. **Export STL** per zone:
+3. **Export STL** per zone (6 files — torso is 2 pieces):
    ```
    character_shells/
    ├── head_shell.stl
-   ├── torso_shell.stl
+   ├── torso_front_shell.stl
+   ├── torso_back_shell.stl
    ├── left_arm_shell.stl
    ├── right_arm_shell.stl
    └── base_shell.stl
