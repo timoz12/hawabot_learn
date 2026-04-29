@@ -111,6 +111,96 @@ def _slice_mesh(
     return _manifold_to_trimesh(result)
 
 
+MIN_ARM_ZONE_WIDTH = 15.0  # mm — minimum X-width for arm zones
+
+
+def validate_tpose(
+    mesh: trimesh.Trimesh,
+    cut_planes: list[CutPlane],
+) -> tuple[bool, list[str]]:
+    """Check if a character mesh appears to be in T-pose.
+
+    Validates by measuring the mesh width at the shoulder cut height.
+    In T-pose, the mesh should extend significantly beyond the arm cut planes.
+
+    Returns:
+        (is_tpose, warnings) — is_tpose is False if arms appear to be
+        against the body.
+    """
+    warnings = []
+
+    head_z = next((c.position for c in cut_planes if c.name == "head_torso"), 115)
+    base_z = next((c.position for c in cut_planes if c.name == "torso_base"), 10)
+    left_x = next((c.position for c in cut_planes if c.name == "left_arm"), -28)
+    right_x = next((c.position for c in cut_planes if c.name == "right_arm"), 28)
+
+    # Measure mesh width at shoulder height (midpoint of torso zone)
+    shoulder_z = (head_z + base_z) / 2
+    bounds = mesh.bounds
+
+    # Slice a thin band at shoulder height and measure its X extent
+    try:
+        band_top = _slice_mesh(mesh, "Z", shoulder_z - 5, "above")
+        band = _slice_mesh(band_top, "Z", shoulder_z + 5, "below")
+
+        if band is not None and len(band.vertices) > 0:
+            band_bounds = band.bounds
+            mesh_width_at_shoulders = band_bounds[1][0] - band_bounds[0][0]
+
+            # Check if mesh extends beyond arm cut planes
+            left_extent = band_bounds[0][0]   # Most negative X
+            right_extent = band_bounds[1][0]   # Most positive X
+
+            left_arm_width = abs(left_extent - left_x)
+            right_arm_width = abs(right_extent - right_x)
+
+            if left_arm_width < MIN_ARM_ZONE_WIDTH:
+                warnings.append(
+                    f"Left arm zone is only {left_arm_width:.1f}mm wide "
+                    f"(need ≥{MIN_ARM_ZONE_WIDTH}mm). Character may not be "
+                    f"in T-pose — arms should be straight out to the sides."
+                )
+
+            if right_arm_width < MIN_ARM_ZONE_WIDTH:
+                warnings.append(
+                    f"Right arm zone is only {right_arm_width:.1f}mm wide "
+                    f"(need ≥{MIN_ARM_ZONE_WIDTH}mm). Character may not be "
+                    f"in T-pose — arms should be straight out to the sides."
+                )
+
+            # Overall width check: T-pose character should be wider than tall
+            # (or at least close). If height >> width, arms are probably down.
+            mesh_height = bounds[1][2] - bounds[0][2]
+            width_to_height = mesh_width_at_shoulders / mesh_height
+
+            if width_to_height < 0.5:
+                warnings.append(
+                    f"Character is much taller ({mesh_height:.0f}mm) than wide "
+                    f"({mesh_width_at_shoulders:.0f}mm) at shoulder height. "
+                    f"This suggests the arms are NOT in T-pose. "
+                    f"Consider regenerating with arms out."
+                )
+
+            is_tpose = len(warnings) == 0
+            return is_tpose, warnings
+
+    except Exception:
+        pass
+
+    # Fallback: use overall mesh bounds
+    total_width = bounds[1][0] - bounds[0][0]
+    total_height = bounds[1][2] - bounds[0][2]
+
+    if total_width < total_height * 0.6:
+        warnings.append(
+            f"Mesh width ({total_width:.0f}mm) is much less than height "
+            f"({total_height:.0f}mm). Character is likely NOT in T-pose."
+        )
+        return False, warnings
+
+    return True, warnings
+
+
 def validate_cut_planes(
     cut_planes: list[CutPlane],
 ) -> list[str]:
@@ -159,6 +249,15 @@ def dissect_character(
         cut_planes = list(DEFAULT_CUT_PLANES)
 
     warnings = validate_cut_planes(cut_planes)
+
+    # T-pose validation
+    is_tpose, tpose_warnings = validate_tpose(mesh, cut_planes)
+    warnings.extend(tpose_warnings)
+    if not is_tpose:
+        warnings.append(
+            "⚠ CHARACTER IS NOT IN T-POSE — arm zones will be too small. "
+            "Regenerate the model with arms straight out to the sides."
+        )
 
     # Extract cut positions
     head_z = next(c.position for c in cut_planes if c.name == "head_torso")

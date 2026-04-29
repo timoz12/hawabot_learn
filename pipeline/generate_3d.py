@@ -47,6 +47,36 @@ MESHY_API_KEY = os.environ.get("MESHY_API_KEY", "")
 DEFAULT_PROVIDER = os.environ.get("HAWABOT_3D_PROVIDER", "tripo")
 
 
+# ── T-Pose Enforcement ────────────────────────────────────────────────────
+
+# This suffix is appended to ALL generation prompts to ensure the output
+# model has arms spread out and legs apart for clean zone dissection.
+TPOSE_PROMPT_SUFFIX = (
+    ". The character must be standing in a T-pose: arms held straight out "
+    "to the sides at shoulder height, palms facing down, legs shoulder-width "
+    "apart, feet flat on the ground, facing directly forward. "
+    "Full body visible, no accessories blocking the arms or legs."
+)
+
+# For image-to-3D, this is used as the text guidance alongside the image
+# to steer the model toward T-pose output.
+TPOSE_IMAGE_GUIDANCE = (
+    "Generate this character in a T-pose with arms straight out to the sides "
+    "at shoulder height, legs shoulder-width apart, standing upright facing "
+    "forward. Full body, centered."
+)
+
+
+def _enforce_tpose_prompt(prompt: str) -> str:
+    """Append T-pose instructions to a generation prompt.
+
+    Avoids double-appending if the prompt already mentions T-pose.
+    """
+    if "t-pose" in prompt.lower() or "t pose" in prompt.lower():
+        return prompt
+    return prompt.rstrip(". ") + TPOSE_PROMPT_SUFFIX
+
+
 @dataclass
 class GenerationResult:
     """Result of a 3D model generation."""
@@ -163,7 +193,7 @@ def _tripo_from_image(image_path: str, output_dir: str) -> GenerationResult:
     )
     image_token = upload_resp.get("data", {}).get("image_token", "")
 
-    # Step 2: Create generation task
+    # Step 2: Create generation task with T-pose guidance
     task_resp = _api_request(
         f"{TRIPO_API_BASE}/task",
         method="POST",
@@ -171,6 +201,7 @@ def _tripo_from_image(image_path: str, output_dir: str) -> GenerationResult:
         data={
             "type": "image_to_model",
             "file": {"type": "image", "file_token": image_token},
+            "prompt": TPOSE_IMAGE_GUIDANCE,
             "model_version": "v2.5-20250123",
         },
     )
@@ -212,6 +243,9 @@ def _tripo_from_text(prompt: str, output_dir: str) -> GenerationResult:
     """Generate 3D model from text using Tripo3D API."""
     start = time.time()
     headers = _tripo_headers()
+
+    # Enforce T-pose in prompt
+    prompt = _enforce_tpose_prompt(prompt)
 
     # Create text-to-model task
     task_resp = _api_request(
@@ -281,13 +315,14 @@ def _meshy_from_image(image_path: str, output_dir: str) -> GenerationResult:
 
     data_uri = f"data:{content_type};base64,{image_b64}"
 
-    # Create image-to-3D task
+    # Create image-to-3D task with T-pose guidance
     task_resp = _api_request(
         f"{MESHY_API_BASE}/image-to-3d",
         method="POST",
         headers=headers,
         data={
             "image_url": data_uri,
+            "prompt": TPOSE_IMAGE_GUIDANCE,
             "enable_pbr": True,
             "should_remesh": True,
             "topology": "quad",
@@ -329,6 +364,9 @@ def _meshy_from_text(prompt: str, output_dir: str) -> GenerationResult:
     """Generate 3D model from text using Meshy API."""
     start = time.time()
     headers = _meshy_headers()
+
+    # Enforce T-pose in prompt
+    prompt = _enforce_tpose_prompt(prompt)
 
     # Create text-to-3D task
     task_resp = _api_request(
