@@ -165,7 +165,18 @@ The AI tutor is **NOT** a separate subscription. It's bundled into the kit and e
 | Explorer | 500 | $14.99 | $0.030 |
 | Builder | 2,000 | $39.99 | $0.020 |
 
-**Credit consumption:** Each AI tutor interaction (hint, explanation, code check) costs 1 credit. A typical lesson session uses ~10-15 credits. Heavy users (~daily) consume ~400 credits/month.
+**Credit consumption:**
+
+| Usage | Credits | Examples |
+|---|---|---|
+| Tutor interaction | 1 | Hint, explanation, code check |
+| Generate animation/skill | 5-10 | Custom dance routine, fighting move, greeting animation |
+| Character behavior/personality | 5 | AI-generated personality traits, voice lines |
+| Advanced movement pattern | 10 | Choreographed sequence, interactive routine |
+
+A typical lesson session uses ~10-15 credits. Generating a cool new skill for your character uses 5-10. Heavy users (~daily) consume ~400 credits/month.
+
+**Credits power the robot, not just the tutor.** Kids spend credits to make their character DO cool things — custom animations, fight moves, personality quirks — not just to get coding help.
 
 **Why this works:**
 - No subscription fatigue — parents hate recurring charges for kids' products
