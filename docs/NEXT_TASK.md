@@ -1,6 +1,6 @@
 # HawaBot — Next Tasks
 
-**Last updated:** 2026-04-29 (evening)
+**Last updated:** 2026-04-29 (late evening)
 
 ---
 
@@ -12,7 +12,10 @@
 | Skeleton subtraction hollowing | **Done** | Replaces vertex-offset; all shells watertight |
 | Torso clamshell split | **Done** | Front/back halves for removal |
 | 3D gen API wrapper (Tripo3D + Meshy) | **Done** | `pipeline/generate_3d.py` |
-| Pricing & business logic | **Done** | `docs/PRICING.md` — bundled model, no subscription |
+| T-pose prompt enforcement | **Done** | Auto-appended to all text + image generation calls |
+| T-pose validation | **Done** | `dissect.py → validate_tpose()` — arm width + ratio check |
+| T-pose two-pass fallback | **Done** | Image fails T-pose → retry as text-only with description |
+| Pricing & business logic | **Done** | `docs/PRICING.md` — bundled model, credits, no subscription |
 | E2E pipeline test (Naruto mesh) | **Done** | 6 shells exported, all watertight |
 
 ---
@@ -45,17 +48,10 @@
 - [ ] Update `skeleton.py` clearance volumes to match final SolidWorks geometry
 - [ ] Tune magnet selection algorithm (currently too conservative on thin shells)
 - [ ] Add auto-thickening for thin wall regions (customer confirmation step)
-- [ ] Test with a proper **T-pose character mesh** (Naruto was hands-in-pockets)
-- [ ] Add T-pose enforcement to `generate_3d.py` via prompt injection
-- [ ] Add T-pose detection to `dissect.py` (validate arm zones > 15mm width)
-
-### 3. T-Pose Enforcement in 3D Generation
-**Effort:** ~half day
-
-- [ ] Add T-pose pre-prompt to `generate_3d.py` for text-to-3D calls
-- [ ] For image-to-3D: detect if source is T-pose, regenerate reference views if not
-- [ ] Add arm-spread validation in `dissect.py` (sanity check before cutting)
-- [ ] Document T-pose requirement in `SHELL_PIPELINE_SPEC.md`
+- [ ] Test with a proper **T-pose character mesh** (generate one via Tripo3D API)
+- [x] ~~Add T-pose enforcement to `generate_3d.py`~~ — Done (two-pass strategy)
+- [x] ~~Add T-pose detection to `dissect.py`~~ — Done (validate_tpose)
+- [ ] Add vision model call to `_describe_image_for_text_fallback()` (currently uses filename)
 
 ### 4. Web App — 3D Preview Viewer
 **Effort:** ~2 days
@@ -157,3 +153,4 @@
 | 2026-04-29 | Bundled pricing, no separate AI subscription | Kit = 6mo tutor; characters extend +6mo; credits for extras |
 | 2026-04-29 | Credits = Fortnite-style add-ons | Movement packs, voice types, animations — not just tutoring |
 | 2026-04-29 | Voice types gated to Core/Pro tier | Requires speaker hardware not in Spark |
+| 2026-04-29 | Two-pass T-pose strategy for image-to-3D | Image may overpower text guidance; fallback to text-only if T-pose fails |

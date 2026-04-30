@@ -100,12 +100,12 @@ All in `pipeline/`. Dependencies: `trimesh`, `manifold3d`, `numpy`.
 | Module | Purpose | Status |
 |---|---|---|
 | `skeleton.py` | Dimensions, magnet grid, cut planes, clearance volumes, removal specs | **Done** |
-| `dissect.py` | Slice character mesh into 5 body zones | **Done** |
+| `dissect.py` | Slice mesh into 5 zones + T-pose validation | **Done** |
 | `hollow.py` | Boolean-subtract skeleton clearance from zones + clamshell torso | **Done** |
 | `magnets.py` | Select optimal magnets + generate boss geometry | **Done** |
 | `validate.py` | Wall thickness, clearance, weight, watertight checks | **Done** |
 | `shell_pipeline.py` | Orchestrator — runs full pipeline end-to-end | **Done** |
-| `generate_3d.py` | Tripo3D + Meshy API wrapper (image/text → 3D mesh) | **Done** |
+| `generate_3d.py` | Tripo3D + Meshy API wrapper with T-pose enforcement + 2-pass fallback | **Done** |
 | `generate_skeleton_step.py` | CadQuery script to generate skeleton STEP/STL | **Done** |
 | `joint_cuts.py` | Joint clearance cuts (legacy, needs update) | Needs rework |
 
@@ -133,9 +133,21 @@ export STL             → 6 files (head, torso_front, torso_back, L arm, R arm,
 
 All character models must be in **T-pose** (arms straight out, legs apart) before entering the pipeline. Without this, arm zone cuts grab almost nothing.
 
-- **Text-to-3D:** System pre-prompt enforces T-pose
-- **Image-to-3D:** If source isn't T-pose, regenerate reference views in T-pose first
-- **Uploaded STL:** Detect arm angle, flag if not T-pose, offer to regenerate
+**Enforcement (implemented in `generate_3d.py`):**
+
+- **Text-to-3D:** T-pose suffix auto-appended to every prompt
+- **Image-to-3D — two-pass strategy:**
+  1. Pass 1: Image-to-3D with T-pose text guidance alongside image
+  2. `validate_tpose()` checks arm zone width (≥15mm) + width/height ratio (≥0.5)
+  3. If not T-pose → Pass 2: text-only fallback (drops image, uses character description + T-pose prompt)
+  4. Cost = 2× if fallback triggers (two API calls)
+- **Uploaded STL:** `validate_tpose()` runs during dissection, warns if not T-pose
+
+**Validation (`dissect.py → validate_tpose()`):**
+- Measures mesh width at shoulder height vs arm cut planes
+- Left/right arm zone must be ≥15mm wide
+- Width-to-height ratio at shoulders must be ≥0.5
+- Tested: correctly flags Naruto mesh (arms in pockets → 3.5mm arm zones, 0.28 ratio)
 
 ### Shell Removal Mechanics
 
@@ -190,7 +202,7 @@ robot.wave()
 | API | REST, independent billing | REST, Pro+ tier |
 | 3D print features | Pre-hollowed, multi-part assembly | Standard |
 
-**Strategy:** Start with Tripo3D API. Fall back to Meshy for models needing finer detail (faces, hands). Test both via fal.ai ($0.20-0.40/model) before committing to direct subscriptions.
+**Strategy:** Tripo3D primary, Meshy fallback. Both integrated in `generate_3d.py` with automatic failover. T-pose enforced on all calls. Two-pass fallback if image-to-3D doesn't produce T-pose (retry as text-only). Test via fal.ai ($0.20-0.40/model) before committing to direct subscriptions.
 
 ---
 
