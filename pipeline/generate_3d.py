@@ -412,49 +412,149 @@ def _meshy_from_text(prompt: str, output_dir: str) -> GenerationResult:
     )
 
 
+# ── T-Pose Validation ─────────────────────────────────────────────────────
+
+def _validate_tpose_on_mesh(mesh_path: str) -> tuple[bool, list[str]]:
+    """Load a generated mesh and check if it's in T-pose.
+
+    Returns (is_tpose, warnings).
+    """
+    import trimesh
+    from pipeline.dissect import validate_tpose
+    from pipeline.skeleton import DEFAULT_CUT_PLANES
+    from pipeline.shell_pipeline import load_and_prepare
+
+    try:
+        mesh = load_and_prepare(mesh_path)
+        return validate_tpose(mesh, DEFAULT_CUT_PLANES)
+    except Exception as e:
+        return False, [f"Could not validate T-pose: {e}"]
+
+
+def _describe_image_for_text_fallback(image_path: str) -> str:
+    """Generate a text description from an image for text-only fallback.
+
+    In production, this would use a vision model (Claude, GPT-4V) to
+    describe the character. For now, returns a generic prompt derived
+    from the filename.
+    """
+    name = Path(image_path).stem
+    # Clean up filename into a readable description
+    description = name.replace("-", " ").replace("_", " ").replace(".", " ")
+    description = " ".join(w.capitalize() for w in description.split())
+    return f"A detailed action figure character of {description}, full body"
+
+
 # ── Public API ────────────────────────────────────────────────────────────
 
 def generate_from_image(
     image_path: str,
     output_dir: str = "pipeline/output",
     provider: str | None = None,
+    character_description: str | None = None,
 ) -> GenerationResult:
-    """Generate a 3D model from an image.
+    """Generate a 3D model from an image, with T-pose validation + fallback.
+
+    Strategy:
+    1. Try image-to-3D with T-pose text guidance
+    2. Validate the result is actually in T-pose
+    3. If not T-pose → retry as text-only using character description
+       (ignores image geometry, uses it only for style reference)
 
     Args:
         image_path: Path to input image (JPG, PNG).
         output_dir: Directory for output mesh file.
         provider: "tripo" or "meshy". Defaults to HAWABOT_3D_PROVIDER env var.
+        character_description: Text description of the character. Used for
+            text-only fallback if image-to-3D doesn't produce T-pose.
+            If None, a description is derived from the filename.
 
     Returns:
         GenerationResult with path to downloaded mesh.
     """
     provider = provider or DEFAULT_PROVIDER
 
+    # ── Pass 1: Image-to-3D with T-pose guidance ──────────────────────
+    print(f"Pass 1: Image-to-3D with T-pose guidance ({provider})...")
     try:
         if provider == "tripo":
-            return _tripo_from_image(image_path, output_dir)
+            result = _tripo_from_image(image_path, output_dir)
         elif provider == "meshy":
-            return _meshy_from_image(image_path, output_dir)
+            result = _meshy_from_image(image_path, output_dir)
         else:
             raise ValueError(f"Unknown provider: {provider}")
     except Exception as e:
-        # Try fallback provider
+        # Try fallback provider for image pass
         fallback = "meshy" if provider == "tripo" else "tripo"
         try:
-            print(f"Primary provider ({provider}) failed: {e}")
-            print(f"Trying fallback ({fallback})...")
+            print(f"  {provider} failed: {e}. Trying {fallback}...")
             if fallback == "tripo":
-                return _tripo_from_image(image_path, output_dir)
+                result = _tripo_from_image(image_path, output_dir)
             else:
-                return _meshy_from_image(image_path, output_dir)
+                result = _meshy_from_image(image_path, output_dir)
         except Exception as e2:
-            return GenerationResult(
+            result = GenerationResult(
                 success=False, mesh_path=None, provider=provider,
                 task_id=None, duration_seconds=0,
                 cost_estimate="N/A",
-                error=f"Both providers failed. Primary: {e}. Fallback: {e2}",
+                error=f"Image-to-3D failed on both providers: {e}, {e2}",
             )
+
+    if not result.success or not result.mesh_path:
+        return result
+
+    # ── T-Pose Validation ─────────────────────────────────────────────
+    print("  Validating T-pose...")
+    is_tpose, tpose_warnings = _validate_tpose_on_mesh(result.mesh_path)
+
+    if is_tpose:
+        print("  ✓ T-pose confirmed.")
+        return result
+
+    print(f"  ✗ Not in T-pose: {'; '.join(tpose_warnings)}")
+
+    # ── Pass 2: Text-only fallback ────────────────────────────────────
+    # The image overpowered the T-pose guidance, so we fall back to
+    # text-only generation where we have full control over the pose.
+    if character_description is None:
+        character_description = _describe_image_for_text_fallback(image_path)
+
+    print(f"Pass 2: Text-only fallback with T-pose prompt...")
+    print(f"  Description: \"{character_description}\"")
+
+    text_result = generate_from_text(
+        prompt=character_description,
+        output_dir=output_dir,
+        provider=provider,
+    )
+
+    if not text_result.success:
+        # Text fallback also failed — return the original image result
+        # with T-pose warnings attached
+        print("  ✗ Text fallback also failed. Using image result with warnings.")
+        result.error = (
+            f"T-pose validation failed ({'; '.join(tpose_warnings)}). "
+            f"Text fallback failed: {text_result.error}"
+        )
+        return result
+
+    # Validate the text result too
+    is_tpose_2, warnings_2 = _validate_tpose_on_mesh(text_result.mesh_path)
+    if is_tpose_2:
+        print("  ✓ T-pose confirmed on text fallback.")
+    else:
+        print(f"  ⚠ Text fallback also not in T-pose: {'; '.join(warnings_2)}")
+        text_result.error = (
+            f"Warning: T-pose not confirmed even after text fallback. "
+            f"{'; '.join(warnings_2)}"
+        )
+
+    # Accumulate cost from both passes
+    total_duration = result.duration_seconds + text_result.duration_seconds
+    text_result.duration_seconds = total_duration
+    text_result.cost_estimate = f"~2× ({result.cost_estimate} + {text_result.cost_estimate})"
+
+    return text_result
 
 
 def generate_from_text(
@@ -463,6 +563,8 @@ def generate_from_text(
     provider: str | None = None,
 ) -> GenerationResult:
     """Generate a 3D model from a text description.
+
+    T-pose is enforced automatically via prompt injection.
 
     Args:
         prompt: Text description of the character.
