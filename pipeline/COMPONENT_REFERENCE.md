@@ -124,7 +124,8 @@ LEGS (Pro only):
 | **Pocket size (with clearance)** | **21.0 × 35.0 × 27.0 mm** (0.5mm/side) |
 | **Horn clearance above body** | **⌀30 mm × 8 mm** |
 
-**CAD file:** Search [ROBOTIS Download Center](https://www.robotis.com/service/download.php) → XL330 → 3D files. Also try [GrabCAD "XL330"](https://grabcad.com/library?query=xl330).
+**CAD file:** [GrabCAD — XL330-288-T](https://grabcad.com/library/xl330-288-t-1) (STEP, free account)
+**Datasheet:** [ROBOTIS e-Manual](https://emanual.robotis.com/docs/en/dxl/x/xl330-m288/)
 
 **Clearances:**
 - 0.5 mm per side (tighter tolerance than hobby servos — precision housing)
@@ -142,26 +143,29 @@ LEGS (Pro only):
 
 | Spec | Value |
 |---|---|
-| Body L × W × H | 40.0 × 20.0 × 40.5 mm |
-| Weight | 60 g |
-| Stall torque (7.4V) | 30 kg·cm |
-| Voltage range | 6.0–7.4 V |
-| Protocol | Half-duplex TTL serial (same as Dynamixel concept) |
-| Connector | 4-pin JST (daisy-chain) |
-| Resolution | 4096 steps/rev |
-| Mounting | 4× M3 holes, various patterns on multiple faces |
-| **Pocket size** | **41.0 × 21.0 × 41.5 mm** |
+| Body L × W × H | 45.2 × 24.7 × 35.0 mm |
+| Weight | 55 g |
+| Stall torque (7.4V) | 19.5 kg·cm |
+| Stall torque (12V) | 30 kg·cm |
+| Voltage range | 6.0–14.0 V |
+| Protocol | Half-duplex TTL serial (Feetech SCS/STS protocol), 38.4k–1Mbps |
+| Connector | 5264-3P, 3-pin (GND/VCC/Signal), daisy-chain |
+| Resolution | 4096 steps/rev (12-bit magnetic encoder) |
+| Horn | 25T spline, OD 5.9mm |
+| Mounting | 4× M3 holes on multiple faces |
+| **Pocket size** | **47 × 26 × 37 mm** (0.5mm/side + tolerance) |
 
 **Tradeoffs vs XL330:**
 - ✓ Much cheaper ($8-12 vs $24)
-- ✓ Much higher torque (30 vs 5.3 kg·cm)
-- ✗ Much larger (40×20×40 vs 20×34×26)
-- ✗ Much heavier (60g vs 18g)
-- ✗ Needs higher voltage (6-7.4V vs 5V — separate power rail)
+- ✓ Much higher torque (19.5 vs 5.3 kg·cm at operating voltage)
+- ✗ Much larger (45×25×35 vs 20×34×26)
+- ✗ Much heavier (55g vs 18g)
+- ✗ Needs separate higher voltage (7.4V+ vs 5V — can't share USB power)
 
 **Recommendation:** Start with XL330 for the 250mm skeleton. STS3215 is better suited for a larger Pro skeleton (300mm+). At 250mm the STS3215 would dominate the leg cavity.
 
-**CAD file:** [GrabCAD "STS3215"](https://grabcad.com/library?query=sts3215) or [Feetech website](https://www.feetechrc.com)
+**CAD file:** [GrabCAD — FEETECH_STS3215](https://grabcad.com/library/feetech_sts3215-1) (STEP, free account)
+**Datasheet:** [Feetech official PDF](https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf)
 
 ---
 
@@ -445,7 +449,8 @@ LEGS (Pro only):
 | Pi Pico W | [Official STEP](https://datasheets.raspberrypi.com/picow/PicoW-step.zip) | You have this ✓ |
 | Pi Zero 2W | [GrabCAD](https://grabcad.com/library/raspberry-pi-zero-2-w-1) | Download needed |
 | Pi 5 (4GB) | [Official STEP](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-step.zip) | Download needed |
-| XL330-M288-T | [ROBOTIS Download Center](https://www.robotis.com/service/download.php) or [GrabCAD "XL330"](https://grabcad.com/library?query=xl330) | Download needed |
+| XL330-M288-T | [GrabCAD — XL330-288-T](https://grabcad.com/library/xl330-288-t-1) | Download needed |
+| STS3215 (reference) | [GrabCAD — FEETECH_STS3215](https://grabcad.com/library/feetech_sts3215-1) | Optional — for size comparison |
 | PCA9685 | [GrabCAD](https://grabcad.com/library/pca9685-pwm-servo-driver-for-arduino-1) | Download needed |
 | MPU6050 GY-521 | [GrabCAD](https://grabcad.com/library/gy-521-mpu6050-accelerometer-and-gyroscope-module-1) | Download needed |
 | MAX98357A | Model as 19.4 × 17.8 × 3mm block | Simple geometry |
