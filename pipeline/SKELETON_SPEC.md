@@ -1,4 +1,16 @@
-# HawaBot Spark Skeleton — Mechanical Frame Specification
+# HawaBot Skeleton — Mechanical Frame Specification
+
+> **NOTE:** This spec is partially stale. The canonical skeleton specification is now maintained in:
+> `pipeline/skeleton_exports/solidworks_package/PARAMETRIC_PIPELINE_PLAN.md`
+>
+> Key changes since this doc was written:
+> - Height: 250mm (was 200mm), 325mm foot-to-head with legs
+> - DOF: 19 (was 5) — v17 macro with Poppy-informed proportions
+> - Servos: SG90 + MG90S + XL330 (was SG90 + MG90S only)
+> - Shoulder roll added, waist roll removed
+> - MCU: ESP32-S3 (was Pi Pico W)
+>
+> Refer to PARAMETRIC_PIPELINE_PLAN.md for current joint positions, mate table, and axis architecture.
 
 The skeleton is a **standalone mechanical frame** — a functional robot that moves on its own. Custom character shells snap on via magnets. This spec defines the frame only. See `INTERFACE_SPEC.md` for how shells attach and `SHELL_PIPELINE_SPEC.md` for the customer workflow.
 
@@ -8,15 +20,15 @@ The skeleton is a **standalone mechanical frame** — a functional robot that mo
 
 1. **The skeleton is a complete robot.** Power it up, it moves. No shell required.
 2. **One skeleton, infinite characters.** Shells are swappable — same frame, different look.
-3. **Fixed size, humanoid proportions.** Optimized for action-figure scale (~150mm). Future variants (stumpy/creature) are separate skeleton designs.
+3. **Fixed size, humanoid proportions.** 250mm scale, Poppy Humanoid-informed proportions. Future Pro variant is 400-500mm.
 4. **Magnets everywhere, use what you need.** The frame has more magnet seats than any single shell requires. Software picks the best subset per character.
 
 ---
 
-## Fixed Dimensions — Spark Skeleton v1
+## Fixed Dimensions — Spark/Core Skeleton (v17)
 
-**Target height:** 200mm (base bottom to top of head servo stack)
-**Proportion:** Humanoid action figure (head ~1/4 height, shoulders at ~2/3 height)
+**Target height:** 250mm (base to head top ~210mm above origin, foot bottom at -115mm)
+**Proportion:** Poppy Humanoid-inspired (leg ratio 35%, arm ratio 33%)
 
 ### Coordinate System
 

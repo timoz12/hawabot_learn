@@ -1,22 +1,26 @@
 # HawaBot — Pricing & Business Logic
 
-**Last updated:** 2026-04-29
+**Last updated:** 2026-05-03
 
 ---
 
-## 1. Bill of Materials — Spark Skeleton Kit
+## 1. Bill of Materials — Spark Kit (7 DOF, 250mm)
 
 ### Electronics & Servos
 
 | Component | Qty | Unit Cost (bulk 50+) | Subtotal |
 |---|---|---|---|
-| Raspberry Pi Pico W | 1 | $4.50 | $4.50 |
-| SG90 Micro Servo | 3 | $1.00 | $3.00 |
-| MG90S Metal Gear Servo | 2 | $2.00 | $4.00 |
-| 6×3mm Neodymium Magnets (N52) | 40 | $0.10 | $4.00 |
-| M2×5mm Self-Tapping Screws | 20 | $0.02 | $0.40 |
-| Servo wire harness / connectors | 1 | $0.50 | $0.50 |
-| **Electronics subtotal** | | | **$16.40** |
+| ESP32-S3 custom PCB (assembled) | 1 | $10.00 | $10.00 |
+| SG90 Micro Servo | 5 | $1.50 | $7.50 |
+| MG90S Metal Gear Servo | 2 | $2.50 | $5.00 |
+| Speaker (28mm) + MAX98357A (on PCB) | 1 | $2.00 | $2.00 |
+| 6×3mm Neodymium Magnets (N52) | 20 | $0.10 | $2.00 |
+| M2×5mm Self-Tapping Screws | 10 | $0.02 | $0.20 |
+| Servo wire harness / JST connectors | 1 | $0.50 | $0.50 |
+| USB-C cable | 1 | $1.00 | $1.00 |
+| **Electronics subtotal** | | | **$28.20** |
+
+Note: PCA9685 PWM driver, MAX98357A amp, and power regulation are integrated on the custom PCB (~55×35mm, 2-layer). Same PCB for Spark and Pro (Pro populates additional mic, IMU, camera connector).
 
 ### 3D Printed Frame
 
@@ -25,14 +29,14 @@
 | Skeleton frame (PLA/PETG) | ~60g | $0.90 | ~3 hrs | $0.90 |
 | **Frame subtotal** | | | | **$0.90** |
 
-### Skeleton Kit Total
+### Spark Kit Total
 
 | | Self-printed | Outsourced print |
 |---|---|---|
-| Electronics + magnets | $16.40 | $16.40 |
+| Electronics + magnets | $28.20 | $28.20 |
 | Frame print | $0.90 (material only) | $5.00 (JLC3DP/PCBWay) |
-| Assembly labor | — | $3.00 (estimate) |
-| **BOM total** | **$17.30** | **$24.40** |
+| Assembly labor | — | $5.00 (estimate) |
+| **BOM total** | **$29.10** | **$38.20** |
 
 ---
 
@@ -43,8 +47,7 @@
 | Step | Provider | Cost |
 |---|---|---|
 | 2D preview views (4 views) | Image gen API | ~$0.05 |
-| 3D model generation | Tripo3D API | ~$0.20 |
-| Fallback / retry | Meshy API | ~$0.05 |
+| 3D model generation | Meshy API | ~$0.20-0.30 |
 | **Generation subtotal** | | **~$0.30** |
 
 ### Shell Printing (5 parts)
@@ -76,20 +79,38 @@
 
 ## 3. Full Cost Stack — Per Customer Order
 
-### Scenario A: Full Kit (New Customer)
+### Scenario A: Spark Kit (New Customer)
 
 Skeleton kit + first character shell set, shipped.
 
 | Line Item | Self-Print | Outsourced |
 |---|---|---|
-| Skeleton kit BOM | $17.30 | $24.40 |
+| Skeleton kit BOM | $29.10 | $38.20 |
 | Character generation (3D API) | $0.30 | $0.30 |
 | Shell printing (5 parts) | $2.25 | $12.50 |
 | Packaging | $1.00 | $1.00 |
 | Shipping | $5.00 | $5.00 |
-| **Total COGS** | **$25.85** | **$43.20** |
+| **Total COGS** | **$37.65** | **$57.00** |
 
-### Scenario B: Additional Character (Existing Customer)
+### Scenario B: Pro Upgrade (Existing Spark Customer)
+
+Full leg system + shoulder upgrades + sensors + battery, shipped.
+
+| Line Item | Cost |
+|---|---|
+| 4× SG90 servos (elbows + hands) | $8.00 |
+| 2× XL330 servos (shoulder upgrade) | $54.00 |
+| 8× XL330 servos (legs) | $216.00 |
+| FSRs (4×) | $8.00 |
+| Battery + TP4056 | $12.00 |
+| IMU + mic + camera | $8.00 |
+| Leg frame + feet (3D printed) | $10.00 |
+| Packaging + shipping | $10.00 |
+| **Total COGS** | **~$326.00** |
+
+Retail: **$399 upgrade** (from Spark to Pro).
+
+### Scenario C: Additional Character (Existing Customer)
 
 New shell set only, shipped.
 
@@ -106,84 +127,44 @@ New shell set only, shipped.
 
 ## 4. Pricing Strategy
 
-### Target Margins
+### Tier Pricing
 
-| Product | COGS | Sell Price | Margin | Margin % |
+| Tier | All-In Price | Upgrade Price | BOM Cost | Margin |
 |---|---|---|---|---|
-| **Spark Starter Kit** | ~$43 | $79-99 | $36-56 | 45-57% |
-| **Additional Character** | ~$20 | $29-39 | $9-19 | 31-49% |
-| **AI Tutor (monthly)** | ~$2* | $9.99/mo | ~$8 | 80% |
-| **AI Tutor (annual)** | ~$24* | $79.99/yr | ~$56 | 70% |
+| **Spark** (7 DOF, 250mm) | $199 | — | ~$57 (outsourced) | 71% |
+| **Pro** (19 DOF) | $599 all-in | $399 (from Spark) | ~$326 (upgrade COGS) | 18% upgrade / 36% all-in |
+| **Max** (future) | $999+ | TBD | TBD | TBD |
 
-*AI tutor COGS = Claude API usage per student (~$2/mo estimated at Haiku rates)
+Pro upgrades Spark with XL330 serial bus servos for legs and shoulders, full sensor suite (IMU, mic, camera), battery system, and walking capability. Max is a future tier with advanced compute and on-board AI.
 
-### Tier Packaging
+### Credits Model (Fortnite-Style Add-Ons)
 
-#### Spark Starter Kit — $79 (introductory) / $99 (regular)
+Credits buy robot capabilities — not just tutor access. Kids spend credits to make their character DO things.
 
-**Includes:**
-- Assembled skeleton (servos installed, magnets pressed, Pico wired)
-- 1 custom character shell set (customer designs at purchase)
-- Shell magnets (pre-installed)
-- USB-C cable
-- Quick start card with QR code
-- 1 month free AI tutor access
-
-**Does NOT include:**
-- Additional character shell sets ($29-39 each)
-- Ongoing AI tutor subscription ($9.99/mo)
-
-#### Character Shell Pack — $29 (simple) / $39 (complex)
-
-**Includes:**
-- 5 printed shell parts for one custom character
-- Shell magnets (pre-installed)
-- Snap-on — no tools needed
-
-**Simple vs Complex:**
-- Simple: characters with smooth/blocky shapes (chibi, Funko-style)
-- Complex: characters with fine details, thin features (spiky hair, weapons, capes)
-- Software auto-classifies based on mesh complexity
-
-#### AI Tutor — Bundled (No Separate Subscription)
-
-The AI tutor is **NOT** a separate subscription. It's bundled into the kit and extended through character purchases.
-
-**How it works:**
-
-| Action | AI Tutor Access |
-|---|---|
-| Buy Starter Kit | **6 months included** |
-| Buy new character shell | **+6 months extension** + character-specific lessons unlocked |
-| Run out of tutor access? | Buy a **credit pack** (no subscription needed) |
-
-**Credit Packs** (for AI tutor usage beyond included periods):
-
-| Pack | Credits | Price | Cost/Credit |
-|---|---|---|---|
-| Starter | 100 | $4.99 | $0.050 |
-| Explorer | 500 | $14.99 | $0.030 |
-| Builder | 2,000 | $39.99 | $0.020 |
-
-**Credit consumption:**
-
-| Usage | Credits | Examples |
+| Add-On Type | Price | Examples |
 |---|---|---|
-| Tutor interaction | 1 | Hint, explanation, code check |
-| Generate animation/skill | 5-10 | Custom dance routine, fighting move, greeting animation |
-| Character behavior/personality | 5 | AI-generated personality traits, voice lines |
-| Advanced movement pattern | 10 | Choreographed sequence, interactive routine |
+| Movement pack | $5-10 | Dance routine, martial arts moves, wave patterns |
+| Voice type | $5 | New TTS personality for speaker output |
+| Animation | $5-10 | Choreographed sequence, reaction animations |
+| New character shell | $15-25 | Different character appearance (printed + shipped) |
+| Shell STL download | $14.99 | Self-print option (~95% margin) |
 
-A typical lesson session uses ~10-15 credits. Generating a cool new skill for your character uses 5-10. Heavy users (~daily) consume ~400 credits/month.
+**Credits power the robot, not just the tutor.** This is the Fortnite model: the base game (robot) is the platform, credits buy emotes (movement packs, voice types, animations, personality).
 
-**Credits power the robot, not just the tutor.** Kids spend credits to make their character DO cool things — custom animations, fight moves, personality quirks — not just to get coding help.
+### Build-As-You-Go Subscription ($39/mo × 6)
 
-**Why this works:**
-- No subscription fatigue — parents hate recurring charges for kids' products
-- Character purchases are the natural recurring revenue (kids always want new characters)
-- Each character extends tutor access AND unlocks character-specific content (e.g., samurai → sword animation lessons, dragon → creature movement patterns)
-- Credit packs are a safety net, not the primary model — most families re-up through characters
-- Credits never expire
+Each month ships a portion of the Spark kit + curriculum:
+
+| Month | What Ships | What They Learn |
+|---|---|---|
+| 1 | ESP32-S3 PCB + base frame + waist servo | Electronics, first servo, serial bus |
+| 2 | Head pan + tilt servos + head frame | Sensor input, pan/tilt control |
+| 3 | R shoulder pitch + roll + arm frame | Kinematics, joint coordination |
+| 4 | L shoulder pitch + roll + arm frame | Symmetry, mirroring, calibration |
+| 5 | Shell kit (magnetic snap-on pieces) + speaker | Character design, personality, voice |
+| 6 | AI tutor unlock + credits + graduation | Full system integration, challenges |
+
+$39/mo × 6 = $234 total (slight premium over $199 one-time, justified by curriculum pacing).
 
 ---
 
@@ -193,49 +174,39 @@ A typical lesson session uses ~10-15 credits. Generating a cool new skill for yo
 
 | Metric | Value |
 |---|---|
-| Revenue per Starter Kit | $89 (avg) |
-| COGS per Starter Kit | $43 |
-| **Gross profit per kit** | **$46** |
-| Monthly kit revenue | $8,900 |
-| Monthly kit gross profit | $4,600 |
+| Revenue per Spark Kit | $199 |
+| COGS per Spark Kit | $57 |
+| **Gross profit per kit** | **$142** |
+| Monthly kit revenue | $19,900 |
+| Monthly kit gross profit | $14,200 |
 | | |
-| Additional characters/mo (0.5 per customer avg) | 50 |
-| Revenue per character (includes +6mo tutor) | $34 (avg) |
-| Monthly character revenue | $1,700 |
-| Monthly character gross profit | $700 |
+| Additional characters/mo (0.3 per customer avg) | 30 |
+| Revenue per character | $20 (avg, mix of printed + STL) |
+| Monthly character revenue | $600 |
 | | |
-| Credit pack purchases (20% of base buy packs) | 20 |
-| Avg pack size | $14.99 (Explorer) |
-| Monthly credit revenue | $300 |
-| Monthly credit gross profit | $240 (AI API cost ~$2/user/mo) |
+| Credit purchases (25% of customers) | 25 |
+| Avg credit purchase | $8 |
+| Monthly credit revenue | $200 |
 | | |
-| **Total monthly revenue** | **$10,900** |
-| **Total monthly gross profit** | **$5,540** |
-| **Blended gross margin** | **51%** |
+| **Total monthly revenue** | **$20,700** |
+| **Total monthly gross profit** | **$15,000+** |
+| **Blended gross margin** | **~72%** |
 
 ### At 1,000 units/month (growth, in-house printing)
 
 | Metric | Value |
 |---|---|
-| Revenue per Starter Kit | $89 |
-| COGS per Starter Kit (in-house) | $28 |
-| **Gross profit per kit** | **$61** |
-| Monthly kit revenue | $89,000 |
-| Monthly kit gross profit | $61,000 |
+| Revenue per Spark Kit | $199 |
+| COGS per Spark Kit (in-house) | $40 |
+| **Gross profit per Spark kit** | **$159** |
+| Monthly kit revenue (mix: 700 Spark, 200 Pro all-in, 100 Pro upgrade) | $259,300 |
+| Monthly kit gross profit | $195,000 |
 | | |
-| Additional characters (1 per customer) | 1,000 |
-| Revenue per character (includes +6mo tutor) | $34 (avg) |
-| Monthly character revenue | $34,000 |
-| Monthly character gross profit | $24,500 |
+| Credits + characters (recurring) | $25,000 |
 | | |
-| Credit pack purchases (30% of base) | 300 |
-| Avg pack | $14.99 |
-| Monthly credit revenue | $4,500 |
-| Monthly credit gross profit | $3,900 |
-| | |
-| **Total monthly revenue** | **$127,500** |
-| **Total monthly gross profit** | **$89,400** |
-| **Blended gross margin** | **70%** |
+| **Total monthly revenue** | **$284,300** |
+| **Total monthly gross profit** | **$220,000** |
+| **Blended gross margin** | **~77%** |
 
 ---
 
@@ -244,29 +215,29 @@ A typical lesson session uses ~10-15 credits. Generating a cool new skill for yo
 | Lever | Impact | When |
 |---|---|---|
 | In-house print farm (3-5 Bambu printers) | -$10/kit COGS | At ~200 units/mo |
-| Bulk component sourcing (AliExpress, direct) | -$3/kit on servos + magnets | At ~500 units/mo |
+| Bulk servo + PCB sourcing (Feetech direct, JLCPCB volume) | -$5/kit | At ~500 units/mo |
 | Volume 3D gen API pricing | -30% on generation costs | At ~1000 gen/mo |
 | Multi-color printing (Bambu AMS) | Charge premium for painted shells | Immediate upsell |
 | Customer self-print option | $0 print cost, charge for STL files only | From launch |
-
-### Customer Self-Print Option
-
-Offer shell STL files as a download ($14.99 per character) instead of printing + shipping. Margin is ~95% since COGS is just the $0.30 3D generation.
+| Upgrade to serial bus servos (SCS0009) for production | Eliminates PCA9685, simplifies wiring | After Feetech volume pricing confirmed |
 
 ---
 
 ## 7. Competitive Pricing Reference
 
-| Competitor | Product | Price |
-|---|---|---|
-| Sphero BOLT | Programmable robot ball | $149 |
-| LEGO Mindstorms | Robotics kit | $359 |
-| Botley 2.0 | Coding robot (younger kids) | $79 |
-| littleBits | Electronics kit | $99-199 |
-| Funko Pop | Collectible figure (non-robotic) | $12-15 |
-| Hot Toys | Premium action figure (non-robotic) | $250-400 |
+| Competitor | Product | Price | Humanoid? | DOF |
+|---|---|---|---|---|
+| Sphero BOLT+ | Programmable ball | $199 | No | 0 |
+| Wonder Workshop Dash | Wheeled robot | $159 | No | 0 |
+| Makeblock mBot Neo | Wheeled robot | $155 | No | 0 |
+| SunFounder PiDog | Quadruped (no Pi) | $180 | No | 12 |
+| UBTECH Alpha 1 Pro | Humanoid | $350 | Yes | 16 |
+| Robotis Mini | Humanoid | $539 | Yes | 16 |
+| Hiwonder TonyPi | Walking humanoid + Pi 5 | $570 | Yes | 18 |
+| **HawaBot Spark** | **Humanoid + AI tutor** | **$199** | **Yes** | **7** |
+| **HawaBot Pro** | **Humanoid + walking + full sensor suite** | **$599** | **Yes** | **19** |
 
-**HawaBot positioning:** Cheaper than LEGO Mindstorms / Sphero, but with custom character appeal. The character customization is the differentiator no competitor offers.
+**HawaBot Spark is the only humanoid robot under $350.** At $199, it sits in the Sphero BOLT+ price bracket but offers a physical humanoid body, character customization, and systems engineering curriculum that no competitor has. HawaBot Pro at $599 competes directly with Robotis Mini and Hiwonder TonyPi but includes AI tutoring, character customization, and a full walking platform.
 
 ---
 
@@ -274,39 +245,39 @@ Offer shell STL files as a download ($14.99 per character) instead of printing +
 
 ```
 ┌──────────────────────────────────────────┐
-│            STARTER KIT                   │  One-time purchase
-│  Skeleton + 1st character + 6mo tutor    │
-│  $79-99                                  │
+│            SPARK KIT                     │  One-time ($199) or subscription ($39/mo×6)
+│  Skeleton + 1st character + PCB + SDK    │
+│  + curriculum access + speaker           │
 └──────────────┬───────────────────────────┘
                │
                ▼
 ┌──────────────────────────────────────────┐
-│         CHARACTER PURCHASES              │  Recurring (organic demand)
-│  New shell set: $29-39 each              │
-│  +6 months AI tutor per purchase         │
-│  +Character-specific lesson content      │
-│  STL-only download: $14.99               │
+│         PRO UPGRADE                      │  $399 upgrade (or $599 all-in)
+│  +10 XL330 servos (shoulders + legs)     │
+│  +4 SG90 (elbows + hands)               │
+│  +IMU + mic + camera + FSRs             │
+│  +battery + leg frame + feet            │
+│  +advanced curriculum modules            │
 └──────────────┬───────────────────────────┘
                │
                ▼
 ┌──────────────────────────────────────────┐
-│         AI TUTOR CREDITS                 │  Top-up (no subscription)
-│  100 credits: $4.99                      │
-│  500 credits: $14.99                     │
-│  2,000 credits: $39.99                   │
-│  Credits never expire                    │
+│         CREDITS (Fortnite model)         │  Recurring (organic demand)
+│  Movement packs: $5-10                   │
+│  Voice types: $5                         │
+│  Animations: $5-10                       │
+│  Character shells: $15-25 (printed)      │
+│  Shell STL download: $14.99              │
 └──────────────┬───────────────────────────┘
                │
                ▼
 ┌──────────────────────────────────────────┐
-│         FUTURE EXPANSION                 │
+│         MAX (Future)                     │  $999+
+│  Advanced compute, on-board AI           │
 │  Character marketplace (% cut)           │
 │  Classroom licenses (bulk pricing)       │
-│  Core/Pro tier upgrades                  │
-│  Sensor add-on packs                     │
+│  Sensor/peripheral add-on packs          │
 └──────────────────────────────────────────┘
 ```
 
-**Key insight:** Characters ARE the subscription. Kids naturally want new characters
-every few months. Each purchase extends their tutor access and unlocks new content.
-No subscription fatigue, no cancellation anxiety — just "I want a new character."
+**Key insight:** Credits ARE the recurring revenue. Like Fortnite emotes for physical robots — kids naturally want new movement packs, voice types, and character shells. No subscription fatigue.

@@ -14,7 +14,7 @@ HawaBot is composed of five major subsystems that work together to deliver the f
                                                                       v
 +---------------------+       +---------------------+       +---------------------+
 |  AI TUTOR           |  <->  |  SDK                |  <->  |  HARDWARE           |
-|  (hawabot/tutor/)   |       |  (hawabot/)         |       |  Pi Pico W / Pi 5   |
+|  (hawabot/tutor/)   |       |  (hawabot/)         |       |  ESP32-S3 (WiFi→phone)|
 |  Claude Haiku+Sonnet|       |  Python package     |       |  Servos + Sensors   |
 +---------------------+       +---------------------+       +---------------------+
 ```
@@ -65,7 +65,7 @@ Flask App (web/app.py)
 3. Meshy returns 3D mesh (STL, ~500K faces)
 4. Shell pipeline processes mesh (see Section 2)
 5. Three.js viewer displays shell sections with exploded view
-6. Kid selects tier (Spark/Core/Pro) and plan (full/subscription)
+6. Kid selects tier (Spark/Pro) and plan (full/subscription)
 7. Order queued for fulfillment
 
 ### Production Architecture (Planned)
@@ -156,13 +156,15 @@ OUTPUT: section_head.stl, section_torso.stl, section_left_arm.stl, etc.
 
 The skeleton is defined parametrically in `pipeline/skeleton.py` based on the tier's servo dimensions and joint layout.
 
-**Spark Skeleton (5 DOF):**
+**Spark Skeleton (7 DOF):**
 ```
 Joint Layout:
   - Head Pan (yaw): SG90, +-90 deg
   - Head Tilt (pitch): SG90, +-45 deg
   - Left Shoulder (pitch): MG90S, +-90 deg
+  - Left Shoulder (roll): MG90S, +-45 deg
   - Right Shoulder (pitch): MG90S, +-90 deg
+  - Right Shoulder (roll): MG90S, +-45 deg
   - Waist (yaw): SG90, +-60 deg
 
 Physical Layout:
@@ -173,9 +175,7 @@ Physical Layout:
   [BASE] ---- waist servo
 ```
 
-**Core Skeleton (10 DOF):** Adds shoulder roll, elbow pitch, arm rotation per arm.
-
-**Pro Skeleton (21 DOF):** Adds 10-DOF leg assembly (hip pitch/roll/yaw, knee, ankle pitch/roll per leg) plus wrist.
+**Pro Skeleton (19 DOF):** Same 250mm frame as Spark, adds elbow pitch and hand pitch per arm plus 8 leg joints (hip yaw, hip pitch, knee pitch, ankle pitch × 2) for walking. Includes FSRs in feet, battery, mic, IMU, and camera.
 
 ---
 
@@ -188,7 +188,7 @@ hawabot/
   __init__.py          # Exports Robot
   robot.py             # Robot class — main entry point
   config/
-    tiers.py           # Tier definitions (Spark/Core/Pro), joint specs
+    tiers.py           # Tier definitions (Spark/Pro/Max), joint specs
   character/
     profile.py         # CharacterProfile (YAML-based)
     profiles/          # Default character YAML files
@@ -197,12 +197,13 @@ hawabot/
     head.py            # Head (pan, tilt, nod, shake)
     arm.py             # Arms (wave, reach, elbow bend)
     waist.py           # Waist (turn)
-    leg.py             # Legs (Pro only — walk, balance, kick)
+    leg.py             # Legs (Pro/Max only — walk, balance, kick)
   drivers/
     base.py            # BaseDriver ABC
     mock.py            # MockDriver for simulation
-    pico.py            # PicoDriver — serial to Pi Pico W (Spark)
-    pi5.py             # Pi5Driver — I2C/UART to smart servos (Core/Pro)
+    pico.py            # PicoDriver — serial to Pi Pico W (prototype/legacy)
+    pi5.py             # Pi5Driver — Max tier only (future, 400-500mm robot)
+    esp32.py           # ESP32Driver — WiFi to ESP32-S3 (Spark/Pro production)
   sensors/             # Ultrasonic, IMU, camera abstractions
   sim/
     engine.py          # SimulationEngine — tracks joint state
@@ -242,7 +243,7 @@ BaseDriver (ABC)
   |
   +-- PicoDriver       # Serial/USB to Pi Pico W (PWM servos)
   |
-  +-- Pi5Driver        # I2C/UART to smart servos (STS3215/Dynamixel)
+  +-- Pi5Driver        # I2C/UART to smart servos (Dynamixel) — Max tier
 ```
 
 All drivers implement the `BaseDriver` ABC (`hawabot/drivers/base.py`):
@@ -283,7 +284,7 @@ Loaded by `CharacterProfile.load()` using Pydantic for validation. Falls back to
 # Record
 recording = robot.teach(duration=5, sample_rate_hz=20)
 
-# On real hardware (Core/Pro): servos enter compliance mode,
+# On real hardware (Pro/Max): servos enter compliance mode,
 # kid physically moves the robot's arms/head,
 # positions are sampled at 20 Hz.
 
@@ -379,9 +380,9 @@ At 50 interactions/student/month: ~$0.15/student/month. Negligible relative to k
 missions/
   month_01/           # Joints, DOF, basic motion (Spark+)
   month_02/           # Sensing: ultrasonic, reactions (Spark+)
-  month_03/           # Feedback loops, IMU balance (Core+)
-  month_04/           # Computer vision, object tracking (Pro)
-  month_05/           # Robot brain: RL, LLM integration (Pro)
+  month_03/           # Feedback loops, IMU balance (Pro+)
+  month_04/           # Computer vision, object tracking (Pro+)
+  month_05/           # Robot brain: RL, LLM integration (Pro+)
 ```
 
 Each month contains 5 missions. Each mission includes:
@@ -420,17 +421,19 @@ Each tier defines:
 
 ### Communication Protocols
 
-| Tier | Compute | Protocol | Servos | Connection |
-|------|---------|----------|--------|------------|
-| Spark | Pi Pico W | USB Serial (115200 baud) | PWM (SG90/MG90S) | Direct GPIO (GP0-GP4) |
-| Core | Pi 5 | Local | UART/TTL bus (STS3215) | Feetech bus adapter |
-| Pro | Pi 5 | Local | UART/TTL bus (Dynamixel) | U2D2 adapter |
+| Tier | Compute | Protocol | Servos |
+|------|---------|----------|--------|
+| Spark | ESP32-S3 | WiFi | PWM via PCA9685 (SG90/MG90S) |
+| Pro | ESP32-S3 | WiFi | PWM (SG90) + Dynamixel bus (XL330) + FSRs |
+| Max (future) | Pi 5 / CM5 | Local + WiFi | Dynamixel bus, on-board AI |
 
 ### PicoDriver — Spark Tier Hardware (`hawabot/drivers/pico.py`)
 
+> **Note:** PicoDriver is the prototype/legacy driver for Pi Pico W. Production Spark and Pro use ESP32-S3 with WiFi. The ESP32Driver (not yet implemented) will use WiFi + REST/WebSocket API instead of USB serial. See `firmware/esp32_s3/` when available.
+
 The PicoDriver enables the Spark tier by communicating with a Raspberry Pi Pico W over USB serial. The Pico W runs MicroPython firmware that drives PWM signals to 5 hobby servos.
 
-**Architecture:**
+**Architecture (Legacy — Pi Pico W):**
 
 ```
 Host (laptop)                          Pi Pico W (MicroPython)
@@ -442,6 +445,22 @@ Host (laptop)                          Pi Pico W (MicroPython)
                                          ├─ GP3  → head_pan (SG90)
                                          ├─ GP4  → head_tilt (SG90)
                                          └─ GP26 → VSYS ADC (battery voltage, optional)
+```
+
+**Architecture (Production — ESP32-S3):**
+
+```
+Phone/Tablet (app)                     ESP32-S3 (on robot)
+  AI Tutor    ─── WiFi REST/WS ───►  Custom PCB (55×35mm)
+  Voice AI    ◄── sensor streams ──        │
+  Curriculum                               ├─ I2C → PCA9685 → 7-19 PWM servos
+                                           ├─ I2S → MAX98357A → speaker
+                                           ├─ I2S ← INMP441 ← mic (Pro)
+                                           ├─ I2C → MPU6050 IMU (Pro)
+                                           ├─ FSRs in feet (Pro)
+                                           ├─ Camera (Pro)
+                                           ├─ Battery (Pro)
+                                           └─ USB-C power
 ```
 
 **Serial Protocol (115200 baud, newline-terminated text):**
@@ -480,9 +499,10 @@ Hobby servos (SG90/MG90S) accept 500–2500 µs pulses at 50 Hz:
 ```
 sensors/
   ultrasonic.py    # HC-SR04 (Spark+): distance measurement
-  imu.py           # MPU6050 (Core+): orientation, acceleration
-  camera.py        # Pi Camera (Pro): image capture, video stream
-  microphone.py    # USB mic (Core+): audio capture for voice AI
+  imu.py           # MPU6050 (Pro+): orientation, acceleration
+  fsr.py           # FSRs in feet (Pro+): ground contact, balance feedback
+  camera.py        # Camera (Pro+): image capture, video stream
+  microphone.py    # Mic (Pro+): audio capture for voice AI
 ```
 
 ---
@@ -520,7 +540,7 @@ Student Python Script
     +-- Robot() instantiation
     |       +-- Load character profile (YAML)
     |       +-- Detect/select tier
-    |       +-- Initialize driver (Mock/Pico/Pi5)
+    |       +-- Initialize driver (Mock/Pico/ESP32/Pi5)
     |       +-- Build body parts (Head, Arms, Waist, Legs)
     |
     +-- robot.head.pan(45)
@@ -549,6 +569,7 @@ Student Python Script
 - Web: `python web/app.py` on localhost
 - Pipeline: CLI invocation
 - AI Tutor: requires `ANTHROPIC_API_KEY` env var
+- Robot firmware: MicroPython on Pi Pico W (legacy) or ESP-IDF on ESP32-S3 (production target)
 
 ### Production (Planned)
 
@@ -602,8 +623,9 @@ Student Python Script
 | Web Prototype | Flask, Three.js, Jinja2 | Built |
 | AI Tutor | Anthropic Claude API (Haiku + Sonnet) | Scaffolded |
 | Curriculum | YAML mission definitions + Python validation | Scaffolded |
-| PicoDriver (Spark) | pyserial, MicroPython PWM firmware | Built |
-| Pi5Driver (Core/Pro) | Pi 5 UART/TTL for smart servos | Scaffolded |
+| PicoDriver (legacy) | pyserial, MicroPython PWM firmware | Built (prototype only) |
+| ESP32Driver (Spark/Pro) | WiFi REST/WS to ESP32-S3 | Planned |
+| Pi5Driver (Max future) | Pi 5 UART/TTL for Dynamixel servos | Stub only |
 | Production Web | Next.js, React, Three.js Fiber | Planned |
 | Payment | Stripe | Planned |
 | Auth | Clerk or Auth0 | Planned |

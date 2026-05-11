@@ -1,8 +1,14 @@
-"""Hardware tier definitions for Spark, Core, and Pro.
+"""Hardware tier definitions for Spark, Pro, and Max.
 
-Spark = tabletop companion (upper body only, no legs)
-Core  = articulated companion with elbows + waist, smart servos with feedback
-Pro   = full bipedal humanoid with legs, advanced sensors
+Two tiers at launch, one future flagship:
+
+Spark = tabletop desk companion, ESP32-S3, upper body only (7 DOF, $199)
+Pro   = walking humanoid, ESP32-S3, full body with legs + FSRs (19 DOF, $599)
+Max   = future flagship, 400-500mm, on-board AI, autonomous ($999+)
+
+Spark and Pro share the same 250mm skeleton and ESP32-S3 custom PCB.
+Pro is an upgrade from Spark (add legs, arms, sensors, battery).
+Max is a separate, larger robot for enthusiasts who completed the curriculum.
 
 Friendly joint names map internally to Poppy convention:
   head_pan → head_z, head_tilt → head_y
@@ -17,15 +23,15 @@ from enum import Enum
 
 class TierName(str, Enum):
     SPARK = "spark"
-    CORE = "core"
     PRO = "pro"
+    MAX = "max"
     MOCK = "mock"
 
 
 class FormFactor(str, Enum):
     TABLETOP = "tabletop"
-    MOBILE = "mobile"
     BIPEDAL = "bipedal"
+    BIPEDAL_LARGE = "bipedal_large"
 
 
 @dataclass(frozen=True)
@@ -87,24 +93,6 @@ MG90S = ServoSpec(
     supports_compliance=False,
 )
 
-STS3215 = ServoSpec(
-    model="Feetech STS3215",
-    torque_kg_cm=15.0,
-    speed_deg_per_sec=250.0,
-    angle_range=(-150.0, 150.0),
-    has_feedback=True,
-    supports_compliance=True,
-)
-
-XL430 = ServoSpec(
-    model="Dynamixel XL430-W250",
-    torque_kg_cm=16.0,
-    speed_deg_per_sec=230.0,
-    angle_range=(-180.0, 180.0),
-    has_feedback=True,
-    supports_compliance=True,
-)
-
 XL330 = ServoSpec(
     model="Dynamixel XL330-M288",
     torque_kg_cm=6.5,
@@ -114,16 +102,27 @@ XL330 = ServoSpec(
     supports_compliance=True,
 )
 
+# XL430 — reserved for Max tier (future). Not used in Spark or Pro.
+XL430 = ServoSpec(
+    model="Dynamixel XL430-W250",
+    torque_kg_cm=16.0,
+    speed_deg_per_sec=230.0,
+    angle_range=(-180.0, 180.0),
+    has_feedback=True,
+    supports_compliance=True,
+)
+
+
 # ---------------------------------------------------------------------------
 # Joint definitions per tier
 # ---------------------------------------------------------------------------
 
 
 def _spark_joints() -> dict[str, JointSpec]:
-    """Spark: 5 DOF tabletop companion — head pan/tilt + 2×shoulder pitch + 1 waist.
+    """Spark: 7 DOF tabletop companion — head + shoulders + shoulder roll + waist.
 
     No legs. Desk-mounted upper body that can look around, wave, gesture,
-    and serve as an AI-powered office/study companion.
+    and serve as an AI-powered study companion. $199.
     """
     return {
         # Head
@@ -133,142 +132,107 @@ def _spark_joints() -> dict[str, JointSpec]:
         "head_tilt": JointSpec(
             servo=SG90, min_angle=-30, max_angle=30, poppy_name="head_y",
         ),
-        # Left arm (single servo — shoulder pitch for raise/lower)
+        # Left arm
         "left_shoulder_pitch": JointSpec(
             servo=MG90S, min_angle=-90, max_angle=90, poppy_name="l_shoulder_y",
         ),
-        # Right arm (single servo — shoulder pitch for raise/lower)
-        "right_shoulder_pitch": JointSpec(
-            servo=MG90S, min_angle=-90, max_angle=90, poppy_name="r_shoulder_y",
-        ),
-        # Waist yaw — lets the whole upper body turn on its base
-        "waist_yaw": JointSpec(
-            servo=SG90, min_angle=-90, max_angle=90, poppy_name="abs_z",
-        ),
-    }
-
-
-def _core_joints() -> dict[str, JointSpec]:
-    """Core: 10 DOF — enhanced upper body with elbows, shoulder roll, waist.
-
-    Still tabletop/mobile (no bipedal legs), but smart servos with feedback
-    and compliance. Can do teach-by-demo natively.
-    """
-    return {
-        # Head
-        "head_pan": JointSpec(
-            servo=STS3215, min_angle=-120, max_angle=120, poppy_name="head_z",
-        ),
-        "head_tilt": JointSpec(
-            servo=STS3215, min_angle=-45, max_angle=45, poppy_name="head_y",
-        ),
-        # Left arm
-        "left_shoulder_pitch": JointSpec(
-            servo=STS3215, min_angle=-120, max_angle=155, poppy_name="l_shoulder_y",
-        ),
         "left_shoulder_roll": JointSpec(
-            servo=STS3215, min_angle=-105, max_angle=110, poppy_name="l_shoulder_x",
-        ),
-        "left_elbow": JointSpec(
-            servo=STS3215, min_angle=-148, max_angle=1, poppy_name="l_elbow_y",
+            servo=SG90, min_angle=-45, max_angle=45, poppy_name="l_shoulder_x",
         ),
         # Right arm
         "right_shoulder_pitch": JointSpec(
-            servo=STS3215, min_angle=-155, max_angle=120, poppy_name="r_shoulder_y",
+            servo=MG90S, min_angle=-90, max_angle=90, poppy_name="r_shoulder_y",
         ),
         "right_shoulder_roll": JointSpec(
-            servo=STS3215, min_angle=-110, max_angle=105, poppy_name="r_shoulder_x",
+            servo=SG90, min_angle=-45, max_angle=45, poppy_name="r_shoulder_x",
         ),
-        "right_elbow": JointSpec(
-            servo=STS3215, min_angle=-1, max_angle=148, poppy_name="r_elbow_y",
-        ),
-        # Waist
+        # Waist yaw — lets the whole upper body turn on its base
         "waist_yaw": JointSpec(
-            servo=STS3215, min_angle=-90, max_angle=90, poppy_name="abs_z",
-        ),
-        # Arm rotation (one side for gestures)
-        "left_arm_rotation": JointSpec(
-            servo=STS3215, min_angle=-105, max_angle=105, poppy_name="l_arm_z",
+            servo=MG90S, min_angle=-90, max_angle=90, poppy_name="abs_z",
         ),
     }
 
 
 def _pro_joints() -> dict[str, JointSpec]:
-    """Pro: 20 DOF — full bipedal humanoid matching Hawabot reference.
+    """Pro: 19 DOF walking humanoid — Spark + elbows + hands + 8 leg joints.
 
-    Joint limits derived from Poppy Humanoid convention / calibrated Hawabot.
+    Same 250mm skeleton as Spark. Upgrade adds arms, legs, sensors, battery.
+    Shoulders and waist upgraded to XL330 for feedback and load bearing.
+    FSRs in feet required for walking (not defined here — sensor-level).
+    $599 all-in, or $399 upgrade from Spark.
     """
-    return {
-        # Head
-        "head_pan": JointSpec(
-            servo=XL330, min_angle=-90, max_angle=90, poppy_name="head_z",
+    joints = _spark_joints()
+
+    # Upgrade shoulders and waist to XL330 for feedback + dual shaft support
+    joints["left_shoulder_pitch"] = JointSpec(
+        servo=XL330, min_angle=-90, max_angle=90, poppy_name="l_shoulder_y",
+    )
+    joints["right_shoulder_pitch"] = JointSpec(
+        servo=XL330, min_angle=-90, max_angle=90, poppy_name="r_shoulder_y",
+    )
+    joints["waist_yaw"] = JointSpec(
+        servo=XL330, min_angle=-90, max_angle=90, poppy_name="abs_z",
+    )
+
+    # Arm additions (elbows + hands)
+    joints.update({
+        "left_elbow_pitch": JointSpec(
+            servo=SG90, min_angle=-90, max_angle=90, poppy_name="l_elbow_y",
         ),
-        "head_tilt": JointSpec(
-            servo=XL330, min_angle=-45, max_angle=6, poppy_name="head_y",
+        "left_hand_pitch": JointSpec(
+            servo=SG90, min_angle=0, max_angle=45, poppy_name="l_hand_y",
         ),
-        # Left arm
-        "left_shoulder_pitch": JointSpec(
-            servo=XL430, min_angle=-120, max_angle=155, poppy_name="l_shoulder_y",
+        "right_elbow_pitch": JointSpec(
+            servo=SG90, min_angle=-90, max_angle=90, poppy_name="r_elbow_y",
         ),
-        "left_shoulder_roll": JointSpec(
-            servo=XL430, min_angle=-105, max_angle=110, poppy_name="l_shoulder_x",
+        "right_hand_pitch": JointSpec(
+            servo=SG90, min_angle=0, max_angle=45, poppy_name="r_hand_y",
         ),
-        "left_arm_rotation": JointSpec(
-            servo=XL330, min_angle=-105, max_angle=105, poppy_name="l_arm_z",
-        ),
-        "left_elbow": JointSpec(
-            servo=XL330, min_angle=-148, max_angle=1, poppy_name="l_elbow_y",
-        ),
-        # Right arm
-        "right_shoulder_pitch": JointSpec(
-            servo=XL430, min_angle=-155, max_angle=120, poppy_name="r_shoulder_y",
-        ),
-        "right_shoulder_roll": JointSpec(
-            servo=XL430, min_angle=-110, max_angle=105, poppy_name="r_shoulder_x",
-        ),
-        "right_arm_rotation": JointSpec(
-            servo=XL330, min_angle=-105, max_angle=105, poppy_name="r_arm_z",
-        ),
-        "right_elbow": JointSpec(
-            servo=XL330, min_angle=-1, max_angle=148, poppy_name="r_elbow_y",
-        ),
-        # Waist
-        "waist_yaw": JointSpec(
-            servo=XL430, min_angle=-90, max_angle=90, poppy_name="abs_z",
-        ),
-        # Left leg
-        "left_hip_roll": JointSpec(
-            servo=XL430, min_angle=-30, max_angle=28.5, poppy_name="l_hip_x",
-        ),
+    })
+
+    # Leg joints (8 DOF — hip yaw/pitch + knee + ankle per side)
+    joints.update({
         "left_hip_yaw": JointSpec(
-            servo=XL430, min_angle=-25, max_angle=90, poppy_name="l_hip_z",
+            servo=XL330, min_angle=-45, max_angle=45, poppy_name="l_hip_z",
         ),
         "left_hip_pitch": JointSpec(
-            servo=XL430, min_angle=-104, max_angle=84, poppy_name="l_hip_y",
+            servo=XL330, min_angle=-90, max_angle=90, poppy_name="l_hip_y",
         ),
-        "left_knee": JointSpec(
-            servo=XL430, min_angle=-3.5, max_angle=134, poppy_name="l_knee_y",
+        "left_knee_pitch": JointSpec(
+            servo=XL330, min_angle=0, max_angle=120, poppy_name="l_knee_y",
         ),
-        "left_ankle": JointSpec(
-            servo=XL330, min_angle=-45, max_angle=45, poppy_name="l_ankle_y",
-        ),
-        # Right leg
-        "right_hip_roll": JointSpec(
-            servo=XL430, min_angle=-28.5, max_angle=30, poppy_name="r_hip_x",
+        "left_ankle_pitch": JointSpec(
+            servo=XL330, min_angle=-30, max_angle=30, poppy_name="l_ankle_y",
         ),
         "right_hip_yaw": JointSpec(
-            servo=XL430, min_angle=-90, max_angle=25, poppy_name="r_hip_z",
+            servo=XL330, min_angle=-45, max_angle=45, poppy_name="r_hip_z",
         ),
         "right_hip_pitch": JointSpec(
-            servo=XL430, min_angle=-85, max_angle=105, poppy_name="r_hip_y",
+            servo=XL330, min_angle=-90, max_angle=90, poppy_name="r_hip_y",
         ),
-        "right_knee": JointSpec(
-            servo=XL430, min_angle=-134, max_angle=3.5, poppy_name="r_knee_y",
+        "right_knee_pitch": JointSpec(
+            servo=XL330, min_angle=0, max_angle=120, poppy_name="r_knee_y",
         ),
-        "right_ankle": JointSpec(
-            servo=XL330, min_angle=-45, max_angle=45, poppy_name="r_ankle_y",
+        "right_ankle_pitch": JointSpec(
+            servo=XL330, min_angle=-30, max_angle=30, poppy_name="r_ankle_y",
         ),
-    }
+    })
+    return joints
+
+
+def _max_joints() -> dict[str, JointSpec]:
+    """Max: 19+ DOF — future flagship, 400-500mm, on-board AI.
+
+    Uses XL330 throughout + XL430 for high-torque joints.
+    Separate skeleton from Spark/Pro. Not upgrade-compatible.
+    Aspirational product for enthusiasts who completed the full curriculum.
+    $999+ depending on options.
+    """
+    # Start from Pro layout, upgrade all servos to XL330/XL430
+    joints = _pro_joints()
+    # All joints already use XL330 for legs/shoulders.
+    # Max may add hip roll, wrist rotation, etc. in future.
+    return joints
 
 
 # ---------------------------------------------------------------------------
@@ -280,48 +244,50 @@ TIERS: dict[TierName, TierDefinition] = {
         name=TierName.SPARK,
         display_name="Spark",
         form_factor=FormFactor.TABLETOP,
-        compute="Raspberry Pi Pico W",
-        bom_cost_usd=69,
-        dof=5,
-        sensors=("ultrasonic", "buzzer"),
+        compute="ESP32-S3",
+        bom_cost_usd=45,
+        dof=7,
+        sensors=("speaker",),
         joints=_spark_joints(),
         has_legs=False,
         has_waist=True,
         description=(
-            "Tabletop companion: head + arms + waist on a desk base. "
-            "Buzzer for feedback sounds. AI tutor runs on laptop via Studio app."
-        ),
-    ),
-    TierName.CORE: TierDefinition(
-        name=TierName.CORE,
-        display_name="Core",
-        form_factor=FormFactor.MOBILE,
-        compute="Raspberry Pi 5",
-        bom_cost_usd=200,
-        dof=10,
-        sensors=("ultrasonic", "imu", "microphone", "speaker"),
-        joints=_core_joints(),
-        has_legs=False,
-        has_waist=True,
-        description=(
-            "Enhanced companion: smart servos with feedback + compliance for "
-            "teach-by-demo, elbows for richer gestures, IMU, voice AI (mic + speaker)."
+            "Tabletop desk companion: 7-DOF upper body on a flat base. "
+            "Speaker for voice output. AI tutor runs on phone/tablet via WiFi. $199."
         ),
     ),
     TierName.PRO: TierDefinition(
         name=TierName.PRO,
         display_name="Pro",
         form_factor=FormFactor.BIPEDAL,
-        compute="Raspberry Pi 5",
-        bom_cost_usd=400,
-        dof=21,
-        sensors=("ultrasonic", "imu", "camera", "microphone", "speaker_hq", "temperature"),
+        compute="ESP32-S3",
+        bom_cost_usd=361,
+        dof=19,
+        sensors=("speaker", "microphone", "imu", "fsr", "camera"),
         joints=_pro_joints(),
         has_legs=True,
         has_waist=True,
         description=(
-            "Full bipedal humanoid: 21 DOF, camera, high-quality voice (mic array + "
-            "40mm speaker), walking, computer vision, full curriculum."
+            "Walking humanoid: 19-DOF, same 250mm skeleton as Spark. "
+            "Adds legs (XL330), elbows, hands, FSRs, IMU, mic, camera, battery. "
+            "AI tutor runs on phone/tablet via WiFi. $599 all-in or $399 upgrade."
+        ),
+    ),
+    TierName.MAX: TierDefinition(
+        name=TierName.MAX,
+        display_name="Max",
+        form_factor=FormFactor.BIPEDAL_LARGE,
+        compute="Raspberry Pi 5 / CM5",
+        bom_cost_usd=500,
+        dof=19,
+        sensors=("speaker", "microphone", "imu", "fsr", "camera", "ultrasonic", "lidar"),
+        joints=_max_joints(),
+        has_legs=True,
+        has_waist=True,
+        description=(
+            "Future flagship: 400-500mm walking humanoid with on-board AI. "
+            "Fully autonomous, battery powered. For enthusiasts who completed "
+            "the Spark → Pro curriculum. Aspirational marketing vehicle. $999+."
         ),
     ),
 }
@@ -334,17 +300,17 @@ def get_tier(name: str | TierName) -> TierDefinition:
     return TIERS[name]
 
 
-# Mock tier mirrors Spark layout for simulation but enables all sensors
+# Mock tier mirrors Spark layout (7 DOF) for simulation but enables all sensors
 MOCK_TIER = TierDefinition(
     name=TierName.MOCK,
     display_name="Mock (Simulation)",
     form_factor=FormFactor.TABLETOP,
     compute="Local machine",
     bom_cost_usd=0,
-    dof=5,
-    sensors=("ultrasonic", "imu", "camera", "microphone", "speaker", "temperature"),
+    dof=7,
+    sensors=("speaker", "microphone", "imu", "fsr", "camera", "ultrasonic"),
     joints=_spark_joints(),
     has_legs=False,
     has_waist=True,
-    description="Simulation mode — all sensors available, Spark joint layout",
+    description="Simulation mode — all sensors available, Spark joint layout (7 DOF)",
 )

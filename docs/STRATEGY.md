@@ -2,11 +2,13 @@
 
 ## Vision
 
-Every kid should be able to bring their imagined robot to life — design it, build it, code it, and teach it. HawaBot is the platform that makes that possible.
+Every kid should be able to bring their imagined robot to life — design it, build it, understand how it works, and teach it. HawaBot is the platform that makes that possible.
 
 ## Mission
 
-Hawa Labs builds the world's first character-driven physical AI robotics platform for kids aged 12-15. We combine custom 3D-printed robot characters, a progressive Python SDK, structured STEM curriculum, and an AI tutor to create the most engaging path from "I have an idea" to "I built a thinking robot."
+Hawa Labs builds the world's first character-driven physical AI robotics platform for kids aged 12-15. We combine custom 3D-printed robot characters, an ESP32-S3-based control system, structured systems engineering curriculum, and an AI tutor to create the most engaging path from "I have an idea" to "I understand how this system works."
+
+**This is NOT a "learn to code" platform.** Students use AI to help with code. The curriculum teaches how mechanical, electrical, firmware, networking, and AI systems connect — systems engineering through building a real robot.
 
 ---
 
@@ -26,10 +28,11 @@ Hawa Labs builds the world's first character-driven physical AI robotics platfor
 2. **AI fluency becoming mandatory.** Boston requires AI fluency for high school graduation starting September 2026. 28 US states have issued AI education guidance. Demand is exploding; supply is not.
 3. **Generative AI is mature enough.** Text-to-3D (Meshy 6) and LLM tutoring (Claude) are production-ready. Two years ago this platform was impossible. Today the unit economics work.
 4. **Python is the language of AI.** Every competitor still uses block-based visual programming or proprietary languages. The 12-15 demographic is ready for real code, and Python is the gateway to everything they will use in college and careers.
+5. **Systems thinking is the real skill.** AI can write code but cannot debug cross-layer system interactions. Understanding how mechanical, electrical, firmware, networking, and AI layers connect is the durable, hard-to-automate skill.
 
 ### Target Customer
 
-**Primary (B2C):** Parents of kids aged 12-15 who are interested in STEM, coding, or robotics. Emotional purchase — "my kid designed their own robot and it showed up at our door." Average household income $80K+. Comfortable spending $99-499 on enrichment.
+**Primary (B2C):** Parents of kids aged 12-15 who are interested in STEM, robotics, or engineering. Emotional purchase — "my kid designed their own robot and it showed up at our door." Average household income $80K+. Comfortable spending $199-599 on enrichment.
 
 **Secondary (B2B):** Schools, after-school programs, summer camps, makerspaces. Longer sales cycle but higher LTV. Bulk pricing and teacher dashboards in Phase 2.
 
@@ -64,10 +67,11 @@ AI concepts are woven into the curriculum from Month 1 ("What is a robot brain?"
 
 ### 4. Progressive Hardware (Platform Moat)
 
-Three tiers (Spark, Core, Pro) share the same character shell — swap the skeleton internals, keep the character. This means:
+Two tiers (Spark, Pro) serve the full learner journey. Spark is the entry point; Pro is the walking upgrade.
 
-- Low entry point ($99 Spark) de-risks the purchase
-- Upgrade path is compelling: same beloved character, new capabilities
+- Low entry point ($199 Spark) de-risks the purchase
+- Spark → Pro upgrade path when students are ready for bipedal walking (19 DOF)
+- Max ($999+, future) is an aspirational flagship for graduates and enthusiasts — few units, high margin, marketing halo
 - Curriculum unlocks naturally with hardware tier
 
 ---
@@ -78,48 +82,49 @@ Three tiers (Spark, Core, Pro) share the same character shell — swap the skele
 
 | Stream | Description | Margin |
 |--------|-------------|--------|
-| Kit Sales (Full) | One-time purchase: shell + skeleton + SDK + curriculum access | 55-65% |
-| Kit Sales (Subscription) | Monthly subscription over 5 months, new module each month | 60-70% |
+| Kit Sales (Full) | One-time purchase: shell + skeleton + SDK + curriculum access | 50-60% |
+| Kit Sales (Subscription) | Build-as-you-go, $39/mo × 6 months | 55-65% |
+| Credits | Fortnite-style add-ons: movement packs, voice types, animations, personality | 80%+ |
 | Shell Reprints | New character designs for existing skeletons | 80%+ |
 | B2B Licensing | School/camp site licenses, bulk kits, teacher dashboard | 70%+ |
 | Character Marketplace | Community-designed characters (future) | 90%+ |
 
 ### Pricing
 
-| Tier | Full Kit Price | Monthly (5mo) | BOM Cost | Gross Margin (Full) |
-|------|---------------|---------------|----------|---------------------|
-| Spark | $99 | $25/mo ($125 total) | $69 | 30% |
-| Core | $249 | $55/mo ($275 total) | $200 | 20% |
-| Pro | $499 | $110/mo ($550 total) | $400 | 20% |
+| Tier | All-In Price | Subscription | BOM Cost | Gross Margin |
+|------|-------------|-------------|----------|--------------|
+| Spark (7 DOF) | $199 | $39/mo × 6 ($234) | ~$45 | ~77% |
+| Pro (19 DOF) | $599 | TBD | ~$361 | ~40% |
+| Max (19+ DOF, future) | $999+ | N/A | ~$500+ | TBD |
 
-Note: Spark is the volume leader and loss-leader. At scale, BOM drops 15-25% through volume purchasing. Core and Pro margins improve significantly at 1,000+ unit runs.
+Note: Spark is the entry-level kit. Pro is the walking upgrade (19 DOF). Max is an aspirational flagship tier for graduates — low volume, high margin, marketing halo effect.
 
 ### Unit Economics (Spark, at scale)
 
 | Item | Cost |
 |------|------|
-| Servo kit (5x SG90/MG90S) | $12 |
-| Pi Pico W | $6 |
-| Ultrasonic sensor + buzzer | $4 |
-| PLA shell (3D printed) | $0.60 |
-| PCB + wiring + magnets | $8 |
+| Servo kit (5× SG90 + 2× MG90S) | $18 |
+| ESP32-S3 custom PCB (assembled) | $12 |
+| PLA shell (3D printed) | $1.00 |
+| Speaker + magnets + screws | $5 |
+| 3D printed frame | $3 |
 | Packaging + shipping | $15 |
 | Assembly labor | $10 |
 | Meshy API (3D generation) | $0.30 |
-| **Total COGS** | **~$56** |
-| **Retail price** | **$99** |
-| **Gross margin** | **43%** |
+| **Total COGS** | **~$64** |
+| **Retail price** | **$199** |
+| **Gross margin** | **68%** |
 
 ### Revenue Projection Framework
 
 | Milestone | Monthly Revenue | Assumptions |
 |-----------|----------------|-------------|
-| Month 6 (post-launch) | $15K | 150 Spark kits/month, early adopters |
-| Month 12 | $50K | Mix of tiers, 300 kits/month, 20% subscription |
-| Month 18 | $150K | B2B pilot revenue begins, 600 kits/month |
-| Month 24 | $400K | B2B at scale, 1,200 kits/month, reprints revenue |
+| Month 6 (post-launch) | $30K | 150 Spark kits/month @ $199, early adopters |
+| Month 12 | $100K | Mix of Spark ($199) + Pro ($599), 400 kits/month, credits revenue |
+| Month 18 | $250K | B2B pilot revenue begins, 800 kits/month |
+| Month 24 | $600K | B2B at scale, Max launch, 1,500 kits/month |
 
-These are conservative estimates assuming organic growth + targeted digital marketing. Subscription revenue compounds: by Month 12, recurring subscribers from previous months add $10-15K/month on top of new sales.
+These are conservative estimates assuming organic growth + targeted digital marketing. Credits and character purchases compound: by Month 12, recurring revenue from existing users adds $20-30K/month on top of new sales.
 
 ---
 
@@ -138,20 +143,21 @@ These are conservative estimates assuming organic growth + targeted digital mark
 
 ## Strategic Priorities (Next 12 Months)
 
-1. **Ship Spark MVP** — Complete SDK, finalize shell pipeline, launch design platform
-2. **Validate B2C** — 500 paid customers in first 6 months
-3. **Prove subscription** — 30%+ of customers choose monthly plan
-4. **Core tier launch** — Month 4-5 post-Spark, validates upgrade path
+1. **Ship Spark MVP** — Complete ESP32-S3 firmware, finalize shell pipeline, launch design platform
+2. **Validate B2C** — 500 paid customers in first 6 months at $199
+3. **Prove credits model** — 30%+ of customers purchase movement packs / voice types / animations
+4. **Pro tier launch** — Month 4-5 post-Spark, validates walking upgrade path ($599)
 5. **B2B pilot** — 3-5 schools/camps by Month 9
-6. **Fundraise** — Seed round ($1.5-2.5M) at Month 6-9, armed with customer data
+6. **Max concept development** — Aspirational flagship ($999+), few units, used for marketing and graduate retention
+7. **Fundraise** — Seed round ($1.5-2.5M) at Month 6-9, armed with customer data
 
 ---
 
 ## Long-Term Vision (3-5 Years)
 
-- **Year 1:** Spark + Core launch, 2,000+ customers, B2C validated
-- **Year 2:** Pro launch, B2B at scale, character marketplace, 10,000+ customers
+- **Year 1:** Spark launch ($199), Pro launch ($599), 2,000+ customers, B2C validated, credits model proven
+- **Year 2:** Max launch ($999+ flagship), B2B at scale, character marketplace, 10,000+ customers
 - **Year 3:** International expansion, teacher certification program, API platform for third-party curricula
-- **Year 5:** The default platform for AI + robotics education. 100K+ active robots. Community-driven curriculum and character ecosystem.
+- **Year 5:** The default platform for systems engineering education. 100K+ active robots. Community-driven curriculum and character ecosystem.
 
-The endgame: HawaBot becomes to physical AI education what Arduino became to maker electronics — the platform everyone starts with.
+The endgame: HawaBot becomes to systems engineering education what Arduino became to maker electronics — the platform everyone starts with.
