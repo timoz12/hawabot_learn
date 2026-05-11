@@ -16,6 +16,7 @@ Thumbs.db
 *.obj
 *.glb
 *.3mf
+*.step
 preview_*.png
 
 # Keep the Excel and equations files in skeleton_exports
