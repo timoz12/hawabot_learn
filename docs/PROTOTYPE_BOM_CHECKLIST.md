@@ -22,9 +22,8 @@ Build and validate the Spark experience: servos, speaker, WiFi API.
 | MG90S metal gear servos | 2 | Amazon | $8 | [x] Ordered |
 | MAX98357A I2S amp breakout | 1 | Adafruit (#3006) | $6 | [x] Ordered |
 | Speaker (3W, 4ohm, 28mm) | 1 | Adafruit / Amazon | $2 | [x] Ordered |
-| Breadboard (full size) | 1 | Amazon | $5 | [x] Ordered |
-| Jumper wires (M-M) | 1 pack | Amazon | $3 | [x] Ordered |
-| Jumper wires (M-F) | 1 pack | Amazon | $3 | [x] Ordered |
+| Hookup wire (22 AWG, solid core) | 1 spool | Amazon | $3 | [x] Ordered |
+| Solder + flux | 1 | Amazon | $3 | [x] Ordered |
 | 5V 3A USB-C power supply | 1 | Amazon | $10 | [x] Ordered |
 
 Servo allocation:
@@ -32,7 +31,7 @@ Servo allocation:
 - MG90S × 2: L shoulder pitch, R shoulder pitch
 - PCA9685: 1 for use, 1 spare
 
-### Phase 1 Total: ~$61
+### Phase 1 Total: ~$56
 
 ### What Phase 1 Validates
 
@@ -166,15 +165,15 @@ Power (Phase 2):
 | Phase | Cost | Status |
 |---|---|---|
 | ESP32-S3-DevKitC-1 | (already had) | [x] |
-| **Phase 1: Spark** | **$61** | **[x] Ordered** |
+| **Phase 1: Spark** | **$56** | **[x] Ordered** |
 | **Phase 2: Pro expansion** | **$322** | [ ] After Spark validated |
-| **Combined** | **$383** | |
+| **Combined** | **$378** | |
 
 ---
 
-## Custom PCB Reference (Future — After Breadboard Prototype Validated)
+## Custom PCB Reference (Future — After Soldered Prototype Validated)
 
-Once Phase 1 is working on the breadboard, design a custom PCB (~55×35mm, 2-layer) in KiCad that consolidates everything onto one board. This replaces the breadboard + breakout boards for production.
+Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×35mm, 2-layer) in KiCad that consolidates everything onto one board. This replaces the soldered breakout boards for production.
 
 ### PCB Component Mapping (Breakout → IC)
 
@@ -187,7 +186,7 @@ Once Phase 1 is working on the breadboard, design a custom PCB (~55×35mm, 2-lay
 | GY-521 IMU breakout (Phase 2) | MPU-6050 IC (QFN-24) or ICM-42688-P | SMD | I2C |
 | FSR voltage dividers (Phase 2) | 4x 10K resistors + ADC input traces | 0402/0603 | Analog |
 | 5V USB-C power supply | USB-C connector + AMS1117-3.3 LDO | SMD | — |
-| Breadboard + jumpers | PCB traces + JST-SH servo headers | — | — |
+| Soldered hookup wire | PCB traces + JST-SH servo headers | — | — |
 
 ### PCB Features
 
@@ -247,4 +246,4 @@ DNP = Do Not Populate (pads on PCB but no component soldered — saves cost for 
 
 **Avoid:** GPIO0, 45, 46 (strapping pins). GPIO19, 20 (USB OTG). GPIO35-37 (reserved on N8R8).
 
-When you breadboard prototype works, these exact pin assignments transfer to the KiCad schematic — no firmware changes needed.
+When your soldered prototype works, these exact pin assignments transfer to the KiCad schematic — no firmware changes needed.
