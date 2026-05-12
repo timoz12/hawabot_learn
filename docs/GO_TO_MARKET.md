@@ -19,11 +19,11 @@ HawaBot launches B2C first, selling directly to parents of kids aged 12-15. The 
 | Attribute | Detail |
 |-----------|--------|
 | **Who** | Parents of kids aged 12-15 with interest in coding, robotics, or STEM |
-| **Household income** | $80K+ (comfortable spending $99-499 on enrichment) |
+| **Household income** | $80K+ (comfortable spending $199-599 on enrichment) |
 | **Motivation** | "I want my kid to learn real skills, not just play games" |
 | **Purchase trigger** | Kid designs a character they love; parent sees educational value |
 | **Decision maker** | Parent pays; kid drives demand |
-| **LTV** | $150-600 (initial kit + potential tier upgrade + subscription premium) |
+| **LTV** | $250-800 (initial kit + potential tier upgrade + subscription premium) |
 | **CAC target** | $15-30 (via organic + targeted digital) |
 
 ### Segment 2: Gift Buyers (B2C, Seasonal)
@@ -35,7 +35,7 @@ HawaBot launches B2C first, selling directly to parents of kids aged 12-15. The 
 | **Motivation** | "Something educational but exciting" |
 | **Purchase trigger** | Gift guides, social proof, unboxing videos |
 | **Decision maker** | Gift buyer; recipient is the kid |
-| **Key insight** | Spark ($99) is perfectly positioned as a premium gift |
+| **Key insight** | Spark ($199) is perfectly positioned as a premium gift |
 
 ### Segment 3: Educators and Schools (B2B, Phase 2)
 
@@ -67,7 +67,7 @@ HawaBot launches B2C first, selling directly to parents of kids aged 12-15. The 
 AWARENESS ──> DESIGN ──> ATTACHMENT ──> PURCHASE ──> ACTIVATE ──> EXPAND
    |             |            |             |            |           |
   Ads,       Free design   "I love my    Buy kit    Unbox,     Upgrade
-  social,    platform      character!"   ($99-499)  assemble,  tier,
+  social,    platform      character!"   ($199-599) assemble,  tier,
   content,   (no account               + monthly   start      subscribe,
   PR         required)                  option     curriculum   refer
 ```
@@ -129,20 +129,19 @@ Between design and purchase, the kid has already named their character and itera
 
 **Two options at checkout:**
 
-| Option | Spark | Core | Pro |
-|--------|-------|------|-----|
-| **Full Kit (one-time)** | $99 | $249 | $499 |
-| **Monthly (5 months)** | $25/mo | $55/mo | $110/mo |
+| Option | Spark | Pro |
+|--------|-------|-----|
+| **Full Kit (one-time)** | $199 | $599 |
+| **Build-as-you-go (6 months)** | $39/mo | TBD |
 
 **Monthly subscription value prop:**
-- Lower commitment: "Try it for $25"
-- New module each month (unboxing excitement 5x)
-- Matches curriculum pacing (new hardware for new lessons)
-- Higher total revenue ($125 vs. $99 for Spark)
+- Lower commitment: "Try it for $39/month"
+- Build-as-you-go pacing matches curriculum (new hardware for new lessons)
+- Higher total revenue ($234 vs. $199 for Spark)
 
 **Checkout optimizations:**
 - Default to monthly option (lower barrier)
-- Show "most popular" badge on Core tier
+- Show "most popular" badge on Spark tier
 - Countdown: "Your design is saved for 7 days"
 - Trust signals: 30-day guarantee, COPPA compliant, real photos of kits
 
@@ -153,7 +152,7 @@ First 48 hours after delivery determine long-term engagement.
 **Activation sequence:**
 1. Unboxing experience (quality packaging, clear "start here" card)
 2. Assembly guide (15-30 minutes, magnets + snap-fit, no tools)
-3. First code: `from hawabot import Robot; robot = Robot(); robot.wave()`
+3. First code: `from hawabot import Robot; robot = Robot(); robot.head.pan(45)`
 4. AI tutor introduces itself using the character's name
 5. Mission 1.1 begins: "Make [CharacterName] look around"
 
@@ -168,9 +167,9 @@ First 48 hours after delivery determine long-term engagement.
 
 | Opportunity | Trigger | Revenue |
 |-------------|---------|---------|
-| Tier upgrade (Spark -> Core) | Kid completes Month 2, wants teach-by-demo | $150-200 |
-| New character shell | Kid wants a different character for same skeleton | $20-40 |
-| Subscription upsell | Full-kit buyer wants monthly modules | $25-110/mo |
+| Tier upgrade (Spark -> Pro) | Kid completes curriculum, wants walking humanoid | $399 |
+| New character shell | Kid wants a different character for same skeleton | $15-25 |
+| Build-as-you-go subscription | Monthly build pacing with curriculum | $39/mo |
 | Referral | Kid shows friend; friend designs own character | Referral bonus |
 | B2B lead | Teacher sees student's robot; contacts Hawa Labs | $2,000-10,000 |
 
@@ -180,30 +179,27 @@ First 48 hours after delivery determine long-term engagement.
 
 ### Principles
 
-1. **Spark is the gateway.** $99 is impulse-buy territory for target demographic. Optimize for volume, not margin.
-2. **Monthly lowers the bar.** $25/month is Netflix pricing. Parents say yes easily.
-3. **Core is the sweet spot.** Best margin-to-value ratio. "Most popular" positioning.
-4. **Pro is aspirational.** Not everyone needs it. Creates ceiling for the most engaged.
+1. **Spark is the gateway.** $199 is competitive with Sphero BOLT+ for target demographic. Optimize for volume, not margin.
+2. **Monthly lowers the bar.** $39/month matches premium subscription pricing. Parents say yes easily.
+3. **Pro is the walking upgrade.** The walking upgrade that justifies premium. For serious learners who want the full humanoid experience.
 
 ### Price Anchoring
 
 ```
 On the pricing page:
 
-  Pro $499        <-- Anchor (makes Core look reasonable)
-  Core $249       <-- "Most Popular" badge
-  Spark $99       <-- "Start Here" badge
+  Pro $599        <-- "Full Walking Humanoid"
+  Spark $199      <-- "Start Here"
 ```
 
 ### Subscription Economics
 
 | Tier | Monthly Price | Months | Total | vs. Full Kit | Premium |
 |------|-------------|--------|-------|--------------|---------|
-| Spark | $25 | 5 | $125 | $99 | +26% |
-| Core | $55 | 5 | $275 | $249 | +10% |
-| Pro | $110 | 5 | $550 | $499 | +10% |
+| Spark | $39 | 6 | $234 | $199 | +18% |
+| Pro | TBD | TBD | TBD | $599 | TBD |
 
-Subscribers pay a premium for the monthly unboxing experience and lower upfront commitment. This premium funds the additional shipping costs (5 shipments vs. 1).
+Subscribers pay a premium for the build-as-you-go experience and lower upfront commitment. This premium funds the additional shipping costs (6 shipments vs. 1).
 
 ---
 
@@ -244,7 +240,7 @@ Subscribers pay a premium for the monthly unboxing experience and lower upfront 
 | 5-6 | Launch referral program (design credit for referrals) |
 | 7-8 | Content series: "Student of the week" showcasing builds |
 | 9-10 | Retarget design-only users (designed but did not purchase) |
-| 11-12 | Core tier announcement + pre-orders |
+| 11-12 | Pro tier announcement + pre-orders |
 
 ---
 
@@ -334,9 +330,9 @@ This metric captures acquisition (someone bought a kit), activation (they built 
 |--------|-------------------|---------------------|
 | Monthly revenue | $15,000 | $50,000 |
 | Monthly recurring (subscriptions) | $3,000 | $15,000 |
-| Average order value | $120 | $150 |
+| Average order value | $220 | $280 |
 | Customer acquisition cost | $25 | $20 |
-| Gross margin | 35% | 45% |
+| Gross margin | 65% | 72% |
 | LTV:CAC ratio | 4:1 | 8:1 |
 
 ### Product Metrics
@@ -345,7 +341,7 @@ This metric captures acquisition (someone bought a kit), activation (they built 
 |--------|--------|
 | Missions completed per active user/month | 3+ |
 | AI tutor interactions per session | 5+ |
-| Teach-by-demo recordings per user/month | 2+ (Core/Pro) |
+| Teach-by-demo recordings per user/month | 2+ (Pro) |
 | Character designs shared socially | 15% of all designs |
 | NPS (Net Promoter Score) | 50+ |
 
@@ -379,10 +375,10 @@ This metric captures acquisition (someone bought a kit), activation (they built 
 | Quarter | Focus | Revenue Target |
 |---------|-------|----------------|
 | Q1 | Pre-launch: build waitlist, beta test, design platform live | $0 (pre-revenue) |
-| Q2 | Spark launch, first 200 customers, validate funnel | $20,000 |
-| Q3 | Scale Spark, launch Core, begin B2B pilots | $50,000 |
-| Q4 | Holiday push, Core at scale, 500+ total customers | $100,000 |
+| Q2 | Spark launch at $199, first 200 customers, validate funnel | $40,000 |
+| Q3 | Scale Spark, launch Pro at $599, begin B2B pilots | $80,000 |
+| Q4 | Holiday push, Pro at scale, 500+ total customers | $150,000 |
 
-**Year 1 revenue target: $170,000-250,000**
+**Year 1 revenue target: $270,000-400,000**
 
-This is achievable with ~1,500 kits sold at an average order value of $130, requiring ~125 kits/month by Q4. With a 6% design-to-purchase conversion rate and 25,000 monthly visitors, this is within reach through organic growth plus modest paid spend.
+This is achievable with ~1,200 kits sold at an average order value of $280, requiring ~100 kits/month by Q4. With a 6% design-to-purchase conversion rate and 25,000 monthly visitors, this is within reach through organic growth plus modest paid spend.

@@ -162,9 +162,9 @@ Joint Layout:
   - Head Pan (yaw): SG90, +-90 deg
   - Head Tilt (pitch): SG90, +-45 deg
   - Left Shoulder (pitch): MG90S, +-90 deg
-  - Left Shoulder (roll): MG90S, +-45 deg
+  - Left Shoulder (roll): SG90, +-45 deg
   - Right Shoulder (pitch): MG90S, +-90 deg
-  - Right Shoulder (roll): MG90S, +-45 deg
+  - Right Shoulder (roll): SG90, +-45 deg
   - Waist (yaw): SG90, +-60 deg
 
 Physical Layout:
@@ -241,9 +241,11 @@ BaseDriver (ABC)
   |
   +-- MockDriver       # Logs commands, simulates joint state
   |
-  +-- PicoDriver       # Serial/USB to Pi Pico W (PWM servos)
+  +-- PicoDriver       # Serial/USB to Pi Pico W (PWM servos) — legacy
   |
-  +-- Pi5Driver        # I2C/UART to smart servos (Dynamixel) — Max tier
+  +-- ESP32Driver      # WiFi REST/WS to ESP32-S3 (Spark/Pro production)
+  |
+  +-- Pi5Driver        # Max tier only (future, 400-500mm)
 ```
 
 All drivers implement the `BaseDriver` ABC (`hawabot/drivers/base.py`):
@@ -379,7 +381,7 @@ At 50 interactions/student/month: ~$0.15/student/month. Negligible relative to k
 ```
 missions/
   month_01/           # Joints, DOF, basic motion (Spark+)
-  month_02/           # Sensing: ultrasonic, reactions (Spark+)
+  month_02/           # Sensing: ultrasonic, reactions (Pro+)
   month_03/           # Feedback loops, IMU balance (Pro+)
   month_04/           # Computer vision, object tracking (Pro+)
   month_05/           # Robot brain: RL, LLM integration (Pro+)
@@ -498,7 +500,7 @@ Hobby servos (SG90/MG90S) accept 500–2500 µs pulses at 50 Hz:
 
 ```
 sensors/
-  ultrasonic.py    # HC-SR04 (Spark+): distance measurement
+  ultrasonic.py    # HC-SR04 (future): distance measurement
   imu.py           # MPU6050 (Pro+): orientation, acceleration
   fsr.py           # FSRs in feet (Pro+): ground contact, balance feedback
   camera.py        # Camera (Pro+): image capture, video stream

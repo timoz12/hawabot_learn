@@ -1,6 +1,6 @@
 # Documentation Staleness Audit
 
-_Last audit: 2026-05-05. All HIGH and MEDIUM items resolved._
+_Last audit: 2026-05-12. All HIGH and MEDIUM items resolved._
 
 All documentation now reflects the two-tier strategy:
 - **Spark** ($199, 7 DOF, desk companion)
@@ -9,18 +9,24 @@ All documentation now reflects the two-tier strategy:
 
 ---
 
-## Resolved (2026-05-05)
+## Resolved (2026-05-12)
 
 | File | What Was Fixed |
 |---|---|
 | `CLAUDE.md` | Created from scratch with full current state |
 | `hawabot/config/tiers.py` | Two tiers (Spark+Pro+Max), correct DOF/servos/MCU/pricing, Core removed |
-| `docs/ARCHITECTURE.md` | ESP32-S3, correct DOFs, ESP32Driver added, PicoDriver marked legacy |
+| `docs/ARCHITECTURE.md` | ESP32-S3, correct DOFs, ESP32Driver added, PicoDriver marked legacy, shoulder roll corrected to SG90 |
 | `docs/STRATEGY.md` | $199/$599/$999+ pricing, two tiers, systems engineering positioning |
 | `docs/PRICING.md` | Complete rewrite with current BOM, credits model, competitive analysis |
+| `docs/IMPLEMENTATION_PLAN.md` | Full rewrite: ESP32-S3, two tiers, correct phases, updated hardware budget |
+| `docs/GO_TO_MARKET.md` | Updated pricing ($199/$599), removed Core tier, $39/mo subscription, updated revenue targets |
+| `docs/COMPETITIVE_ANALYSIS.md` | Updated pricing ($199/$599), added TonyPi competitor, two tiers, systems engineering positioning |
+| `docs/TIER_COMPONENTS.md` | New — full component tables for Spark, Pro, Max with interfaces and intent |
 | `hawabot/drivers/pi5.py` | Docstring updated — Max tier only |
 | `pipeline/SKELETON_SPEC.md` | Staleness banner + redirect to PARAMETRIC_PIPELINE_PLAN.md |
-| `solidworks_package/PARAMETRIC_PIPELINE_PLAN.md` | Two-tier architecture, FSRs noted for Pro |
+| `solidworks_package/PARAMETRIC_PIPELINE_PLAN.md` | All Core→Pro, two-tier architecture, correct MCU table |
+| `solidworks_package/SOLIDWORKS_CONTEXT.md` | New — cowork reference with full hardware context |
+| `docs/PROTOTYPE_BOM_CHECKLIST.md` | Phase 1 ordered ($56), no breadboard (soldered), custom PCB reference |
 
 ## Still Pending (Low Priority)
 
@@ -29,7 +35,5 @@ All documentation now reflects the two-tier strategy:
 | `pipeline/INTERFACE_SPEC.md` | Component dimensions may differ from v17 | When pipeline code is modified |
 | `pipeline/SHELL_PIPELINE_SPEC.md` | May reference old skeleton model | When pipeline code is modified |
 | `pipeline/COMPONENT_REFERENCE.md` | Duplicated in solidworks_package/ | Consolidate when convenient |
-| `docs/COMPETITIVE_ANALYSIS.md` | Missing recent competitors (TonyPi, SO-100) | Before investor materials |
 | `firmware/pico_w/main.py` | Legacy — needs ESP32-S3 port | When starting firmware development |
 | `hawabot/drivers/pico.py` | Legacy — needs ESP32Driver equivalent | When ESP32 firmware is ready |
-| `docs/IMPLEMENTATION_PLAN.md` | May reference old phases | Review when planning next sprint |

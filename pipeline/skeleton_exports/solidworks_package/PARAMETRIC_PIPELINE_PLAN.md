@@ -19,7 +19,7 @@ This document explains the hybrid SolidWorks + CadQuery pipeline strategy and tr
 
 ### Prototype Build (What You're Building Now)
 
-Build the **Pro (19 DOF)** with XL330 at shoulders for proper dual-shaft support. Validate the full skeleton, then strip down to Core/Spark.
+Build the **Pro (19 DOF)** with XL330 at shoulders for proper dual-shaft support. Validate the full skeleton, then strip down to Spark.
 
 **Servo selection:**
 - **8x SG90** ($2 each) — head, shoulder roll, elbows, hands (low-load joints)
@@ -71,7 +71,7 @@ Consumer products with WiFi/Bluetooth need FCC certification. Boards with **modu
 | Pi CM4/CM5 | Yes | ~$3,000 | Yes, but $30/unit |
 | **ESP32-S3-WROOM-1** | **Yes** | **~$2,000-3,000** | **Yes — $3/unit** |
 
-**ESP32-S3-WROOM-1 selected** for Spark and Core production. Team has direct ESP32 experience (WiFi, cloud SQL, OTA updates from environmental sensing project).
+**ESP32-S3-WROOM-1 selected** for Spark and Pro production. Team has direct ESP32 experience (WiFi, cloud SQL, OTA updates from environmental sensing project).
 
 ### ESP32-S3-WROOM-1 Specs
 
@@ -102,9 +102,9 @@ Heavy AI runs on the user's phone/tablet/computer via WiFi. The ESP32-S3 handles
   AI Tutor engine                     ESP32-S3 on custom PCB:
   Voice recognition (STT)    <-WiFi->   Servo control (PWM via PCA9685)
   Movement planning                     Speaker output (I2S)
-  Curriculum UI                         Mic input (I2S, Core only)
-  Character personality                 IMU reading (I2C, Core only)
-  3D viewer                             Camera stream (DVP, Core only)
+  Curriculum UI                         Mic input (I2S, Pro only)
+  Character personality                 IMU reading (I2C, Pro only)
+  3D viewer                             Camera stream (DVP, Pro only)
                                         OTA firmware updates
 ```
 
@@ -112,22 +112,22 @@ No cables — WiFi only. Robot moves freely. Phone/laptop must be within WiFi ra
 
 ### Custom PCB: HawaBot Controller Board
 
-One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and Core** — Core just populates additional components.
+One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and Pro** — Pro just populates additional components.
 
 #### What the Custom PCB Integrates
 
 | Replaces | Function | IC on Custom PCB | Populated |
 |---|---|---|---|
-| PCA9685 breakout | 16-ch PWM servo driver | PCA9685 IC (I2C) | Spark + Core |
-| Audio amp board | Speaker amplification | MAX98357A (I2S) | Spark + Core |
-| Mic breakout | Microphone input | INMP441 (I2S MEMS) | Core only |
-| IMU breakout | Motion sensing | MPU6050 (I2C) | Core only |
-| Power regulation | 5V servos, 3.3V logic | Buck converter + LDO | Spark + Core |
-| Camera connector | DVP camera interface | Header (OV2640) | Core only |
-| — | WiFi + BT + compute | ESP32-S3-WROOM-1 module | Spark + Core |
-| — | Power input + programming | USB-C connector | Spark + Core |
-| — | Servo connections | 9x 3-pin JST headers | Spark + Core |
-| — | Speaker connection | 2-pin JST header | Spark + Core |
+| PCA9685 breakout | 16-ch PWM servo driver | PCA9685 IC (I2C) | Spark + Pro |
+| Audio amp board | Speaker amplification | MAX98357A (I2S) | Spark + Pro |
+| Mic breakout | Microphone input | INMP441 (I2S MEMS) | Pro only |
+| IMU breakout | Motion sensing | MPU6050 (I2C) | Pro only |
+| Power regulation | 5V servos, 3.3V logic | Buck converter + LDO | Spark + Pro |
+| Camera connector | DVP camera interface | Header (OV2640) | Pro only |
+| — | WiFi + BT + compute | ESP32-S3-WROOM-1 module | Spark + Pro |
+| — | Power input + programming | USB-C connector | Spark + Pro |
+| — | Servo connections | 9x 3-pin JST headers | Spark + Pro |
+| — | Speaker connection | 2-pin JST header | Spark + Pro |
 
 #### PCB Size and Layout
 
@@ -152,7 +152,7 @@ The ESP32-S3-WROOM-1 module is only 18x25.5mm. Board size is driven by the 9 ser
 |  [servo6][servo7][servo8][servo9]                 |
 +--------------------------------------------------+
 
-  * = Core only (unpopulated on Spark)
+  * = Pro only (unpopulated on Spark)
   
   55 mm wide x 35 mm tall x ~8 mm high
   2-layer PCB (no impedance matching needed)
@@ -161,9 +161,9 @@ The ESP32-S3-WROOM-1 module is only 18x25.5mm. Board size is driven by the 9 ser
 
 Fits comfortably in the 250mm robot's torso cavity (125mm tall gap from waist to shoulder, 28mm+ deep).
 
-#### Spark vs Core — Same Board, Different Population
+#### Spark vs Pro — Same Board, Different Population
 
-| Component | Spark | Core |
+| Component | Spark | Pro |
 |---|---|---|
 | ESP32-S3 module | Yes | Yes |
 | PCA9685 PWM driver | Yes | Yes |
@@ -180,13 +180,13 @@ One PCB design. One assembly line. Two tiers by populating different components.
 
 ### Tier MCU Summary
 
-| | Spark ($199) | Core ($299) | Pro (future, $599+) |
+| | Spark ($199) | Pro ($599) | Max (future, $999+) |
 |---|---|---|---|
 | MCU | ESP32-S3 | ESP32-S3 (same board) | CM5 or Pi 5 (larger robot) |
 | Audio | Speaker (I2S) | Speaker + mic (I2S) | Speaker + mic array |
-| Sensors | None | IMU + camera | Full sensor suite |
+| Sensors | None | IMU + FSRs + camera | Full sensor suite |
 | AI brain | Phone/tablet via WiFi | Phone/tablet via WiFi | On-board (autonomous) |
-| Power | USB-C (wall powered) | USB-C (wall powered) | Battery |
+| Power | USB-C (wall powered) | Battery | Battery (large) |
 | Custom PCB | HawaBot Controller Board | Same board, more populated | Different board |
 
 ### Rejected Alternatives (for reference)

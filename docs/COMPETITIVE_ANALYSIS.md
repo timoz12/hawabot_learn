@@ -15,12 +15,12 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 | Dimension | LEGO | HawaBot |
 |-----------|------|---------|
 | **Status** | SPIKE Prime retiring June 2026; Mindstorms discontinued 2022 | Active development |
-| **Price** | $396 (SPIKE Prime) | $99-499 |
+| **Price** | $396 (SPIKE Prime) | $199-599 |
 | **Age Range** | 9-14 | 12-15 |
 | **Programming** | Scratch-based (block coding), limited Python via extension | Native Python from day one |
 | **AI Integration** | None | AI tutor (Claude), AI concepts in curriculum, AI-generated characters |
 | **Customization** | Brick-built (standard LEGO) | Fully custom 3D-printed character shells |
-| **Hardware Progression** | Single SKU, no upgrade path | 3 tiers sharing same character shell |
+| **Hardware Progression** | Single SKU, no upgrade path | 2 tiers + future flagship, same character shell |
 
 **Key gap exploited:** LEGO is abandoning the advanced segment. Their block-based programming caps out at age 12-13. No AI. No Python. No path to real engineering.
 
@@ -28,7 +28,7 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 | Dimension | VEX | HawaBot |
 |-----------|-----|---------|
-| **Price** | $200-2,500+ | $99-499 |
+| **Price** | $200-2,500+ | $199-599 |
 | **Focus** | Competition robotics (VEX tournaments) | Creative expression + AI literacy |
 | **Programming** | VEXcode (proprietary), block + text | Standard Python (transferable skill) |
 | **AI Integration** | None | Core to platform |
@@ -38,11 +38,27 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 **Key gap exploited:** VEX optimizes for competition, not learning. Proprietary language. No AI. No creative ownership. Expensive for individual families.
 
+#### Hiwonder TonyPi (Closest Direct Competitor to Pro)
+
+| Dimension | TonyPi | HawaBot Pro |
+|-----------|--------|-------------|
+| **Price** | $570 | $599 |
+| **DOF** | 18 | 19 |
+| **Compute** | Raspberry Pi 5 | ESP32-S3 (AI offloaded to phone) |
+| **Form Factor** | Walking humanoid | Walking humanoid |
+| **Programming** | Python (ROS-style) | Python SDK |
+| **AI Integration** | OpenCV vision, no AI tutor | AI tutor (Claude), AI curriculum, AI-generated characters |
+| **Customization** | Fixed plastic shell | Custom 3D-printed character shells |
+| **Curriculum** | Example scripts, no structured curriculum | 25-mission systems engineering curriculum |
+| **Target** | Hobbyists, university students | Kids 12-15, structured learning |
+
+**Key gap exploited:** TonyPi is the closest hardware competitor at a similar price and DOF count, but it ships as a generic robot with no curriculum, no AI tutoring, no character customization, and no structured learning path. It is a hobbyist kit, not an educational platform.
+
 #### Makeblock (mBot / CyberPi / mBot Neo)
 
 | Dimension | Makeblock | HawaBot |
 |-----------|-----------|---------|
-| **Price** | $60-200 | $99-499 |
+| **Price** | $60-200 | $199-599 |
 | **Form Factor** | Wheeled robot, sensor boards | Humanoid character (tabletop to bipedal) |
 | **Programming** | mBlock (Scratch-based), Arduino C++ | Python SDK |
 | **AI Integration** | Basic ML image recognition | AI tutor, AI concepts throughout curriculum |
@@ -55,7 +71,7 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 | Dimension | Sphero | HawaBot |
 |-----------|--------|---------|
-| **Price** | $150-280 | $99-499 |
+| **Price** | $150-280 | $199-599 |
 | **Form Factor** | Rolling ball / wheeled platform | Humanoid character |
 | **Programming** | Sphero Edu (block + JS + Python-lite) | Full Python SDK |
 | **AI Integration** | None | Core to platform |
@@ -70,7 +86,7 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 | Dimension | Arduino | HawaBot |
 |-----------|---------|---------|
-| **Price** | $30-200 | $99-499 |
+| **Price** | $30-200 | $199-599 |
 | **Programming** | C/C++ (Arduino IDE) | Python |
 | **Structure** | Unstructured; requires self-direction | 25-mission guided curriculum |
 | **AI Integration** | None native | Core to platform |
@@ -83,7 +99,7 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 | Dimension | NVIDIA Jetson | HawaBot |
 |-----------|---------------|---------|
-| **Price** | $200-600+ | $99-499 |
+| **Price** | $200-600+ | $199-599 |
 | **Programming** | Python + JupyterLab | Python SDK |
 | **AI Integration** | Strong (vision, inference) | AI tutor + curriculum |
 | **Target** | College students, hobbyists | Kids 12-15 |
@@ -97,7 +113,7 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 
 | Dimension | Research Robots | HawaBot |
 |-----------|-----------------|---------|
-| **Price** | $1,600-16,000+ | $99-499 |
+| **Price** | $1,600-16,000+ | $199-599 |
 | **Target** | Universities, research labs | K-12 (specifically 12-15) |
 
 **Key gap exploited:** Wrong audience entirely. But these platforms demonstrate the aspirational endpoint that HawaBot's curriculum builds toward.
@@ -113,13 +129,13 @@ The educational robotics market ($1.8-2.5B, 14-19% CAGR) is dominated by players
 | **AI in Curriculum** | Yes | No | No | Basic ML | No | No |
 | **Custom Character** | Yes | No | No | No | No | No |
 | **Humanoid Form** | Yes | Buildable | Buildable | No | No | No |
-| **Teach-by-Demo** | Yes (Core+) | No | No | No | No | No |
-| **Voice AI** | Yes (Core+) | No | No | No | No | No |
+| **Teach-by-Demo** | Yes (Pro) | No | No | No | No | No |
+| **Voice AI** | Yes (Pro) | No | No | No | No | No |
 | **Computer Vision** | Yes (Pro) | No | Yes (V5) | Basic | No | Add-on |
-| **Progressive HW** | 3 tiers | 1 SKU | 3 lines | 2-3 lines | 2 lines | Open |
+| **Progressive HW** | 2 tiers + future flagship | 1 SKU | 3 lines | 2-3 lines | 2 lines | Open |
 | **Structured Curriculum** | 25 missions | Yes | Yes (comp) | Some | Some | No |
 | **Subscription Model** | Yes | No | No | No | No | No |
-| **Entry Price** | $99 | $396 | $200 | $60 | $150 | $30 |
+| **Entry Price** | $199 | $396 | $200 | $60 | $150 | $30 |
 | **Age Range Sweet Spot** | 12-15 | 9-13 | 10-18 | 8-14 | 8-13 | 14+ |
 
 ---
@@ -158,13 +174,13 @@ Block-based programming (Scratch, VEXcode Blocks, mBlock) is appropriate for age
 
 Most competitors offer a single product or disconnected product lines. Upgrading from LEGO to VEX means abandoning everything and starting over.
 
-**HawaBot's tier system** (Spark -> Core -> Pro) keeps the same character shell. Swap the skeleton internals, unlock new DOF, continue the curriculum. The kid's emotional investment compounds rather than resets.
+**HawaBot's tier system** (Spark -> Pro) keeps the same 250mm character shell. Spark ($199, 7 DOF desk companion) upgrades to Pro ($599 all-in, or $399 upgrade kit) which adds legs, arms, sensors, and walking. The kid's emotional investment compounds rather than resets. Max ($999+) is a future aspirational flagship — a larger 400-500mm robot with on-board AI for graduates who complete the full curriculum.
 
 ---
 
 ## Positioning Statement
 
-**For parents of kids aged 12-15** who want their child to learn real coding, AI, and robotics, **HawaBot** is the **only educational robotics platform** that lets kids **design their own AI-powered robot character**, have it **physically built and shipped to them**, and then **code and teach it using real Python and an AI tutor**. Unlike LEGO, VEX, or Makeblock, HawaBot combines **custom physical characters, native Python, AI-integrated curriculum, and a progressive hardware path** — all starting at $99.
+**For parents of kids aged 12-15** who want their child to learn systems engineering, AI, and robotics, **HawaBot** is the **only educational robotics platform** that lets kids **design their own AI-powered robot character**, have it **physically built and shipped to them**, and then **operate and teach it using real Python and an AI tutor**. Unlike LEGO, VEX, or Makeblock, HawaBot combines **custom physical characters, native Python, AI-integrated systems engineering curriculum, and a progressive hardware path** (Spark -> Pro) — all starting at $199.
 
 ---
 
