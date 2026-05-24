@@ -133,14 +133,14 @@ Shell inner surface must clear:
 
 ```
 Shell covers the base plate sides and bottom.
-- Must clear Pico USB port (slot in +X side)
+- Must clear USB-C port (slot in +X side)
 - Must not block base plate top surface (waist servo mounts here)
 - Battery compartment access (future)
 ```
 
 | Constraint | Value | Why |
 |---|---|---|
-| USB port clearance | 14×8 mm opening on +X face | Pico W USB access |
+| USB-C port clearance | 10×4 mm opening on +X face | ESP32-S3 PCB USB-C access |
 | Min shell wall thickness | 2.0 mm | Printability |
 | Max overhang past base | 5 mm | Stability — shell shouldn't make it tippy |
 
@@ -222,7 +222,7 @@ All magnets in a zone face the same direction. This means any shell fits any ske
 
 ## Assembly Sequence (End User)
 
-1. Skeleton ships assembled — servos installed, magnets press-fit, Pico wired
+1. Skeleton ships assembled — servos installed, magnets press-fit, ESP32-S3 PCB wired
 2. Customer receives 5 printed shell parts (head, torso, L arm, R arm, base)
 3. Customer presses magnets into shell boss pockets (or pre-installed at fulfillment)
 4. **Base shell:** Slide onto base plate bottom → magnets snap

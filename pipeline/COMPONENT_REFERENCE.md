@@ -2,7 +2,7 @@
 
 Every component in the Pro skeleton with exact dimensions, mounting specifications, pocket/clearance requirements, and CAD file download links.
 
-**Design for Pro (250mm), strip down for Core/Spark.**
+**Design for Pro (250mm), strip down for Spark.**
 
 ---
 
@@ -10,27 +10,27 @@ Every component in the Pro skeleton with exact dimensions, mounting specificatio
 
 ```
 HEAD:
-├── SG90 × 2 (pan + tilt)
+├── SG90 × 2 (pan + tilt)                           All tiers
 ├── INMP441 mic breakout (face area)               Pro only
-├── HC-SR04 mini ultrasonic (front, "eyes")         Pro only
-└── WS2812B LEDs × 2 (eyes)                         Core+
+└── OV2640 camera (face area)                       Pro only
 
 TORSO:
-├── MG90S × 2 (shoulders)
-├── SG90 × 2 (elbows)                               Core+
-├── SG90 × 2 (hands/grippers)                       Core+ / Pro
-├── MG90S × 1 (waist yaw)
-├── SG90 × 1 (waist roll)                           Core+
-├── Speaker ⌀28mm (chest front)                     Core+
-├── MAX98357A amp board (behind speaker)             Core+
-├── WS2812B LED × 1 (chest)                          Core+
+├── MG90S × 2 (shoulder pitch, Spark)              Spark only
+│   └── upgraded to XL330 × 2 (shoulder pitch, Pro)  Pro only
+├── SG90 × 2 (shoulder roll)                        All tiers
+├── SG90 × 2 (elbows)                               Pro only
+├── SG90 × 2 (hands/grippers)                       Pro only
+├── MG90S × 1 (waist yaw, Spark)                   Spark only
+│   └── upgraded to XL330 × 1 (waist yaw, Pro)      Pro only
+├── Speaker ⌀28mm (chest front)                     All tiers
+├── MAX98357A amp board (behind speaker)             All tiers
 └── MPU6050 IMU (torso center)                       Pro only
 
 BASE PLATE / HIP:
-├── Raspberry Pi 5 (4GB)                             Pro (Pico W for Spark, Zero 2W for Core)
-├── PCA9685 servo driver                             Core+
-├── TP4056 USB-C charging board                      Pro
-├── LiPo battery 3.7V 1000mAh                       Pro
+├── ESP32-S3 custom PCB (~55×35mm)                  All tiers
+├── PCA9685 (on custom PCB)                          All tiers
+├── TP4056 USB-C charging board                      Pro only
+├── LiPo battery 3.7V 1000mAh                       Pro only
 ├── USB-C breakout (power input)                     All tiers
 └── Power switch                                     All tiers
 
@@ -39,16 +39,16 @@ LEGS (Pro only):
 ├── XL330 × 2 (hip pitch)
 ├── XL330 × 2 (knee)
 ├── XL330 × 2 (ankle)
-└── Foot plates with rubber pads
+└── Foot plates with rubber pads + FSRs
 ```
 
 ---
 
 ## 1. Servos
 
-### 1.1 SG90 Micro Servo (×7 in Pro)
+### 1.1 SG90 Micro Servo (×4 in Spark, ×8 in Pro)
 
-**Used for:** Head pan, head tilt, L/R elbow, L/R hand grip, waist roll
+**Used for:** Head pan, head tilt, L/R shoulder roll (all tiers), L/R elbow, L/R hand grip (Pro only)
 
 | Spec | Value |
 |---|---|
@@ -79,9 +79,9 @@ LEGS (Pro only):
 
 ---
 
-### 1.2 MG90S Metal Gear Servo (×3 in Pro)
+### 1.2 MG90S Metal Gear Servo (×3 in Spark, ×0 in Pro)
 
-**Used for:** L/R shoulder, waist yaw
+**Used for:** L/R shoulder pitch + waist yaw (Spark only — Pro upgrades all three to XL330)
 
 | Spec | Value |
 |---|---|
@@ -103,9 +103,9 @@ LEGS (Pro only):
 
 ---
 
-### 1.3 Dynamixel XL330-M288-T (×8 in Pro — legs only)
+### 1.3 Dynamixel XL330-M288-T (×11 in Pro)
 
-**Used for:** L/R hip yaw, L/R hip pitch, L/R knee, L/R ankle
+**Used for:** L/R shoulder pitch (2), waist yaw (1), L/R hip yaw (2), L/R hip pitch (2), L/R knee (2), L/R ankle (2)
 
 | Spec | Value |
 |---|---|
@@ -133,11 +133,13 @@ LEGS (Pro only):
 - Horn rotation: ⌀30mm swept clear above mounting face
 - M2 screw bosses: ⌀4mm posts at each mounting hole position
 
-**Wiring note:** XL330 uses daisy-chain — each servo has 2 JST ports. Wire goes: Pi UART → first hip servo → knee → ankle. Only ONE data wire needed per leg (plus VCC + GND).
+**Wiring note:** XL330 uses daisy-chain — each servo has 2 JST ports. Wire goes: ESP32 UART → first hip servo → knee → ankle. Only ONE data wire needed per leg (plus VCC + GND). Shoulder and waist XL330s can share a separate daisy-chain.
 
 ---
 
-### 1.4 STS3215 Serial Bus Servo (alternative to XL330)
+### 1.4 STS3215 Serial Bus Servo (reference only — not used in any current tier)
+
+> **Not used in Spark, Pro, or Max.** Retained for reference/comparison only.
 
 **Cheaper alternative for legs ($8-12 vs $24 per servo)**
 
@@ -156,13 +158,11 @@ LEGS (Pro only):
 | **Pocket size** | **47 × 26 × 37 mm** (0.5mm/side + tolerance) |
 
 **Tradeoffs vs XL330:**
-- ✓ Much cheaper ($8-12 vs $24)
-- ✓ Much higher torque (19.5 vs 5.3 kg·cm at operating voltage)
-- ✗ Much larger (45×25×35 vs 20×34×26)
-- ✗ Much heavier (55g vs 18g)
-- ✗ Needs separate higher voltage (7.4V+ vs 5V — can't share USB power)
-
-**Recommendation:** Start with XL330 for the 250mm skeleton. STS3215 is better suited for a larger Pro skeleton (300mm+). At 250mm the STS3215 would dominate the leg cavity.
+- Much cheaper ($8-12 vs $24)
+- Much higher torque (19.5 vs 5.3 kg·cm at operating voltage)
+- Much larger (45x25x35 vs 20x34x26) — too large for 250mm skeleton
+- Much heavier (55g vs 18g)
+- Needs separate higher voltage (7.4V+ vs 5V — can't share USB power)
 
 **CAD file:** [GrabCAD — FEETECH_STS3215](https://grabcad.com/library/feetech_sts3215-1) (STEP, free account)
 **Datasheet:** [Feetech official PDF](https://www.feetechrc.com/Data/feetechrc/upload/file/20200611/6372749961523760249976542.pdf)
@@ -171,42 +171,25 @@ LEGS (Pro only):
 
 ## 2. Compute Boards
 
-### 2.1 Raspberry Pi Pico W (Spark tier)
+### 2.1 ESP32-S3-WROOM-1 Custom PCB (Spark + Pro — all tiers)
 
 | Spec | Value |
 |---|---|
-| Board L × W | 51.0 × 21.0 mm |
-| Board thickness | 1.0 mm |
-| Component height | 3.9 mm |
-| Total H with headers | ~10 mm |
-| Mounting holes | 4×, ⌀2.1 mm, spacing 47.0 × 11.4 mm, 2.0 mm from short edge |
-| Weight | ~3 g |
-| USB | Micro-USB on short edge |
-| **Pocket size** | **57 × 25 × 12 mm** (with standoffs + cable space) |
-| **Standoffs** | **4×, ⌀4.5 × 5mm tall, ⌀2.1 pilot hole** |
+| Custom PCB L × W | ~55 × 35 mm (2-layer) |
+| Module | ESP32-S3-WROOM-1 (FCC modular cert, $3/unit) |
+| On-board | PCA9685 (PWM servo control), MAX98357A (I2S amp), USB-C |
+| Pro populates | INMP441 mic, MPU6050 IMU, FSR inputs, OV2640 camera, battery circuit |
+| Communication | WiFi + Bluetooth (AI offloaded to phone) |
+| Servo control | PCA9685 I2C (SG90/MG90S) + UART (Dynamixel XL330, Pro) |
+| **Pocket size** | **58 × 38 × 12 mm** (with standoffs + connector clearance) |
 
-**CAD file:** [Official STEP](https://datasheets.raspberrypi.com/picow/PicoW-step.zip) (direct download, no login)
+**Dev board for prototyping:** ESP32-S3-DevKitC-1
 
----
-
-### 2.2 Raspberry Pi Zero 2 W (Core tier)
-
-| Spec | Value |
-|---|---|
-| Board L × W | 65.0 × 30.0 mm |
-| Height | ~5 mm |
-| Mounting holes | 4× M2.5, ⌀2.75 mm, spacing 58 × 23 mm, 3.5 mm from edges |
-| Weight | ~10 g |
-| Connectors | mini-HDMI, 2× micro-USB (data + power), CSI camera, 40-pin GPIO |
-| **Pocket size** | **70 × 35 × 15 mm** (with standoffs + cables) |
-| **Standoffs** | **4×, ⌀5 × 5mm tall, ⌀2.75 pilot hole** |
-
-**CAD file:** [GrabCAD](https://grabcad.com/library/raspberry-pi-zero-2-w-1) or [Geekworm Wiki STEP](https://wiki.geekworm.com/File:Raspberry-Pi-Zero-2-W.STEP)
-**Mechanical drawing:** [Official PDF](https://datasheets.raspberrypi.com/rpizero2/raspberry-pi-zero-2-w-mechanical-drawing.pdf)
+**Design note:** Same custom PCB is used for Spark and Pro. Pro simply populates additional components (mic, IMU, FSR inputs, camera connector, battery management). This keeps manufacturing simple with one board design.
 
 ---
 
-### 2.3 Raspberry Pi 5 (4GB) (Pro tier)
+### 2.2 Raspberry Pi 5 (4GB) (Max tier — future)
 
 | Spec | Value |
 |---|---|
@@ -221,31 +204,31 @@ LEGS (Pro only):
 **CAD file:** [Official STEP](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-step.zip) (direct download)
 **Mechanical drawing:** [Official PDF](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf)
 
-**Design note:** The Pi 5 is BIG (85×56mm). At 250mm skeleton height with a 100×80mm base plate, it fits but dominates the base cavity. Mount flat with the USB/Ethernet ports facing one edge for access. The GPIO header should face upward or inward toward the torso wire channel.
+**Design note:** The Pi 5 is for the Max tier only (400-500mm skeleton, future product). It does NOT fit in the 250mm Spark/Pro skeleton. Max is a separate, larger robot — not an upgrade from Spark/Pro.
 
 ---
 
-### 2.4 PCA9685 16-Channel PWM Servo Driver (Core+)
+### 2.3 PCA9685 16-Channel PWM Servo Driver (All tiers — on custom PCB)
 
 | Spec | Value |
 |---|---|
 | Board L × W | 62.5 × 25.4 mm |
 | Height | ~12 mm (with pin headers + screw terminals) |
 | Mounting holes | 4×, ⌀2.54 mm, spacing 55.9 × 19.1 mm |
-| Communication | I2C (SDA, SCL) — only 2 wires to Pi |
+| Communication | I2C (SDA, SCL) — only 2 wires to ESP32 |
 | Servo headers | 16× 3-pin (on board edge) |
 | **Pocket size** | **65 × 28 × 15 mm** |
 | **Standoffs** | **4×, ⌀4.5 × 3mm tall, ⌀2.5 pilot hole** |
 
 **CAD file:** [GrabCAD — PCA9685](https://grabcad.com/library/pca9685-pwm-servo-driver-for-arduino-1)
 
-**Placement:** Stack above or beside the Pi in the base plate. Connect to Pi via 2-wire I2C. All PWM servo wires connect here.
+**Placement:** Integrated on the custom ESP32-S3 PCB. Connected to ESP32 via 2-wire I2C. All PWM servo wires (SG90/MG90S) connect here.
 
 ---
 
 ## 3. Audio Components
 
-### 3.1 Speaker — 28mm, 8Ω, 2W (Core+)
+### 3.1 Speaker — 28mm, 8Ω, 2W (All tiers)
 
 | Spec | Value |
 |---|---|
@@ -262,17 +245,17 @@ LEGS (Pro only):
 
 ---
 
-### 3.2 MAX98357A I2S Amplifier Breakout (Core+)
+### 3.2 MAX98357A I2S Amplifier Breakout (All tiers — on custom PCB)
 
 | Spec | Value |
 |---|---|
 | Board L × W × H | 19.4 × 17.8 × 3.0 mm |
 | Mounting | No mounting holes — solder header or friction-mount in slot |
 | Output | 2-pin screw terminal to speaker |
-| Input | I2S from Pi (3 wires: BCLK, LRCLK, DIN) |
+| Input | I2S from ESP32 (3 wires: BCLK, LRCLK, DIN) |
 | **Pocket size** | **22 × 20 × 5 mm** (with header clearance) |
 
-**Placement:** Directly behind the speaker in the torso. Wire runs to Pi GPIO.
+**Placement:** Integrated on the custom ESP32-S3 PCB. Speaker connects via 2-pin output.
 
 **CAD file:** Model as a 19.4 × 17.8 × 3mm block.
 
@@ -313,7 +296,7 @@ LEGS (Pro only):
 
 ---
 
-### 4.2 HC-SR04 Mini Ultrasonic Sensor (Pro only)
+### 4.2 HC-SR04 Mini Ultrasonic Sensor (future — not in current Spark or Pro spec)
 
 | Spec | Value |
 |---|---|
@@ -327,11 +310,11 @@ LEGS (Pro only):
 
 **Placement:** Head front — the two transducers look like "eyes." The shell needs two ⌀11mm holes aligned with the transducers.
 
-**Note:** At 40×18mm this is large for a 250mm robot head. Consider the **RCWL-1601** (same pinout, slightly smaller) or a **VL53L0X ToF laser sensor** (12×18×2mm, I2C, single small lens) as a more compact alternative.
+**Note:** Not included in current Spark or Pro spec. Retained for future reference. At 40x18mm this is large for a 250mm robot head. Consider the **RCWL-1601** (same pinout, slightly smaller) or a **VL53L0X ToF laser sensor** (12x18x2mm, I2C, single small lens) as a more compact alternative.
 
 ---
 
-### 4.3 WS2812B NeoPixel LEDs (Core+)
+### 4.3 WS2812B NeoPixel LEDs (future — not in current spec)
 
 | Spec | Value |
 |---|---|
@@ -346,7 +329,9 @@ LEGS (Pro only):
 - 2× in head (eyes) — behind ⌀5mm holes in frame, light shines through shell
 - 1× in chest — behind small window in torso frame
 
-**Wiring:** Daisy chain: Pi GPIO → eye 1 → eye 2 → chest LED. One data wire total.
+**Note:** Not included in current Spark or Pro spec. Retained for future reference.
+
+**Wiring:** Daisy chain: ESP32 GPIO -> LED 1 -> LED 2 -> etc. One data wire total.
 
 ---
 
@@ -376,7 +361,7 @@ LEGS (Pro only):
 | Alt. slimmer | 502470: 70 × 24 × 5 mm, ~19 g |
 | **Pocket size** | **42 × 32 × 10 mm** (with 1mm clearance + wire routing) |
 
-**Placement:** Base plate cavity, beside or below the Pi. Must be removable for replacement/safety. Consider a slide-in tray.
+**Placement:** Base plate cavity, beside or below the custom PCB. Must be removable for replacement/safety. Consider a slide-in tray.
 
 **Safety:** Design a retaining clip or strap — LiPo should not rattle loose. Keep away from heat sources (servos under load).
 
@@ -413,11 +398,10 @@ LEGS (Pro only):
 | Parameter | Value | Notes |
 |---|---|---|
 | **Total height** | 250 mm | Base bottom to top of head servo stack |
-| **Base plate** | 100 × 80 × 25 mm | Must contain Pi 5 (85×56mm) |
+| **Base plate** | 100 × 80 × 25 mm | Must contain ESP32-S3 custom PCB (~55×35mm) |
 | **Base plate corner R** | 8 mm | |
 | **Torso column** | ⌀28 mm (or 28×28 rounded rect) | Room for speaker + wiring |
 | **Waist yaw servo Z** | 15 mm | Above base surface |
-| **Waist roll servo Z** | 45 mm | Above waist yaw |
 | **Shoulder Z** | 140 mm | ~56% of height |
 | **Shoulder X** | ±48 mm | Shoulder spread from center |
 | **Elbow Z** | 105 mm | Below shoulder |
@@ -446,9 +430,8 @@ LEGS (Pro only):
 |---|---|---|
 | SG90 Servo | [GrabCAD](https://grabcad.com/library/sg90-micro-servo-9g-tower-pro-1) | You have this ✓ |
 | MG90S Servo | [GrabCAD](https://grabcad.com/library/mg90s-servo-high-detail-1) | You have this ✓ |
-| Pi Pico W | [Official STEP](https://datasheets.raspberrypi.com/picow/PicoW-step.zip) | You have this ✓ |
-| Pi Zero 2W | [GrabCAD](https://grabcad.com/library/raspberry-pi-zero-2-w-1) | Download needed |
-| Pi 5 (4GB) | [Official STEP](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-step.zip) | Download needed |
+| ESP32-S3 custom PCB | Custom design (KiCad) | In progress |
+| Pi 5 (4GB) | [Official STEP](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-step.zip) | Max tier only (future) |
 | XL330-M288-T | [GrabCAD — XL330-288-T](https://grabcad.com/library/xl330-288-t-1) | Download needed |
 | STS3215 (reference) | [GrabCAD — FEETECH_STS3215](https://grabcad.com/library/feetech_sts3215-1) | Optional — for size comparison |
 | PCA9685 | [GrabCAD](https://grabcad.com/library/pca9685-pwm-servo-driver-for-arduino-1) | Download needed |
@@ -459,7 +442,8 @@ LEGS (Pro only):
 | Speaker 28mm | Model as ⌀28 × 12mm cylinder | Simple geometry |
 | LiPo battery | Model as 40 × 30 × 8mm block | Simple geometry |
 | USB-C breakout | Model as 20 × 14 × 5mm block | Simple geometry |
-| WS2812B LED | Model as 5 × 5 × 1.6mm block | Tiny — just mark positions |
+| OV2640 camera | Model as 8 × 8 × 5mm block | Pro only |
+| WS2812B LED | Model as 5 × 5 × 1.6mm block | Future — not in current spec |
 
 ---
 

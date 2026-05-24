@@ -230,7 +230,7 @@ robot = Robot(character_path="my_character.yaml")
 The `Robot` class:
 - Loads the character profile (YAML) or uses defaults
 - Detects hardware tier or falls back to simulation
-- Instantiates the appropriate driver (MockDriver, PicoDriver, Pi5Driver)
+- Instantiates the appropriate driver (MockDriver, PicoDriver, ESP32Driver, Pi5Driver)
 - Creates body part objects (Head, Arms, Waist, optionally Legs)
 - Provides high-level methods: `express()`, `teach()`, `play()`, `shutdown()`
 

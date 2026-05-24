@@ -293,7 +293,7 @@ Phase 0: Physical Prototype (ESP32-S3 + 7 DOF)
 | Issue | Severity | Plan |
 |-------|----------|------|
 | PicoDriver is legacy, ESP32Driver needed for production | High | Implement ESP32Driver (WiFi REST/WS) in Phase 0 |
-| Tier config still references Core tier | Medium | Remove Core from `hawabot/config/tiers.py` |
+| ~~Tier config still references Core tier~~ | ~~Medium~~ | ~~Done — Core removed from tiers.py (2026-05-12)~~ |
 | Web prototype is Flask, not production-ready | Medium | Rewrite to Next.js in Phase 1C |
 | No automated tests for shell pipeline | Medium | Add pytest suite in Phase 1 |
 | MockDriver does not simulate servo latency | Low | Add configurable delay in Phase 1 |

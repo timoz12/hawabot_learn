@@ -1,6 +1,6 @@
 # Documentation Staleness Audit
 
-_Last audit: 2026-05-12. All HIGH and MEDIUM items resolved._
+_Last audit: 2026-05-24. All HIGH and MEDIUM items resolved._
 
 All documentation now reflects the two-tier strategy:
 - **Spark** ($199, 7 DOF, desk companion)
@@ -8,6 +8,19 @@ All documentation now reflects the two-tier strategy:
 - **Max** ($999+, future flagship, 400-500mm, on-board AI)
 
 ---
+
+## Resolved (2026-05-24)
+
+| File | What Was Fixed |
+|---|---|
+| `pipeline/COMPONENT_REFERENCE.md` | Removed all Core references, updated MCU to ESP32-S3, fixed servo counts (SG90×4/MG90S×3 Spark, SG90×8/XL330×11 Pro), removed waist roll/LEDs/ultrasonic, updated compute board sections |
+| `pipeline/SOLIDWORKS_BUILD_GUIDE.md` | Replaced Pi 5 with ESP32-S3 PCB, removed waist roll, added shoulder roll, removed LEDs/ultrasonic, updated assembly tree, fixed joint positions |
+| `hawabot/drivers/pi5.py` | Changed "Pro tier" → "Max tier", removed Core (11 DOF) references |
+| `pipeline/INTERFACE_SPEC.md` | Updated Pico USB → ESP32-S3 USB-C in clearance specs and assembly sequence |
+| `pipeline/SKELETON_SPEC.md` | Changed "Core Humanoid" variant → "Max Humanoid", "Spark/Core" → "Spark/Pro" |
+| `docs/IMPLEMENTATION_PLAN.md` | Struck through resolved Core tier tech debt item |
+| `docs/GO_TO_MARKET.md` | Updated partnership from "Pi Pico W / Pi 5" → "ESP32-S3 (Spark/Pro), Pi 5 (Max future)" |
+| `docs/ARCHITECTURE.md` | Added ESP32Driver to driver instantiation list |
 
 ## Resolved (2026-05-12)
 
@@ -32,8 +45,7 @@ All documentation now reflects the two-tier strategy:
 
 | File | Issue | When to Fix |
 |---|---|---|
-| `pipeline/INTERFACE_SPEC.md` | Component dimensions may differ from v17 | When pipeline code is modified |
 | `pipeline/SHELL_PIPELINE_SPEC.md` | May reference old skeleton model | When pipeline code is modified |
-| `pipeline/COMPONENT_REFERENCE.md` | Duplicated in solidworks_package/ | Consolidate when convenient |
+| `pipeline/COMPONENT_REFERENCE.md` | Partially duplicated in solidworks_package/ | Consolidate when convenient |
 | `firmware/pico_w/main.py` | Legacy — needs ESP32-S3 port | When starting firmware development |
 | `hawabot/drivers/pico.py` | Legacy — needs ESP32Driver equivalent | When ESP32 firmware is ready |

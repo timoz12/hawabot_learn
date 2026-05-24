@@ -54,13 +54,14 @@ This is the most important step. The SSP contains NO solid geometry — only con
 "BASE_D" = 80
 "BASE_H" = 25
 "WAIST_YAW_Z" = 15
-"WAIST_ROLL_Z" = 45
-"SHOULDER_Z" = 140
+"SHOULDER_Z" = 125
 "SHOULDER_X" = 48
-"ELBOW_Z" = 105
+"SHOULDER_ROLL_X" = 55
+"ELBOW_Z" = 90
 "ELBOW_X" = 65
 "HEAD_PAN_Z" = 155
 "HEAD_TILT_Z" = 185
+"HEAD_TOP_Z" = 210
 "HIP_Z" = 0
 "KNEE_Z" = -60
 "ANKLE_Z" = -105
@@ -77,37 +78,39 @@ This sketch defines the kinematic chain as seen from the front.
 ```
 Line 1: (0, -"BASE_H") to (0, 0)              → Base plate height
 Line 2: (0, 0) to (0, "WAIST_YAW_Z")          → Ground to waist yaw
-Line 3: (0, "WAIST_YAW_Z") to (0, "WAIST_ROLL_Z")  → Waist yaw to roll
-Line 4: (0, "WAIST_ROLL_Z") to (0, "SHOULDER_Z")    → Waist to shoulders
-Line 5: (0, "SHOULDER_Z") to (0, "HEAD_PAN_Z")      → Shoulders to neck
-Line 6: (0, "HEAD_PAN_Z") to (0, "HEAD_TILT_Z")     → Head pan to tilt
+Line 3: (0, "WAIST_YAW_Z") to (0, "SHOULDER_Z")    → Waist to shoulders
+Line 4: (0, "SHOULDER_Z") to (0, "HEAD_PAN_Z")      → Shoulders to neck
+Line 5: (0, "HEAD_PAN_Z") to (0, "HEAD_TILT_Z")     → Head pan to tilt
+Line 6: (0, "HEAD_TILT_Z") to (0, "HEAD_TOP_Z")     → Head tilt to top
 ```
 
 **Left arm chain:**
 ```
-Line 7: (0, "SHOULDER_Z") to (-"SHOULDER_X", "SHOULDER_Z")    → Shoulder link
-Line 8: (-"SHOULDER_X", "SHOULDER_Z") to (-"ELBOW_X", "ELBOW_Z")  → Upper arm
-Line 9: (-"ELBOW_X", "ELBOW_Z") to (-"ELBOW_X", "ELBOW_Z"-35)    → Forearm to hand
+Line 7: (0, "SHOULDER_Z") to (-"SHOULDER_X", "SHOULDER_Z")              → Shoulder pitch link
+Line 8: (-"SHOULDER_X", "SHOULDER_Z") to (-"SHOULDER_ROLL_X", "SHOULDER_Z")  → Shoulder roll link
+Line 9: (-"SHOULDER_ROLL_X", "SHOULDER_Z") to (-"ELBOW_X", "ELBOW_Z")  → Upper arm
+Line 10: (-"ELBOW_X", "ELBOW_Z") to (-"ELBOW_X", "ELBOW_Z"-35)        → Forearm to hand
 ```
 
 **Right arm chain (mirror):**
 ```
-Line 10: (0, "SHOULDER_Z") to ("SHOULDER_X", "SHOULDER_Z")
-Line 11: ("SHOULDER_X", "SHOULDER_Z") to ("ELBOW_X", "ELBOW_Z")
-Line 12: ("ELBOW_X", "ELBOW_Z") to ("ELBOW_X", "ELBOW_Z"-35)
+Line 11: (0, "SHOULDER_Z") to ("SHOULDER_X", "SHOULDER_Z")
+Line 12: ("SHOULDER_X", "SHOULDER_Z") to ("SHOULDER_ROLL_X", "SHOULDER_Z")
+Line 13: ("SHOULDER_ROLL_X", "SHOULDER_Z") to ("ELBOW_X", "ELBOW_Z")
+Line 14: ("ELBOW_X", "ELBOW_Z") to ("ELBOW_X", "ELBOW_Z"-35)
 ```
 
 **Left leg chain:**
 ```
-Line 13: (0, "HIP_Z") to (-20, "HIP_Z")           → Hip offset
-Line 14: (-20, "HIP_Z") to (-20, "KNEE_Z")         → Upper leg (thigh)
-Line 15: (-20, "KNEE_Z") to (-20, "ANKLE_Z")        → Lower leg (shin)
-Line 16: (-20, "ANKLE_Z") to (-20, "ANKLE_Z"-10)    → Foot
+Line 15: (0, "HIP_Z") to (-20, "HIP_Z")           → Hip offset
+Line 16: (-20, "HIP_Z") to (-20, "KNEE_Z")         → Upper leg (thigh)
+Line 17: (-20, "KNEE_Z") to (-20, "ANKLE_Z")        → Lower leg (shin)
+Line 18: (-20, "ANKLE_Z") to (-20, "ANKLE_Z"-10)    → Foot
 ```
 
 **Right leg chain (mirror):**
 ```
-Line 17-20: Mirror of lines 13-16 at X = +20
+Line 19-22: Mirror of lines 15-18 at X = +20
 ```
 
 3. **Add Construction Points** at every joint intersection — these become your joint centers:
@@ -116,22 +119,23 @@ Line 17-20: Mirror of lines 13-16 at X = +20
 |---|---|---|
 | P1 | (0, 0) | Ground / base top |
 | P2 | (0, 15) | Waist yaw |
-| P3 | (0, 45) | Waist roll |
-| P4 | (0, 140) | Spine top / shoulder center |
-| P5 | (-48, 140) | Left shoulder |
-| P6 | (48, 140) | Right shoulder |
-| P7 | (-65, 105) | Left elbow |
-| P8 | (65, 105) | Right elbow |
-| P9 | (-65, 70) | Left hand |
-| P10 | (65, 70) | Right hand |
-| P11 | (0, 155) | Head pan |
-| P12 | (0, 185) | Head tilt |
-| P13 | (-20, 0) | Left hip |
-| P14 | (20, 0) | Right hip |
-| P15 | (-20, -60) | Left knee |
-| P16 | (20, -60) | Right knee |
-| P17 | (-20, -105) | Left ankle |
-| P18 | (20, -105) | Right ankle |
+| P3 | (0, 125) | Spine top / shoulder center |
+| P4 | (-48, 125) | Left shoulder pitch |
+| P5 | (48, 125) | Right shoulder pitch |
+| P6 | (-55, 125) | Left shoulder roll |
+| P7 | (55, 125) | Right shoulder roll |
+| P8 | (-65, 90) | Left elbow |
+| P9 | (65, 90) | Right elbow |
+| P10 | (-65, 55) | Left hand |
+| P11 | (65, 55) | Right hand |
+| P12 | (0, 155) | Head pan |
+| P13 | (0, 185) | Head tilt |
+| P14 | (-20, 0) | Left hip |
+| P15 | (20, 0) | Right hip |
+| P16 | (-20, -60) | Left knee |
+| P17 | (20, -60) | Right knee |
+| P18 | (-20, -105) | Left ankle |
+| P19 | (20, -105) | Right ankle |
 
 4. **Exit Sketch**
 5. **Rename** the sketch: `LAYOUT_FRONT`
@@ -163,23 +167,24 @@ Each servo rotation needs a **reference plane** perpendicular to its rotation ax
 | Plane Name | Definition | Joint | Rotation Axis |
 |---|---|---|---|
 | `PL_WAIST_YAW` | Parallel to Top Plane, offset Z = 15mm | Waist yaw | Z (vertical) |
-| `PL_WAIST_ROLL` | Parallel to Right Plane, offset Z = 45mm | Waist roll | Y (front-back) |
-| `PL_L_SHOULDER` | Parallel to Right Plane, through P5 (-48, 140) | L shoulder pitch | X (left-right) |
-| `PL_R_SHOULDER` | Parallel to Right Plane, through P6 (48, 140) | R shoulder pitch | X (left-right) |
-| `PL_L_ELBOW` | Parallel to Right Plane, through P7 (-65, 105) | L elbow pitch | X |
-| `PL_R_ELBOW` | Parallel to Right Plane, through P8 (65, 105) | R elbow pitch | X |
-| `PL_L_HAND` | Parallel to Right Plane, through P9 (-65, 70) | L hand grip | X |
-| `PL_R_HAND` | Parallel to Right Plane, through P10 (65, 70) | R hand grip | X |
+| `PL_L_SHOULDER` | Parallel to Right Plane, through P4 (-48, 125) | L shoulder pitch | X (left-right) |
+| `PL_R_SHOULDER` | Parallel to Right Plane, through P5 (48, 125) | R shoulder pitch | X (left-right) |
+| `PL_L_SHOULDER_ROLL` | Parallel to Front Plane, through P6 (-55, 125) | L shoulder roll | Y (front-back) |
+| `PL_R_SHOULDER_ROLL` | Parallel to Front Plane, through P7 (55, 125) | R shoulder roll | Y (front-back) |
+| `PL_L_ELBOW` | Parallel to Right Plane, through P8 (-65, 90) | L elbow pitch | X |
+| `PL_R_ELBOW` | Parallel to Right Plane, through P9 (65, 90) | R elbow pitch | X |
+| `PL_L_HAND` | Parallel to Right Plane, through P10 (-65, 55) | L hand grip | X |
+| `PL_R_HAND` | Parallel to Right Plane, through P11 (65, 55) | R hand grip | X |
 | `PL_HEAD_PAN` | Parallel to Top Plane, offset Z = 155mm | Head pan yaw | Z |
 | `PL_HEAD_TILT` | Parallel to Front Plane, offset Z = 185mm | Head tilt pitch | Y |
-| `PL_L_HIP_YAW` | Parallel to Top Plane, through P13 (-20, 0) | L hip yaw | Z |
-| `PL_R_HIP_YAW` | Parallel to Top Plane, through P14 (20, 0) | R hip yaw | Z |
-| `PL_L_HIP_PITCH` | Parallel to Right Plane, through P13 | L hip pitch | X |
-| `PL_R_HIP_PITCH` | Parallel to Right Plane, through P14 | R hip pitch | X |
-| `PL_L_KNEE` | Parallel to Right Plane, through P15 (-20, -60) | L knee pitch | X |
-| `PL_R_KNEE` | Parallel to Right Plane, through P16 (20, -60) | R knee pitch | X |
-| `PL_L_ANKLE` | Parallel to Right Plane, through P17 (-20, -105) | L ankle pitch | X |
-| `PL_R_ANKLE` | Parallel to Right Plane, through P18 (20, -105) | R ankle pitch | X |
+| `PL_L_HIP_YAW` | Parallel to Top Plane, through P14 (-20, 0) | L hip yaw | Z |
+| `PL_R_HIP_YAW` | Parallel to Top Plane, through P15 (20, 0) | R hip yaw | Z |
+| `PL_L_HIP_PITCH` | Parallel to Right Plane, through P14 | L hip pitch | X |
+| `PL_R_HIP_PITCH` | Parallel to Right Plane, through P15 | R hip pitch | X |
+| `PL_L_KNEE` | Parallel to Right Plane, through P16 (-20, -60) | L knee pitch | X |
+| `PL_R_KNEE` | Parallel to Right Plane, through P17 (20, -60) | R knee pitch | X |
+| `PL_L_ANKLE` | Parallel to Right Plane, through P18 (-20, -105) | L ankle pitch | X |
+| `PL_R_ANKLE` | Parallel to Right Plane, through P19 (20, -105) | R ankle pitch | X |
 
 ### 1.5 Create Reference Axes for Each Joint
 
@@ -190,23 +195,24 @@ Each joint needs a **reference axis** representing the servo output shaft rotati
 | Axis Name | Definition | Direction |
 |---|---|---|
 | `AX_WAIST_YAW` | Through P2, perpendicular to PL_WAIST_YAW | Vertical (Z) |
-| `AX_WAIST_ROLL` | Through P3, perpendicular to PL_WAIST_ROLL | Front-back (Y) |
-| `AX_L_SHOULDER` | Through P5, perpendicular to PL_L_SHOULDER | Left-right (X) |
-| `AX_R_SHOULDER` | Through P6, perpendicular to PL_R_SHOULDER | Left-right (X) |
-| `AX_L_ELBOW` | Through P7, perpendicular to PL_L_ELBOW | Left-right (X) |
-| `AX_R_ELBOW` | Through P8, perpendicular to PL_R_ELBOW | Left-right (X) |
-| `AX_L_HAND` | Through P9, perpendicular to PL_L_HAND | Left-right (X) |
-| `AX_R_HAND` | Through P10, perpendicular to PL_R_HAND | Left-right (X) |
-| `AX_HEAD_PAN` | Through P11, perpendicular to PL_HEAD_PAN | Vertical (Z) |
-| `AX_HEAD_TILT` | Through P12, perpendicular to PL_HEAD_TILT | Front-back (Y) |
-| `AX_L_HIP_YAW` | Through P13, perpendicular to PL_L_HIP_YAW | Vertical (Z) |
-| `AX_R_HIP_YAW` | Through P14, perpendicular to PL_R_HIP_YAW | Vertical (Z) |
-| `AX_L_HIP_PITCH` | Through P13, perpendicular to PL_L_HIP_PITCH | Left-right (X) |
-| `AX_R_HIP_PITCH` | Through P14, perpendicular to PL_R_HIP_PITCH | Left-right (X) |
-| `AX_L_KNEE` | Through P15, perpendicular to PL_L_KNEE | Left-right (X) |
-| `AX_R_KNEE` | Through P16, perpendicular to PL_R_KNEE | Left-right (X) |
-| `AX_L_ANKLE` | Through P17, perpendicular to PL_L_ANKLE | Left-right (X) |
-| `AX_R_ANKLE` | Through P18, perpendicular to PL_R_ANKLE | Left-right (X) |
+| `AX_L_SHOULDER` | Through P4, perpendicular to PL_L_SHOULDER | Left-right (X) |
+| `AX_R_SHOULDER` | Through P5, perpendicular to PL_R_SHOULDER | Left-right (X) |
+| `AX_L_SHOULDER_ROLL` | Through P6, perpendicular to PL_L_SHOULDER_ROLL | Front-back (Y) |
+| `AX_R_SHOULDER_ROLL` | Through P7, perpendicular to PL_R_SHOULDER_ROLL | Front-back (Y) |
+| `AX_L_ELBOW` | Through P8, perpendicular to PL_L_ELBOW | Left-right (X) |
+| `AX_R_ELBOW` | Through P9, perpendicular to PL_R_ELBOW | Left-right (X) |
+| `AX_L_HAND` | Through P10, perpendicular to PL_L_HAND | Left-right (X) |
+| `AX_R_HAND` | Through P11, perpendicular to PL_R_HAND | Left-right (X) |
+| `AX_HEAD_PAN` | Through P12, perpendicular to PL_HEAD_PAN | Vertical (Z) |
+| `AX_HEAD_TILT` | Through P13, perpendicular to PL_HEAD_TILT | Front-back (Y) |
+| `AX_L_HIP_YAW` | Through P14, perpendicular to PL_L_HIP_YAW | Vertical (Z) |
+| `AX_R_HIP_YAW` | Through P15, perpendicular to PL_R_HIP_YAW | Vertical (Z) |
+| `AX_L_HIP_PITCH` | Through P14, perpendicular to PL_L_HIP_PITCH | Left-right (X) |
+| `AX_R_HIP_PITCH` | Through P15, perpendicular to PL_R_HIP_PITCH | Left-right (X) |
+| `AX_L_KNEE` | Through P16, perpendicular to PL_L_KNEE | Left-right (X) |
+| `AX_R_KNEE` | Through P17, perpendicular to PL_R_KNEE | Left-right (X) |
+| `AX_L_ANKLE` | Through P18, perpendicular to PL_L_ANKLE | Left-right (X) |
+| `AX_R_ANKLE` | Through P19, perpendicular to PL_R_ANKLE | Left-right (X) |
 
 ### 1.6 Create Reference Points for Component Placement
 
@@ -214,27 +220,24 @@ Add points for non-joint components:
 
 | Point Name | Location (X, Y, Z) | Component |
 |---|---|---|
-| `PT_PI5` | (0, 0, -12.5) | Pi 5 center (inside base plate) |
-| `PT_PCA9685` | (35, 0, -12.5) | PCA9685 board (beside Pi) |
-| `PT_BATTERY` | (-30, 0, -12.5) | LiPo battery |
-| `PT_TP4056` | (45, 30, -12.5) | Charging board (near base edge) |
+| `PT_PCB` | (0, 0, 80) | ESP32-S3 custom PCB (~55×35mm, in torso cavity) |
+| `PT_BATTERY` | (-30, 0, -12.5) | LiPo battery (Pro only) |
+| `PT_TP4056` | (45, 30, -12.5) | Charging board (near base edge, Pro only) |
 | `PT_USB_C` | (50, 0, -12.5) | USB-C power input (base edge) |
-| `PT_SPEAKER` | (0, -14, 100) | Speaker (torso front, chest height) |
-| `PT_AMP` | (0, -8, 100) | Amp board (behind speaker) |
-| `PT_IMU` | (0, 0, 90) | IMU (torso center) |
-| `PT_MIC` | (0, -10, 175) | Microphone (head, face area) |
-| `PT_ULTRASONIC` | (0, -12, 180) | Ultrasonic sensor (head front) |
-| `PT_LED_L_EYE` | (-8, -12, 182) | Left eye LED |
-| `PT_LED_R_EYE` | (8, -12, 182) | Right eye LED |
-| `PT_LED_CHEST` | (0, -14, 110) | Chest LED |
+| `PT_SPEAKER` | (0, -14, 100) | Speaker 28mm (torso front, all tiers) |
+| `PT_IMU` | (0, 0, 90) | MPU6050 IMU (torso center, Pro only) |
+| `PT_MIC` | (0, -10, 175) | INMP441 microphone (head, Pro only) |
+| `PT_CAMERA` | (0, -12, 180) | OV2640 camera (head front, Pro only) |
+| `PT_FSR_L` | (-20, 0, -115) | FSR left foot (Pro only) |
+| `PT_FSR_R` | (20, 0, -115) | FSR right foot (Pro only) |
 
 ### 1.7 Save the SSP
 
 Your SSP should now contain:
 - 2 layout sketches (front + side views with all construction lines)
-- 18 reference planes (one per joint)
-- 18 reference axes (one per joint rotation)
-- ~25 reference points (joints + component locations)
+- 19 reference planes (one per joint — includes shoulder roll planes)
+- 19 reference axes (one per joint rotation)
+- ~29 reference points (19 joints + ~10 component locations)
 - Global variables driving all positions
 - **ZERO solid features**
 
@@ -268,16 +271,25 @@ For each servo, you create two mates:
 3. **Limit Mate** (for simulation): Set rotation limits ±90° around `AX_WAIST_YAW`
 4. Servo body is below the plane, shaft points up (+Z)
 
-### 3.2 Waist Roll — SG90
+### 3.2 Left Shoulder Roll — SG90
 
 1. **Insert Component** → `SG90.sldprt`
 2. **Mate:**
-   - Concentric: SG90 shaft axis → `AX_WAIST_ROLL`
-   - Coincident: SG90 mounting face → `PL_WAIST_ROLL`
-3. **Limit Mate:** ±30°
-4. Shaft points forward (+Y)
+   - Concentric: SG90 shaft axis → `AX_L_SHOULDER_ROLL`
+   - Coincident: SG90 mounting face → `PL_L_SHOULDER_ROLL`
+3. **Limit Mate:** ±90°
+4. Shaft points forward (+Y), outboard of shoulder pitch servo
 
-### 3.3 Left Shoulder — MG90S
+### 3.3 Right Shoulder Roll — SG90
+
+1. **Insert Component** → `SG90.sldprt`
+2. **Mate:**
+   - Concentric: SG90 shaft axis → `AX_R_SHOULDER_ROLL`
+   - Coincident: SG90 mounting face → `PL_R_SHOULDER_ROLL`
+3. **Limit Mate:** ±90°
+4. Mirror of left shoulder roll
+
+### 3.4 Left Shoulder Pitch — MG90S
 
 1. **Insert Component** → `MG90S.sldprt`
 2. **Mate:**
@@ -286,13 +298,13 @@ For each servo, you create two mates:
 3. **Limit Mate:** ±90°
 4. Shaft points outward (-X)
 
-### 3.4 Right Shoulder — MG90S
+### 3.5 Right Shoulder Pitch — MG90S
 
-1. Mirror of left shoulder
+1. Mirror of left shoulder pitch
 2. Mate to `AX_R_SHOULDER` and `PL_R_SHOULDER`
 3. Shaft points outward (+X)
 
-### 3.5 Left Elbow — SG90
+### 3.6 Left Elbow — SG90
 
 1. **Insert Component** → `SG90.sldprt`
 2. **Mate:**
@@ -300,21 +312,21 @@ For each servo, you create two mates:
    - Coincident: mounting face → `PL_L_ELBOW`
 3. **Limit Mate:** ±90°
 
-### 3.6 Right Elbow — SG90
+### 3.7 Right Elbow — SG90
 
 1. Mirror of left elbow at `AX_R_ELBOW`
 
-### 3.7 Left Hand — SG90
+### 3.8 Left Hand — SG90
 
 1. **Insert Component** → `SG90.sldprt`
 2. Mate to `AX_L_HAND` / `PL_L_HAND`
 3. **Limit Mate:** 0–45° (grip open to closed)
 
-### 3.8 Right Hand — SG90
+### 3.9 Right Hand — SG90
 
 1. Mirror at `AX_R_HAND`
 
-### 3.9 Head Pan — SG90
+### 3.10 Head Pan — SG90
 
 1. **Insert Component** → `SG90.sldprt`
 2. **Mate:**
@@ -323,7 +335,7 @@ For each servo, you create two mates:
 3. **Limit Mate:** ±90°
 4. Shaft points up (+Z)
 
-### 3.10 Head Tilt — SG90
+### 3.11 Head Tilt — SG90
 
 1. **Insert Component** → `SG90.sldprt`
 2. **Mate:**
@@ -332,7 +344,7 @@ For each servo, you create two mates:
 3. **Limit Mate:** -30° to +30°
 4. Shaft points forward (+Y)
 
-### 3.11 Leg Servos — XL330 (×8)
+### 3.12 Leg Servos — XL330 (×8, Pro only)
 
 For each leg joint, insert an XL330 and mate:
 
@@ -355,74 +367,65 @@ For each leg joint, insert an XL330 and mate:
 
 These components don't rotate — use **Coincident + Lock** mates to fix them at their reference points.
 
-### 4.1 Raspberry Pi 5
+### 4.1 ESP32-S3 Custom PCB
 
-1. **Insert Component** → `pi5.sldprt`
+1. **Insert Component** → `esp32_pcb.sldprt` (~55×35×8mm)
 2. **Mate:**
-   - Coincident: board center → `PT_PI5`
+   - Coincident: board center → `PT_PCB`
    - Parallel: board flat face → Top Plane
-   - Lock rotation so USB ports face +X edge of base
-3. Board sits inside base plate cavity, 6mm above base floor (standoffs)
+   - Lock rotation so USB-C port faces accessible edge
+3. Board sits in torso cavity, 4mm standoffs from torso wall
+4. Integrates: ESP32-S3-WROOM-1, PCA9685, MAX98357A, power regulation
+5. Same PCB for Spark and Pro — Pro populates additional components (mic header, IMU header, FSR inputs, camera connector, battery charging)
 
-### 4.2 PCA9685 Servo Driver
-
-1. **Insert Component** → `pca9685.sldprt`
-2. **Mate:** center → `PT_PCA9685`, parallel to Top Plane
-3. Sits beside Pi 5 in base, servo headers face upward
-
-### 4.3 LiPo Battery
+### 4.2 LiPo Battery (Pro only)
 
 1. **Insert Component** → model as 40×30×8mm block
 2. **Mate:** center → `PT_BATTERY`
-3. Opposite side of Pi 5 in base plate
+3. Inside base plate cavity
 
-### 4.4 TP4056 Charging Board
+### 4.3 TP4056 Charging Board (Pro only)
 
 1. **Insert Component** → model as 25×17×4mm block
 2. **Mate:** center → `PT_TP4056`
 3. USB-C port must face base plate edge (-Y or +X)
 
-### 4.5 USB-C Breakout
+### 4.4 USB-C Breakout
 
 1. **Insert Component** → 20×14×5mm block
 2. **Mate:** center → `PT_USB_C`
 3. Port flush with base plate edge
 
-### 4.6 Speaker (28mm)
+### 4.5 Speaker (28mm)
 
 1. **Insert Component** → ⌀28×12mm cylinder
 2. **Mate:** center → `PT_SPEAKER`
 3. Cone face points forward (-Y) through torso front wall
 
-### 4.7 MAX98357A Amp
-
-1. **Insert Component** → 19.4×17.8×3mm block
-2. **Mate:** center → `PT_AMP`
-3. Sits directly behind speaker
-
-### 4.8 MPU6050 IMU
+### 4.6 MPU6050 IMU (Pro only)
 
 1. **Insert Component** → `gy521.sldprt`
 2. **Mate:** center → `PT_IMU`
 3. Must be level (parallel to Top Plane) and firmly mounted
 
-### 4.9 INMP441 Microphone
+### 4.7 INMP441 Microphone (Pro only)
 
 1. **Insert Component** → 14×14×3mm block
 2. **Mate:** center → `PT_MIC`
 3. Sound port faces forward — needs ⌀1.5mm hole through frame
 
-### 4.10 HC-SR04 Mini Ultrasonic
+### 4.8 OV2640 Camera (Pro only)
 
-1. **Insert Component** → 40×18×16mm block
-2. **Mate:** center → `PT_ULTRASONIC`
-3. Transducer faces forward — two ⌀11mm openings needed in frame
+1. **Insert Component** → model as 24×24×9mm block (DVP module)
+2. **Mate:** center → `PT_CAMERA`
+3. Lens faces forward through frame — needs ⌀8mm clear aperture
 
-### 4.11 NeoPixel LEDs (×3)
+### 4.9 FSRs — Force Sensitive Resistors (Pro only)
 
-1. Model as 5×5×2mm blocks
-2. **Mate** each to `PT_LED_L_EYE`, `PT_LED_R_EYE`, `PT_LED_CHEST`
-3. Light-emitting face points outward through frame
+1. Model as ⌀14×0.5mm discs
+2. **Mate** each to `PT_FSR_L` and `PT_FSR_R`
+3. Placed under foot pads, wired to FSR inputs on custom PCB
+4. Required for walking — provides ground contact feedback
 
 ---
 
@@ -495,9 +498,9 @@ Define these test positions to verify the kinematic chain:
 1. **Always reference SSP geometry** — don't dimension to servo faces, dimension to SSP planes/axes. This way, if you change a joint position in the SSP, everything updates.
 
 2. **Build as separate part files, one per structural section:**
-   - `frame_base.sldprt` — base plate, Pi 5 housing, battery bay
-   - `frame_torso.sldprt` — torso column, speaker mount, shoulder brackets
-   - `frame_head.sldprt` — head pan/tilt housing, mic mount, sensor mount
+   - `frame_base.sldprt` — base plate, battery bay (Pro)
+   - `frame_torso.sldprt` — torso column, PCB mount, speaker mount, shoulder brackets
+   - `frame_head.sldprt` — head pan/tilt housing, mic mount (Pro), camera mount (Pro)
    - `frame_arm_left.sldprt` — shoulder-to-hand housing (mirror for right)
    - `frame_leg_left.sldprt` — hip-to-foot housing (mirror for right)
 
@@ -507,7 +510,7 @@ Define these test positions to verify the kinematic chain:
    - SG90 pocket: 23.3 × 12.8 × 23.3mm (body + 0.3mm/side)
    - MG90S pocket: 23.4 × 13.0 × 23.1mm
    - XL330 pocket: 21.0 × 35.0 × 27.0mm (body + 0.5mm/side)
-   - Pi 5 pocket: 90 × 60 × 25mm
+   - ESP32-S3 custom PCB pocket: 56 × 36 × 10mm (board + standoffs)
    - Speaker recess: ⌀29 × 13mm
 
 5. **Wire channels:** Route ⌀8mm main channel vertically through torso, ⌀6mm branches to shoulders and legs, ⌀4mm for audio/sensor wires.
@@ -524,47 +527,45 @@ hawabot_pro_assembly.sldasm
 ├── hawabot_skeleton_sketch.sldprt    [FIXED at origin]
 │   ├── LAYOUT_FRONT (construction sketch)
 │   ├── LAYOUT_SIDE (construction sketch)
-│   ├── 18 Reference Planes (PL_*)
-│   ├── 18 Reference Axes (AX_*)
-│   ├── ~25 Reference Points (PT_*)
+│   ├── 19 Reference Planes (PL_*)
+│   ├── 19 Reference Axes (AX_*)
+│   ├── ~29 Reference Points (PT_*)
 │   └── Global Variables (equations)
 │
 ├── SERVOS (mate to AX_* and PL_*)
 │   ├── MG90S_waist_yaw.sldprt        → AX_WAIST_YAW
-│   ├── SG90_waist_roll.sldprt        → AX_WAIST_ROLL
 │   ├── MG90S_L_shoulder.sldprt       → AX_L_SHOULDER
 │   ├── MG90S_R_shoulder.sldprt       → AX_R_SHOULDER
+│   ├── SG90_L_shoulder_roll.sldprt   → AX_L_SHOULDER_ROLL
+│   ├── SG90_R_shoulder_roll.sldprt   → AX_R_SHOULDER_ROLL
 │   ├── SG90_L_elbow.sldprt           → AX_L_ELBOW
 │   ├── SG90_R_elbow.sldprt           → AX_R_ELBOW
 │   ├── SG90_L_hand.sldprt            → AX_L_HAND
 │   ├── SG90_R_hand.sldprt            → AX_R_HAND
 │   ├── SG90_head_pan.sldprt          → AX_HEAD_PAN
 │   ├── SG90_head_tilt.sldprt         → AX_HEAD_TILT
-│   ├── XL330_L_hip_yaw.sldprt        → AX_L_HIP_YAW
-│   ├── XL330_L_hip_pitch.sldprt      → AX_L_HIP_PITCH
-│   ├── XL330_L_knee.sldprt           → AX_L_KNEE
-│   ├── XL330_L_ankle.sldprt          → AX_L_ANKLE
-│   ├── XL330_R_hip_yaw.sldprt        → AX_R_HIP_YAW
-│   ├── XL330_R_hip_pitch.sldprt      → AX_R_HIP_PITCH
-│   ├── XL330_R_knee.sldprt           → AX_R_KNEE
-│   └── XL330_R_ankle.sldprt          → AX_R_ANKLE
+│   ├── XL330_L_hip_yaw.sldprt        → AX_L_HIP_YAW (Pro only)
+│   ├── XL330_L_hip_pitch.sldprt      → AX_L_HIP_PITCH (Pro only)
+│   ├── XL330_L_knee.sldprt           → AX_L_KNEE (Pro only)
+│   ├── XL330_L_ankle.sldprt          → AX_L_ANKLE (Pro only)
+│   ├── XL330_R_hip_yaw.sldprt        → AX_R_HIP_YAW (Pro only)
+│   ├── XL330_R_hip_pitch.sldprt      → AX_R_HIP_PITCH (Pro only)
+│   ├── XL330_R_knee.sldprt           → AX_R_KNEE (Pro only)
+│   └── XL330_R_ankle.sldprt          → AX_R_ANKLE (Pro only)
 │
 ├── ELECTRONICS (mate to PT_*)
-│   ├── pi5.sldprt                    → PT_PI5
-│   ├── pca9685.sldprt                → PT_PCA9685
-│   ├── battery.sldprt                → PT_BATTERY
-│   ├── tp4056.sldprt                 → PT_TP4056
+│   ├── esp32_pcb.sldprt              → PT_PCB (all tiers)
+│   ├── battery.sldprt                → PT_BATTERY (Pro only)
+│   ├── tp4056.sldprt                 → PT_TP4056 (Pro only)
 │   └── usb_c_breakout.sldprt         → PT_USB_C
 │
 ├── AUDIO + SENSORS (mate to PT_*)
-│   ├── speaker_28mm.sldprt           → PT_SPEAKER
-│   ├── max98357a.sldprt              → PT_AMP
-│   ├── inmp441_mic.sldprt            → PT_MIC
-│   ├── mpu6050.sldprt                → PT_IMU
-│   ├── hcsr04_mini.sldprt            → PT_ULTRASONIC
-│   ├── led_eye_L.sldprt              → PT_LED_L_EYE
-│   ├── led_eye_R.sldprt              → PT_LED_R_EYE
-│   └── led_chest.sldprt              → PT_LED_CHEST
+│   ├── speaker_28mm.sldprt           → PT_SPEAKER (all tiers)
+│   ├── inmp441_mic.sldprt            → PT_MIC (Pro only)
+│   ├── mpu6050.sldprt                → PT_IMU (Pro only)
+│   ├── ov2640_camera.sldprt          → PT_CAMERA (Pro only)
+│   ├── fsr_left.sldprt               → PT_FSR_L (Pro only)
+│   └── fsr_right.sldprt              → PT_FSR_R (Pro only)
 │
 └── STRUCTURAL FRAME (YOUR DESIGN — mate to SSP)
     ├── frame_base.sldprt

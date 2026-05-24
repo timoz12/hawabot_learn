@@ -285,7 +285,7 @@ Subscribers pay a premium for the build-as-you-go experience and lower upfront c
 | Partner | Type | Value |
 |---------|------|-------|
 | **Code.org / CS Teachers Association** | Curriculum alignment | Credibility with educators, B2B pipeline |
-| **Raspberry Pi Foundation** | Hardware ecosystem | Pi Pico W / Pi 5 are our compute platforms |
+| **Espressif / Raspberry Pi Foundation** | Hardware ecosystem | ESP32-S3 (Spark/Pro), Pi 5 (Max future) |
 | **Anthropic** | AI partner | Claude powers the tutor; co-marketing opportunity |
 | **Bambu Lab / Prusa** | 3D printing | Volume printing partnership, co-brand "printed on Bambu Lab" |
 

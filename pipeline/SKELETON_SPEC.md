@@ -25,7 +25,7 @@ The skeleton is a **standalone mechanical frame** — a functional robot that mo
 
 ---
 
-## Fixed Dimensions — Spark/Core Skeleton (v17)
+## Fixed Dimensions — Spark/Pro Skeleton (v17)
 
 **Target height:** 250mm (base to head top ~210mm above origin, foot bottom at -115mm)
 **Proportion:** Poppy Humanoid-inspired (leg ratio 35%, arm ratio 33%)
@@ -335,4 +335,4 @@ The generated file is at `pipeline/skeleton_exports/hawabot_spark_skeleton.step`
 |---|---|---|
 | **Spark Humanoid** (this doc) | Action figures, human characters | Standard proportions |
 | **Spark Stumpy** | Dragons, animals, creatures | Wider base, shorter torso, 4 limb mounts |
-| **Core Humanoid** | Larger/more capable | STS3215 servos, elbows, Pi 5 |
+| **Max Humanoid** | 400-500mm flagship | XL330+XL430, on-board AI (Pi 5/CM5) |

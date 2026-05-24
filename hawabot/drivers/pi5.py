@@ -1,7 +1,7 @@
-"""Raspberry Pi 5 driver stub — Pro tier only (future 400-500mm walking humanoid).
+"""Raspberry Pi 5 driver stub — Max tier only (future 400-500mm walking humanoid).
 
-NOTE: This driver is NOT used for Spark or Core tiers. Those use ESP32-S3
-with WiFi (see esp32.py when available). This stub exists for the future Pro
+NOTE: This driver is NOT used for Spark or Pro tiers. Those use ESP32-S3
+with WiFi (see esp32.py when available). This stub exists for the future Max
 tier, which is a separate, larger robot with on-board Pi 5/CM5 compute and
 Dynamixel XL330 serial bus servos.
 """
@@ -10,15 +10,15 @@ from hawabot.drivers.base import BaseDriver
 
 
 class Pi5Driver(BaseDriver):
-    """Controls Dynamixel servos via Raspberry Pi 5 — Pro tier only (future).
+    """Controls Dynamixel servos via Raspberry Pi 5 — Max tier only (future).
 
-    This is a stub for the future Pro tier (400-500mm walking humanoid).
-    Not used in Spark (7 DOF) or Core (11 DOF) — those use ESP32-S3.
+    This is a stub for the future Max tier (400-500mm walking humanoid).
+    Not used in Spark (7 DOF) or Pro (19 DOF) — those use ESP32-S3.
     """
 
     def __init__(self, port: str = "/dev/ttyUSB0"):
         raise NotImplementedError(
-            "Pi5Driver is not yet implemented. Pro tier is a future product. "
+            "Pi5Driver is not yet implemented. Max tier is a future product. "
             "Use HAWABOT_MOCK=1 or Robot(mock=True) for simulation mode."
         )
 
