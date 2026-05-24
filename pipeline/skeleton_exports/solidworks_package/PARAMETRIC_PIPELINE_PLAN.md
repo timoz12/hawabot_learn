@@ -69,11 +69,11 @@ Consumer products with WiFi/Bluetooth need FCC certification. Boards with **modu
 | Pi Zero 2W | No | ~$15,000 | Prototype only |
 | Pi 5 | No | ~$15,000 | Prototype only |
 | Pi CM4/CM5 | Yes | ~$3,000 | Yes, but $30/unit |
-| **ESP32-S3-WROOM-1** | **Yes** | **~$2,000-3,000** | **Yes — $3/unit** |
+| **ESP32-S3-WROOM-1-N16R8** | **Yes** | **~$2,000-3,000** | **Yes — $3/unit** |
 
-**ESP32-S3-WROOM-1 selected** for Spark and Pro production. Team has direct ESP32 experience (WiFi, cloud SQL, OTA updates from environmental sensing project).
+**ESP32-S3-WROOM-1-N16R8 selected** for Spark and Pro production. Team has direct ESP32 experience (WiFi, cloud SQL, OTA updates from environmental sensing project).
 
-### ESP32-S3-WROOM-1 Specs
+### ESP32-S3-WROOM-1-N16R8 Specs
 
 | Spec | Value |
 |---|---|
@@ -124,7 +124,7 @@ One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and P
 | IMU breakout | Motion sensing | MPU6050 (I2C) | Pro only |
 | Power regulation | 5V servos, 3.3V logic | Buck converter + LDO | Spark + Pro |
 | Camera connector | DVP camera interface | Header (OV2640) | Pro only |
-| — | WiFi + BT + compute | ESP32-S3-WROOM-1 module | Spark + Pro |
+| — | WiFi + BT + compute | ESP32-S3-WROOM-1-N16R8 module | Spark + Pro |
 | — | Power input + programming | USB-C connector | Spark + Pro |
 | — | Servo connections | 9x 3-pin JST headers | Spark + Pro |
 | — | Speaker connection | 2-pin JST header | Spark + Pro |
@@ -133,13 +133,13 @@ One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and P
 
 **Estimated size: ~55 x 35 x 8 mm** (about the size of a PCA9685 board)
 
-The ESP32-S3-WROOM-1 module is only 18x25.5mm. Board size is driven by the 9 servo connectors and peripheral ICs.
+The ESP32-S3-WROOM-1-N16R8 module is only 18x25.5mm. Board size is driven by the 9 servo connectors and peripheral ICs.
 
 ```
 +--------------------------------------------------+
 |  [USB-C]                          [speaker JST]  |
 |                                                  |
-|  [ESP32-S3-WROOM-1 module]     [PCA9685 IC]     |
+|  [ESP32-S3-WROOM-1-N16R8 module]     [PCA9685 IC]     |
 |  (18 x 25.5mm, antenna         (TSSOP-28)       |
 |   keep-out zone above)                           |
 |                                                  |

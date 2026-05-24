@@ -9,7 +9,7 @@ A character-driven physical AI robotics platform that teaches systems engineerin
 ## Tech Stack
 
 ### Robot Hardware (Spark + Pro — 250mm)
-- **MCU:** ESP32-S3-WROOM-1 (FCC modular cert, $3, WiFi/BT)
+- **MCU:** ESP32-S3-WROOM-1-N16R8 (16MB flash, 8MB PSRAM, FCC modular cert, WiFi/BT)
 - **Servo control:** PCA9685 (I2C, 16-ch PWM) for SG90/MG90S; Dynamixel bus for XL330 (Pro)
 - **Audio out:** MAX98357A (I2S amp)
 - **Audio in:** INMP441 (I2S MEMS mic, Pro only)

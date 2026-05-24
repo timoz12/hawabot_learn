@@ -375,7 +375,7 @@ These components don't rotate — use **Coincident + Lock** mates to fix them at
    - Parallel: board flat face → Top Plane
    - Lock rotation so USB-C port faces accessible edge
 3. Board sits in torso cavity, 4mm standoffs from torso wall
-4. Integrates: ESP32-S3-WROOM-1, PCA9685, MAX98357A, power regulation
+4. Integrates: ESP32-S3-WROOM-1-N16R8, PCA9685, MAX98357A, power regulation
 5. Same PCB for Spark and Pro — Pro populates additional components (mic header, IMU header, FSR inputs, camera connector, battery charging)
 
 ### 4.2 LiPo Battery (Pro only)

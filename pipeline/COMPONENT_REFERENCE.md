@@ -171,12 +171,12 @@ LEGS (Pro only):
 
 ## 2. Compute Boards
 
-### 2.1 ESP32-S3-WROOM-1 Custom PCB (Spark + Pro — all tiers)
+### 2.1 ESP32-S3-WROOM-1-N16R8 Custom PCB (Spark + Pro — all tiers)
 
 | Spec | Value |
 |---|---|
 | Custom PCB L × W | ~55 × 35 mm (2-layer) |
-| Module | ESP32-S3-WROOM-1 (FCC modular cert, $3/unit) |
+| Module | ESP32-S3-WROOM-1-N16R8 (FCC modular cert, $3/unit) |
 | On-board | PCA9685 (PWM servo control), MAX98357A (I2S amp), USB-C |
 | Pro populates | INMP441 mic, MPU6050 IMU, FSR inputs, OV2640 camera, battery circuit |
 | Communication | WiFi + Bluetooth (AI offloaded to phone) |

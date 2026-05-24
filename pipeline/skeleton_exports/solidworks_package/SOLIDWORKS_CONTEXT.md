@@ -148,7 +148,7 @@ Total (foot to head top):       325mm
 ### Custom PCB (Lives in Torso Cavity)
 - **Size:** ~55 x 35 x 8 mm
 - **Location:** Inside torso, between waist (Z=15) and shoulders (Z=140) — 125mm gap
-- **Integrates:** ESP32-S3-WROOM-1, PCA9685, MAX98357A, power reg
+- **Integrates:** ESP32-S3-WROOM-1-N16R8, PCA9685, MAX98357A, power reg
 - **Pro adds:** INMP441 mic, MPU6050 IMU, camera connector, FSR inputs, battery connector
 
 ### Speaker
@@ -161,7 +161,7 @@ Total (foot to head top):       325mm
 - 7.4V 2S, 1000mAh
 
 ### Antenna Keep-Out
-- ESP32-S3-WROOM-1 antenna is at one end of the module
+- ESP32-S3-WROOM-1-N16R8 antenna is at one end of the module
 - **15mm keep-out zone** — no copper, no ground pour, no metal within 15mm of antenna
 - Orient antenna toward shell opening or thin wall section
 

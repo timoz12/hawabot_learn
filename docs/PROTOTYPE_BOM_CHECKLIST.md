@@ -179,7 +179,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 
 | Breadboard Breakout | Production PCB Equivalent | Package | I/F |
 |---|---|---|---|
-| ESP32-S3-DevKitC-1 | ESP32-S3-WROOM-1 module | Castellated SMD | — |
+| ESP32-S3-DevKitC-1 | ESP32-S3-WROOM-1-N16R8 module | Castellated SMD | — |
 | HiLetgo PCA9685 board | PCA9685PW IC (TSSOP-28) + 25MHz crystal | SMD | I2C |
 | MAX98357A breakout | MAX98357AETE+T IC (TQFN-16) | SMD | I2S |
 | INMP441 mic breakout (Phase 2) | INMP441ACEZ IC (LGA) | SMD | I2S |
@@ -192,7 +192,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 
 | Feature | Spark (populated) | Pro (additionally populated) |
 |---|---|---|
-| ESP32-S3-WROOM-1 module | Yes | Yes |
+| ESP32-S3-WROOM-1-N16R8 module | Yes | Yes |
 | PCA9685 PWM driver + 25MHz xtal | Yes | Yes |
 | MAX98357A I2S amp | Yes | Yes |
 | 9× 3-pin servo JST headers | 7 used | All 11 used |

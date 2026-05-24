@@ -12,7 +12,7 @@ Upper-body humanoid on a flat base. Entry point for the curriculum.
 
 | Component | Qty | Interface | Intent |
 |---|---|---|---|
-| ESP32-S3-WROOM-1 | 1 | — | Main MCU: WiFi, I2C, I2S, GPIO. FCC modular cert. |
+| ESP32-S3-WROOM-1-N16R8 | 1 | — | Main MCU: 16MB flash, 8MB PSRAM, WiFi, I2C, I2S, GPIO. FCC modular cert. |
 | PCA9685 PWM driver | 1 | I2C (0x40) | 16-ch servo control over single I2C bus |
 | SG90 micro servo | 5 | PCA9685 PWM | Head pan, head tilt, L/R shoulder roll, waist yaw |
 | MG90S metal gear servo | 2 | PCA9685 PWM | L/R shoulder pitch (higher torque for arm lift) |
