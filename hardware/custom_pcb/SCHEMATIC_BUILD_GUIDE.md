@@ -1,6 +1,6 @@
 # HawaBot Controller Board — Complete Schematic Build Guide
 
-**Version:** 1.1 | **Date:** May 24, 2026 | **Author:** Hawa Labs
+**Version:** 1.3 | **Date:** May 24, 2026 | **Author:** Hawa Labs
 **This document is self-contained. No internet or Claude session required.**
 
 ---
@@ -76,7 +76,7 @@ CONTROL:
 | TP4056 charger (Pro) | 9 | Pro only (DNP Spark) |
 | DW01A/FS8205A protection (Pro) | 5 | Pro only (DNP Spark) |
 | NTC thermistor (Pro) | 2 | Pro only (DNP Spark) |
-| Boost converter TPS61023 (Pro) | 7 | Pro only (DNP Spark) |
+| Boost converter TPS61023 (Pro) | 6 | Pro only (DNP Spark) |
 | OR-ing diodes (Pro) | 2 | Pro only (DNP Spark) |
 | SPH0641 mic (Pro) | 2 | Pro only (DNP Spark) |
 | MPU6050 IMU (Pro) | 4 | Pro only (DNP Spark) |
@@ -102,8 +102,8 @@ CONTROL:
 | 7 | PDM DATA (mic) | PDM | 2 (Pro) | `PDM_DATA` |
 | 8 | I2C SDA | I2C | 1 | `I2C_SDA` |
 | 9 | I2C SCL | I2C | 1 | `I2C_SCL` |
-| 11 | FSR right front | ADC2_CH0 | 2 (Pro) | `FSR_RF` |
-| 12 | FSR right rear | ADC2_CH1 | 2 (Pro) | `FSR_RR` |
+| 10 | FSR right front | ADC1_CH9 | 2 (Pro) | `FSR_RF` |
+| 3 | FSR right rear | ADC1_CH2 | 2 (Pro) | `FSR_RR` |
 | 15 | PDM CLK (mic) | PDM | 2 (Pro) | `PDM_CLK` |
 | 17 | UART1 TX (Dynamixel) | UART | 2 (Pro) | `DXL_TX` |
 | 18 | UART1 RX (Dynamixel) | UART | 2 (Pro) | `DXL_RX` |
@@ -112,7 +112,11 @@ CONTROL:
 | 43 | UART0 TX (debug) | USB-Serial | 1 | — |
 | 44 | UART0 RX (debug) | USB-Serial | 1 | — |
 
-**Reserved / Avoid:** GPIO0 (strapping, used as boot button with pull-up), GPIO3 (strapping), GPIO45 (strapping), GPIO46 (strapping + input only). GPIO35-37 reserved for Octal SPI PSRAM on N16R8 variant — do NOT use for camera DVP or any other function.
+**Reserved / Avoid:** GPIO0 (strapping, used as boot button with pull-up), GPIO45 (strapping), GPIO46 (strapping + input only). GPIO35-37 reserved for Octal SPI PSRAM on N16R8 variant — do NOT use for camera DVP or any other function.
+
+**GPIO3 note:** Strapping pin (JTAG source select), but safe for FSR_RR with 10K pull-down. At boot, FSR reads ~0V (no force) which selects default JTAG source — no functional impact. FSR is only read during Pro walking gait, well after boot.
+
+**ADC1 vs ADC2:** GPIO1-10 = ADC1 (works with WiFi active). GPIO11-20 = ADC2 (blocked when WiFi is active). All 4 FSRs use ADC1 pins (GPIO1, 2, 3, 10) to ensure readings work during WiFi operation.
 
 ---
 
@@ -191,17 +195,19 @@ CONTROL:
 
 | U2 Pin | Name | Wire To |
 |--------|------|---------|
-| 1 | VIN | `+5V` |
+| 1 | VIN | `+5V_SERVO` (combined power rail — USB or battery via OR-ing diodes) |
 | 2 | GND | GND |
-| 3 | EN | `+5V` (tie to VIN = always enabled) |
+| 3 | EN | `+5V_SERVO` (tie to VIN = always enabled) |
 | 4 | NC | No connect marker (X) |
 | 5 | VOUT | Label `+3V3` |
 
-3. Place C3: `Device:C` → `10uF`, 0805, C15850 → between `+5V` (U2 VIN) and GND
+**NOTE:** VIN connects to `+5V_SERVO` (NOT `+5V`). On Spark, `+5V_SERVO` = `+5V` (direct or via 0Ω jumper). On Pro, `+5V_SERVO` comes from whichever source is active (USB or battery boost) via OR-ing diodes (Step 13c). This ensures the ESP32 powers up on battery even when USB is disconnected.
+
+3. Place C3: `Device:C` → `10uF`, 0805, C15850 → between `+5V_SERVO` (U2 VIN) and GND
 4. Place C4: `Device:C` → `10uF`, 0805, C15850 → between `+3V3` (U2 VOUT) and GND
 
 **VERIFY:**
-- [ ] Pin 1 = VIN → `+5V`
+- [ ] Pin 1 = VIN → `+5V_SERVO` (**NOT `+5V`** — must work on battery)
 - [ ] Pin 3 = EN → tied to VIN (active HIGH, always enabled)
 - [ ] Pin 4 = NC → no connect marker
 - [ ] Pin 5 = VOUT → `+3V3`
@@ -653,7 +659,7 @@ Wire U7 (DW01A):
 | U7 Pin | Name | Wire To |
 |--------|------|---------|
 | 1 | OD | Q1 **pin 6** (G1) — GND-side FET gate |
-| 2 | CS | R11 → junction between Q1 S1 and GND |
+| 2 | VM | R11 → junction between Q1 S1 and GND (current sense / charger detect) |
 | 3 | OC | Q1 **pin 4** (G2) — BAT-side FET gate |
 | 4 | TD | NC or 100nF to GND |
 | 5 | VCC | R12 (100R) → `VBAT` + C15 from VCC to GND |
@@ -696,62 +702,86 @@ Wire Q1 (FS8205A SOT-23-6):
 - DW01A/FS8205A protection already designed for single cell
 - Trade-off: lower runtime (mitigated by using 2000mAh cell)
 
+**CRITICAL: The TPS61023 is a SYNCHRONOUS boost converter — it has an internal high-side PMOS rectifier. NO external Schottky diode needed (unlike the non-synchronous MT3608).**
+
+**TPS61023 SOT-563 Pin Map (from datasheet Table 5-1, page 3):**
+
+| Pin | Name | Function |
+|-----|------|----------|
+| 1 | FB | Feedback input — connect to resistor divider |
+| 2 | EN | Enable — tie to VIN for always-on |
+| 3 | VIN | Power input — connect to VBAT |
+| 4 | GND | Ground |
+| 5 | SW | Switch node — connect inductor here |
+| 6 | VOUT | Regulated output — connect to +5V_BOOST |
+
 **DO:**
 1. Place U9: `Regulator_Switching:TPS61023` (or generic boost symbol + assign footprint)
    - Footprint: SOT-563 (1.6×1.2mm, 6-pin)
    - LCSC: C919459
    - Price: ~$0.14
-2. Wire per TPS61023 datasheet reference circuit:
+2. Wire per TPS61023 datasheet Figure 8-1 (Typical Application):
 
 | U9 Pin | Name | Wire To |
 |--------|------|---------|
-| 1 | VIN | `VBAT` (from battery protection output) |
-| 2 | GND | GND |
-| 3 | EN | `VBAT` (tie to VIN = always enabled when battery present) |
-| 4 | SW | → L3 inductor → D_BOOST Schottky cathode → `+5V_BOOST` |
-| 5 | FB | Feedback divider midpoint (R17/R18) |
-| 6 | VOUT | `+5V_BOOST` (direct connection for internal LDO) |
+| 1 | FB | Feedback divider midpoint (R17/R18) |
+| 2 | EN | `VBAT` (tie to VIN = always enabled when battery present) |
+| 3 | VIN | `VBAT` (from battery protection output) |
+| 4 | GND | GND |
+| 5 | SW | L3 inductor (other end of L3 connects to VBAT) |
+| 6 | VOUT | Label `+5V_BOOST` — this IS the regulated output (internal sync rectifier) |
 
-3. Place L3: `Device:L` → `2.2µH`, 3×3mm or 4×4mm, rated ≥4A saturation
-   - Wire: `VBAT` → L3 → U9 SW (pin 4)
-   - LCSC: Search "2.2uH inductor 4A" — e.g., C408412 or similar
-4. Place D_BOOST: `Device:D_Schottky` → `SS34` (3A/40V), SMA, LCSC: C8678
-   - Wire: anode → U9 SW (pin 4) / L3 junction, cathode → label `+5V_BOOST`
+3. Place L3: `Device:L` → **`1µH`**, 3×3mm or 4×4mm, rated ≥4A saturation
+   - Wire: `VBAT` → L3 → U9 SW (**pin 5**)
+   - LCSC: Search "1uH inductor 4A" — TPS61023 datasheet Table 8-2 recommends Coilcraft XFL4020, Würth 744311100, or TDK VLC4020T
+   - **NOTE:** 1µH per TI typical application (Figure 8-1). NOT 2.2µH.
+4. **NO external Schottky diode** — TPS61023 is synchronous (internal PMOS rectifier). Adding one would reduce efficiency and interfere with current sensing.
 5. Place C_BIN: `Device:C` → `10uF`, 0805, C15850 — boost input cap
-   - Wire: `VBAT` → C_BIN → GND (close to U9 VIN)
+   - Wire: `VBAT` → C_BIN → GND (close to U9 VIN, pin 3)
 6. Place C_BOUT: `Device:C` → `22uF`, 0805, C45783 — boost output cap
-   - Wire: `+5V_BOOST` → C_BOUT → GND
-7. Place feedback divider (sets Vout = 5.1V):
-   - R17: `750k 1%`, 0402, C137937 — top resistor
-   - R18: `100k 1%`, 0402, C25741 — bottom resistor
+   - Wire: `+5V_BOOST` (U9 VOUT, pin 6) → C_BOUT → GND
+7. Place feedback divider (sets Vout ≈ 5.0V):
+   - **TPS61023 VREF = 0.595V typical** (datasheet Section 6.5, NOT 0.5V)
+   - Formula: R17 = (VOUT/VREF - 1) × R18
+   - For Vout = 5.0V: R17 = (5.0/0.595 - 1) × 100k = 7.4 × 100k = **740k**
+   - TI reference design (Figure 8-1) uses **R17 = 732k**, R18 = 100k → Vout ≈ 4.96V
+   - Use: R17 = **750k 1%** (C137937, standard value), R18 = **100k 1%** (C25741)
+   - Actual Vout = 0.595 × (1 + 750/100) = 0.595 × 8.5 = **5.06V** ✓
    - Wire: `+5V_BOOST` → R17 → junction → R18 → GND
-   - Wire: junction → U9 FB (pin 5)
-   - Vout = 0.5V × (1 + 750k/100k) = 0.5V × 8.5 = **4.25V**... 
+   - Wire: junction → U9 FB (**pin 1**)
 
-   **CORRECTION:** TPS61023 reference voltage is 0.5V (not 0.6V like MT3608).
-   For Vout = 5.1V: R17/R18 = (5.1/0.5) - 1 = 9.2
-   Use R17 = **920k** (C25810), R18 = **100k** (C25741) → Vout = 0.5 × (1 + 920k/100k) = **5.1V**
-
-**Topology:**
+**Topology (synchronous — no external diode):**
 ```
-VBAT ──[L3 2.2µH]──┬──[D_BOOST SS34]── +5V_BOOST
-                    │                    │
-                  SW (pin 4)           C_BOUT (22µF)
-                                        │
-                              R17 (920k) ── FB (pin 5) ── R18 (100k) ── GND
+VBAT ──[L3 1µH]── SW (pin 5)
+  │                  │
+  │                U9 TPS61023
+  │                  │
+  └── VIN (pin 3)  VOUT (pin 6) ── +5V_BOOST
+                                      │
+                                    C_BOUT (22µF)
+                                      │
+                           R17 (750k) ── FB (pin 1) ── R18 (100k) ── GND
 ```
 
 **VERIFY:**
-- [ ] L3 connects VBAT → SW junction (NOT between SW and diode output)
-- [ ] D_BOOST anode at SW junction, cathode at `+5V_BOOST` output
-- [ ] Feedback: R17 (920k) from +5V_BOOST to FB, R18 (100k) from FB to GND
-- [ ] Vout = 0.5V × (1 + 920k/100k) = **5.1V**
-- [ ] EN tied to VIN (always on when battery present)
-- [ ] C_BIN (10µF) on input, C_BOUT (22µF) on output
+- [ ] **Pin 1 = FB** (NOT VIN) — feedback divider connects here
+- [ ] **Pin 2 = EN** → tied to VBAT (always enabled)
+- [ ] **Pin 3 = VIN** → `VBAT`
+- [ ] **Pin 4 = GND** → GND
+- [ ] **Pin 5 = SW** → L3 inductor (other end to VBAT)
+- [ ] **Pin 6 = VOUT** → `+5V_BOOST` output
+- [ ] **NO external Schottky diode** — synchronous converter handles this internally
+- [ ] L3 = **1µH** (NOT 2.2µH) per TI recommendation
 - [ ] L3 rated ≥ 4A saturation current (TPS61023 peaks at 3.7A)
-- [ ] Component count: 7 (U9, L3, D_BOOST, C_BIN, C_BOUT, R17, R18)
+- [ ] Feedback: R17 (**750k**) from +5V_BOOST to FB, R18 (**100k**) from FB to GND
+- [ ] Vout = 0.595V × (1 + 750k/100k) = **5.06V** (within 5V ±2%)
+- [ ] **VREF is 0.595V** (NOT 0.5V, NOT 0.6V) — verify in datasheet Section 6.5
+- [ ] C_BIN (10µF) on VIN, C_BOUT (22µF) on VOUT
+- [ ] Cross-check EVERY pin against TPS61023 datasheet Table 5-1 (page 3)
+- [ ] Component count: **5** (U9, L3, C_BIN, C_BOUT, R17, R18 = 6 parts... but R17/R18 counted as 2)
+- [ ] Total: 6 components (U9, L3, C_BIN, C_BOUT, R17, R18)
 
-**EXPECTED RESULT:** When on battery (3.7V), boost converter produces 5.1V for servos. Current capability: ~2A continuous at 5.1V output from 3.7V input (efficiency ~90%).
+**EXPECTED RESULT:** When on battery (3.7V), synchronous boost converter produces ~5.06V for servos. No external diode needed. Current capability: ~2A continuous at 5V output from 3.7V input (efficiency ~94% per datasheet Figure 7-3).
 
 ---
 
@@ -786,7 +816,13 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 - [ ] `+5V_SERVO` is now the main 5V bus (feeds LDO input too — change U2 VIN from `+5V` to `+5V_SERVO`)
 - [ ] Component count: 2 (D_OR1, D_OR2)
 
-**NOTE:** Schottky diode forward drop is ~0.3V. So servo rail gets ~4.7V from USB or ~4.8V from boost. SG90/MG90S work fine at 4.7V (rated 4.8-6V). XL330 works at 3.7-6V.
+**NOTE:** SS34 Schottky forward drop is ~0.4-0.6V at operating currents (0.85V max at 3A per datasheet). Servo rail voltage:
+- From USB (5.0V): `+5V_SERVO` ≈ 4.4-4.6V — marginal for SG90 (rated 4.8V min)
+- From boost (5.06V): `+5V_SERVO` ≈ 4.5-4.7V — same concern
+
+**Spark mitigation:** For Spark (USB-only, no battery), consider populating D_OR1 position with a **0Ω jumper** instead of Schottky diode. This gives full 5V to servos with zero drop. D_OR2 is DNP (no boost on Spark). The 0Ω jumper is safe because there's no second power source to backfeed.
+
+**Pro:** Both diodes populated. The ~0.5V drop is acceptable because XL330 servos (Pro legs/shoulders) operate at 3.7-6V. SG90 servos at 4.5V will have slightly reduced torque (~10%) but function correctly at the light loads in this robot.
 
 **EXPECTED RESULT:** Seamless power switching between USB and battery. Unplug USB → battery boost takes over. Plug USB back in → USB takes over and TP4056 charges battery.
 
@@ -905,7 +941,7 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 
 | J_CAM Pin | Signal | ESP32 GPIO | Notes |
 |-----------|--------|------------|-------|
-| — | D0 | GPIO10 | Shared with FSR on Spark — OK because camera is Pro-only |
+| — | D0 | GPIO11 | Camera is digital (not ADC) — ADC2 WiFi restriction doesn't apply |
 | — | D1 | GPIO13 | |
 | — | D2 | GPIO14 | |
 | — | D3 | GPIO16 | Freed by PDM mic (only uses 2 pins) |
@@ -955,14 +991,14 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 |-----|-----------|----------|------|-----------|
 | Left front | J_FSR1 | R13 | GPIO1 | `FSR_LF` |
 | Left rear | J_FSR2 | R14 | GPIO2 | `FSR_LR` |
-| Right front | J_FSR3 | R15 | GPIO11 | `FSR_RF` |
-| Right rear | J_FSR4 | R16 | GPIO12 | `FSR_RR` |
+| Right front | J_FSR3 | R15 | GPIO10 | `FSR_RF` |
+| Right rear | J_FSR4 | R16 | GPIO3 | `FSR_RR` |
 
 **VERIFY:**
 - [ ] Each FSR has a 10K pull-down resistor forming a voltage divider
-- [ ] ADC GPIOs (1, 2, 11, 12) are all ADC-capable on ESP32-S3 and NOT strapping pins
-- [ ] GPIO3 is NOT used (strapping pin)
-- [ ] GPIO10 is NOT used here (reserved for camera DVP on Pro)
+- [ ] All 4 FSR GPIOs are **ADC1** channels (GPIO1, 2, 3, 10) — works with WiFi active
+- [ ] GPIO3 is a strapping pin but safe: 10K pull-down reads ~0V at boot (default JTAG source, no impact)
+- [ ] GPIO10 is shared with camera D0 — acceptable since both are Pro-only and firmware manages pin muxing
 - [ ] FSR connectors are 2-pin (signal + GND)
 - [ ] Component count: 8 (4 connectors + 4 resistors)
 
@@ -1038,15 +1074,14 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 | 37 | D3 | GREEN LED (full) | C130723 | Step 11 |
 | 38 | D_OR1 | SS34 Schottky (USB) | C2480 | Step 13c |
 | 39 | D_OR2 | SS34 Schottky (boost) | C2480 | Step 13c |
-| 40 | D_BOOST | SS34 Schottky (boost rect) | C8678 | Step 13b |
-| 41 | L3 | 2.2µH inductor ≥4A | TBD | Step 13b |
+| 41 | L3 | 1µH inductor ≥4A | TBD | Step 13b |
 | 42 | R7 | 2k (PROG) | C4109 | Step 11 |
 | 43 | R8-R9 | 1k ×2 (charge LED) | C11702 | Step 11 |
 | 44 | R10 | 10k (NTC bias) | C25744 | Step 12 |
 | 45 | R11 | 100mR (sense) | C724023 | Step 13 |
 | 46 | R12 | 100R (VCC inrush) | C25076 | Step 13 |
 | 47 | R13-R16 | 10k ×4 (FSR) | C25744 | Step 18 |
-| 48 | R17 | 920k 1% (boost FB top) | C25810 | Step 13b |
+| 48 | R17 | 750k 1% (boost FB top) | C137937 | Step 13b |
 | 49 | R18 | 100k 1% (boost FB bottom) | C25741 | Step 13b |
 | 50 | C13-C19 | Various decoupling | C1525/C15850 | Various |
 | 51 | C_BIN | 10µF (boost input) | C15850 | Step 13b |
@@ -1103,7 +1138,8 @@ Zero DRC errors required before Gerber export.
 | Single-cell LiPo + boost (not 2S + buck) | TP4056 charger + DW01A protection proven on Pod. Lower voltage = safer for kids. Full reuse of Pod charging circuit. 2000mAh cell mitigates runtime. |
 | TPS61023 boost converter | 3.7A peak current, SOT-563 (tiny), $0.14 on LCSC. Handles servo loads. OR-ing diodes merge USB and battery power seamlessly. |
 | WS2812B RGB status LED | Single addressable LED on GPIO48. Provides boot/WiFi/error/OTA status via firmware color codes. Same part as Pod. |
-| PCA9685 internal oscillator (no crystal) | PCA9685 has NO external oscillator pins (TSSOP-28). Internal 25MHz is ±10%, fine for 50Hz servo PWM. |
+| PCA9685 internal oscillator (no crystal) | PCA9685 has EXTCLK pin (pin 25) for optional external clock, but internal 25MHz oscillator is sufficient (±10% fine for 50Hz servo PWM). No crystal needed. |
+| All FSRs on ADC1 (GPIO1,2,3,10) | ADC2 (GPIO11+) is blocked when WiFi is active. FSRs must read during walking while WiFi streams to phone. GPIO3 strapping risk accepted (10K pull-down = safe boot). |
 | GPIO35-37 reserved for PSRAM | N16R8 uses Octal SPI PSRAM on GPIO35-37. Camera DVP reassigned to avoid these. |
 | Reset button (SW2) added | Standard ESP32 practice. Simplifies boot mode entry (hold BOOT + press RESET). Without it, must power-cycle. |
 | Single-cell LiPo (not 2S) | TP4056 only charges single-cell. Simplifies power. Servos run fine on 5V from USB. |
