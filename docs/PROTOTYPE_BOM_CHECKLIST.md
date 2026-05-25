@@ -1,6 +1,6 @@
 # HawaBot Prototype BOM Checklist
 
-_Last updated: 2026-05-05_
+_Last updated: 2026-05-24_
 
 Build Spark first, validate, then expand to Pro with Dynamixel legs.
 
@@ -11,12 +11,13 @@ Build Spark first, validate, then expand to Pro with Dynamixel legs.
 Build and validate the Spark experience: servos, speaker, WiFi API.
 
 ### Already Have
-- [x] ESP32-S3-DevKitC-1 dev board
+- [x] ESP32-S3-DevKitC-1 dev board (check module variant — need N16R8)
 
 ### Purchased
 
 | Item | Qty | Source | Price | Status |
 |---|---|---|---|---|
+| ESP32-S3-DevKitC-1-N16R8 dev board | 1 | Amazon (YEJMKJ B0CDRM6BGQ) | $12 | [ ] To Order |
 | HiLetgo PCA9685 16-ch PWM breakout (2-pack) | 2 | Amazon (B07BRS249H) | $14 | [x] Ordered |
 | SG90 micro servos | 5 | Amazon | $10 | [x] Ordered |
 | MG90S metal gear servos | 2 | Amazon | $8 | [x] Ordered |
@@ -31,7 +32,7 @@ Servo allocation:
 - MG90S × 2: L shoulder pitch, R shoulder pitch
 - PCA9685: 1 for use, 1 spare
 
-### Phase 1 Total: ~$56
+### Phase 1 Total: ~$68
 
 ### What Phase 1 Validates
 
@@ -164,10 +165,11 @@ Power (Phase 2):
 
 | Phase | Cost | Status |
 |---|---|---|
-| ESP32-S3-DevKitC-1 | (already had) | [x] |
-| **Phase 1: Spark** | **$56** | **[x] Ordered** |
+| ESP32-S3-DevKitC-1 (original) | (already had) | [x] |
+| ESP32-S3-DevKitC-1-N16R8 | $12 | [ ] To Order |
+| **Phase 1: Spark** | **$68** | **Partially ordered** |
 | **Phase 2: Pro expansion** | **$322** | [ ] After Spark validated |
-| **Combined** | **$378** | |
+| **Combined** | **$390** | |
 
 ---
 
@@ -185,7 +187,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | INMP441 mic breakout (Phase 2) | INMP441ACEZ IC (LGA) | SMD | I2S |
 | GY-521 IMU breakout (Phase 2) | MPU-6050 IC (QFN-24) or ICM-42688-P | SMD | I2C |
 | FSR voltage dividers (Phase 2) | 4x 10K resistors + ADC input traces | 0402/0603 | Analog |
-| 5V USB-C power supply | USB-C connector + AMS1117-3.3 LDO | SMD | — |
+| 5V USB-C power supply | USB-C connector + AP2112K-3.3 LDO | SMD | — |
 | Soldered hookup wire | PCB traces + JST-SH servo headers | — | — |
 
 ### PCB Features
@@ -197,7 +199,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | MAX98357A I2S amp | Yes | Yes |
 | 9× 3-pin servo JST headers | 7 used | All 11 used |
 | USB-C power + programming | Yes | Yes |
-| 3.3V LDO (AMS1117-3.3) | Yes | Yes |
+| 3.3V LDO (AP2112K-3.3) | Yes | Yes |
 | 5V servo power rail + bulk caps | Yes | Yes |
 | Boot + Reset buttons | Yes | Yes |
 | INMP441 MEMS mic | **DNP** | Yes |
@@ -219,7 +221,7 @@ DNP = Do Not Populate (pads on PCB but no component soldered — saves cost for 
 - **USB-C:** CC1/CC2 need 5.1K pull-down resistors for 5V power delivery
 - **Servo power rail:** Separate from 3.3V logic. Common GND. Bulk cap (470µF) near PCA9685.
 - **Design tool:** KiCad → fabricate at JLCPCB with SMT assembly
-- **Estimated size:** ~55 × 35 × 8mm (fits in 250mm robot torso cavity)
+- **Estimated size:** ~60 × 40 × 8mm (fits in 250mm robot torso cavity)
 - **Estimated cost:** ~$2-3/board + ~$15 assembly (prototype qty at JLCPCB)
 
 ### PCB Pin Allocation (Matching Breadboard Prototype)
