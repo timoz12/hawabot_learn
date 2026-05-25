@@ -1,6 +1,6 @@
 # HawaBot Controller Board — Complete Schematic Build Guide
 
-**Version:** 1.0 | **Date:** May 24, 2026 | **Author:** Hawa Labs
+**Version:** 1.1 | **Date:** May 24, 2026 | **Author:** Hawa Labs
 **This document is self-contained. No internet or Claude session required.**
 
 ---
@@ -61,8 +61,8 @@ CONTROL:
 |---------|-----------|-----------|
 | USB-C input + ESD | 8 | All tiers |
 | 3.3V LDO | 3 | All tiers |
-| ESP32-S3 support | 5 | All tiers |
-| PCA9685 servo driver | 5 | All tiers |
+| ESP32-S3 support | 6 | All tiers |
+| PCA9685 servo driver | 3 | All tiers |
 | MAX98357A audio amp | 5 | All tiers |
 | Servo power rail | 3 | All tiers |
 | Servo headers (3-pin) | 7-16 | All tiers (7 Spark, 16 Pro) |
@@ -71,7 +71,7 @@ CONTROL:
 | DW01A/FS8205A protection (Pro) | 5 | Pro only (DNP Spark) |
 | NTC thermistor (Pro) | 2 | Pro only (DNP Spark) |
 | SPH0641 mic (Pro) | 2 | Pro only (DNP Spark) |
-| MPU6050 IMU (Pro) | 2 | Pro only (DNP Spark) |
+| MPU6050 IMU (Pro) | 4 | Pro only (DNP Spark) |
 | Dynamixel connector (Pro) | 1 | Pro only (DNP Spark) |
 | Camera connector (Pro) | 1 | Pro only (DNP Spark) |
 | FSR connectors + dividers (Pro) | 8 | Pro only (DNP Spark) |
@@ -86,16 +86,16 @@ CONTROL:
 | GPIO | Function | Bus/Interface | Phase | Net Label |
 |------|----------|---------------|-------|-----------|
 | 0 | BOOT button | Digital (strapping) | 1 | `BOOT` |
-| 1 | FSR left front | ADC | 2 (Pro) | `FSR_LF` |
-| 2 | FSR left rear | ADC | 2 (Pro) | `FSR_LR` |
-| 3 | FSR right front | ADC | 2 (Pro) | `FSR_RF` |
+| 1 | FSR left front | ADC1_CH0 | 2 (Pro) | `FSR_LF` |
+| 2 | FSR left rear | ADC1_CH1 | 2 (Pro) | `FSR_LR` |
 | 4 | I2S0 BCLK (speaker) | I2S | 1 | `I2S_BCLK` |
 | 5 | I2S0 LRCLK (speaker) | I2S | 1 | `I2S_LRCLK` |
 | 6 | I2S0 DOUT (speaker) | I2S | 1 | `I2S_DOUT` |
 | 7 | PDM DATA (mic) | PDM | 2 (Pro) | `PDM_DATA` |
 | 8 | I2C SDA | I2C | 1 | `I2C_SDA` |
 | 9 | I2C SCL | I2C | 1 | `I2C_SCL` |
-| 10 | FSR right rear | ADC | 2 (Pro) | `FSR_RR` |
+| 11 | FSR right front | ADC2_CH0 | 2 (Pro) | `FSR_RF` |
+| 12 | FSR right rear | ADC2_CH1 | 2 (Pro) | `FSR_RR` |
 | 15 | PDM CLK (mic) | PDM | 2 (Pro) | `PDM_CLK` |
 | 17 | UART1 TX (Dynamixel) | UART | 2 (Pro) | `DXL_TX` |
 | 18 | UART1 RX (Dynamixel) | UART | 2 (Pro) | `DXL_RX` |
@@ -104,7 +104,7 @@ CONTROL:
 | 43 | UART0 TX (debug) | USB-Serial | 1 | — |
 | 44 | UART0 RX (debug) | USB-Serial | 1 | — |
 
-**Reserved / Avoid:** GPIO0 (strapping, used as boot button with pull-up), GPIO3 (strapping), GPIO45 (strapping), GPIO46 (strapping + input only).
+**Reserved / Avoid:** GPIO0 (strapping, used as boot button with pull-up), GPIO3 (strapping), GPIO45 (strapping), GPIO46 (strapping + input only). GPIO35-37 reserved for Octal SPI PSRAM on N16R8 variant — do NOT use for camera DVP or any other function.
 
 ---
 
@@ -227,6 +227,8 @@ CONTROL:
    - Wire: `+3V3` → R4 → U1 GPIO0
 7. Place SW1: `Switch:SW_Push` → Footprint: tactile switch, LCSC: C318884
    - Wire: U1 GPIO0 → SW1 → GND (pressing SW1 pulls GPIO0 LOW for boot mode)
+8. Place SW2: `Switch:SW_Push` → Footprint: tactile switch, LCSC: C318884
+   - Wire: U1 EN → SW2 → GND (pressing SW2 resets the ESP32)
 
 **VERIFY:**
 - [ ] U1 3V3 → `+3V3`, all GND pins → GND
@@ -234,10 +236,12 @@ CONTROL:
 - [ ] R3 (10k) pulls EN HIGH through to +3V3
 - [ ] C5 (100nF) from EN to GND — creates RC reset delay
 - [ ] R4 (10k) pulls GPIO0 HIGH (normal boot)
-- [ ] SW1 pulls GPIO0 LOW when pressed (download mode)
-- [ ] Component count: 5 (R3, R4, C5, SW1 + U1 already placed)
+- [ ] SW1 (BOOT) pulls GPIO0 LOW when pressed
+- [ ] SW2 (RESET) pulls EN LOW when pressed — resets the ESP32
+- [ ] **Boot mode entry:** hold SW1, press SW2, release SW2, release SW1
+- [ ] Component count: 6 (R3, R4, C5, SW1, SW2 + U1 already placed)
 
-**EXPECTED RESULT:** ESP32-S3 module with power, USB data, and boot/reset support. Hold SW1 during power-on to enter download mode for flashing.
+**EXPECTED RESULT:** ESP32-S3 module with power, USB data, boot button (SW1), and reset button (SW2). Hold BOOT + press RESET to enter download mode.
 
 ---
 
@@ -249,7 +253,7 @@ CONTROL:
 1. Place R5: `Device:R` → `4.7k`, 0402, C25900 — SDA pull-up
    - Wire: `+3V3` → R5 → label `I2C_SDA`
    - Wire: U1 GPIO8 → `I2C_SDA`
-2. Place R6: `Device:R` → `4.7k`, 0402, C25744 — SCL pull-up
+2. Place R6: `Device:R` → `4.7k`, 0402, C25900 — SCL pull-up
    - Wire: `+3V3` → R6 → label `I2C_SCL`
    - Wire: U1 GPIO9 → `I2C_SCL`
 
@@ -263,57 +267,77 @@ CONTROL:
 
 ---
 
-## Step 5: PCA9685 Servo PWM Driver (5 components)
+## Step 5: PCA9685 Servo PWM Driver (3 components)
 
 **PURPOSE:** 16-channel PWM driver for SG90/MG90S hobby servos. This is the core servo control IC.
 
-**DATASHEET:** Open `datasheets/PCA9685.pdf` — page 5 (pin table), page 28 (reference circuit)
+**DATASHEET:** Open `datasheets/PCA9685.pdf` — page 6, Table 4 (TSSOP-28 pinout)
+
+**CRITICAL: The PCA9685 TSSOP-28 pin numbers are NOT intuitive. Verify every pin against the datasheet. The bare IC has NO "VSERVO" pin — that is a breakout board concept.**
+
+**PCA9685 TSSOP-28 Complete Pin Map (from datasheet Table 4):**
+
+| Pin | Function | Pin | Function |
+|-----|----------|-----|----------|
+| 1 | A0 | 15 | LED8 |
+| 2 | A1 | 16 | LED9 |
+| 3 | A2 | 17 | LED10 |
+| 4 | A3 | 18 | LED11 |
+| 5 | A4 | 19 | LED12 |
+| 6 | LED0 | 20 | LED13 |
+| 7 | LED1 | 21 | LED14 |
+| 8 | LED2 | 22 | LED15 |
+| 9 | LED3 | 23 | OE (active LOW) |
+| 10 | LED4 | 24 | A5 |
+| 11 | LED5 | 25 | EXTCLK |
+| 12 | LED6 | 26 | SCL |
+| 13 | LED7 | 27 | SDA |
+| 14 | VSS | 28 | VDD |
 
 **DO:**
 1. Place U3: `LED_Driver:PCA9685PW` → Footprint: `Package_SO:TSSOP-28_4.4x9.7mm_P0.65mm`
    - LCSC: C2678753
 2. Wire power:
-   - U3 VDD (pin 28) → `+3V3` (logic power)
-   - U3 VSS (pin 14) → GND
-   - U3 VSERVO (pin 27) → **NOT connected to +3V3** — see servo power step
+   - U3 VDD (**pin 28**) → `+3V3` (logic power)
+   - U3 VSS (**pin 14**) → GND
 3. Wire I2C:
-   - U3 SDA (pin 23) → `I2C_SDA`
-   - U3 SCL (pin 24) → `I2C_SCL`
+   - U3 SDA (**pin 27**) → `I2C_SDA`
+   - U3 SCL (**pin 26**) → `I2C_SCL`
 4. Wire address pins (all to GND = address 0x40):
-   - U3 A0 (pin 17) → GND
-   - U3 A1 (pin 18) → GND
-   - U3 A2 (pin 19) → GND
-   - U3 A3 (pin 20) → GND
-   - U3 A4 (pin 21) → GND
-   - U3 A5 (pin 15) → GND
+   - U3 A0 (**pin 1**) → GND
+   - U3 A1 (**pin 2**) → GND
+   - U3 A2 (**pin 3**) → GND
+   - U3 A3 (**pin 4**) → GND
+   - U3 A4 (**pin 5**) → GND
+   - U3 A5 (**pin 24**) → GND
 5. Wire control pins:
-   - U3 OE (pin 22) → GND (output always enabled)
-   - U3 EXTCLK (pin 25) → GND (use internal oscillator)
-6. Place Y1: `Device:Crystal` → Value: `25MHz`, Footprint: 3215 or HC-49S
-   - Wire: Y1 pin 1 → U3 OSC_IN (pin 26)
-   - Wire: Y1 pin 2 → U3 OSC_OUT (pin 16)
-   - **ALTERNATIVE:** If using internal oscillator (acceptable for servos), omit Y1 and tie OSC_IN (pin 26) to GND. Internal oscillator is ±10% which is fine for 50Hz PWM.
-7. Place C6: `Device:C` → `100nF`, 0402, C1525 — VDD decoupling
-   - Wire: `+3V3` → C6 → GND (close to U3 VDD pin)
-8. Place C7: `Device:C` → `10uF`, 0805, C15850 — VDD bulk
+   - U3 OE (**pin 23**) → GND (output always enabled — OE is active LOW)
+   - U3 EXTCLK (**pin 25**) → GND (use internal 25MHz oscillator — no external crystal needed)
+6. Place C6: `Device:C` → `100nF`, 0402, C1525 — VDD decoupling
+   - Wire: `+3V3` → C6 → GND (close to U3 VDD pin 28)
+7. Place C7: `Device:C` → `10uF`, 0805, C15850 — VDD bulk
    - Wire: `+3V3` → C7 → GND
 
-**PWM outputs — leave FLOATING for now. Servo headers are wired in Step 7.**
+**PWM outputs (pins 6-13, 15-22) — leave FLOATING for now. Servo headers are wired in Step 7.**
+
+**NOTE:** The PCA9685 IC has NO "VSERVO" pin. On the Adafruit breakout board, "V+" is a separate screw terminal for servo power that connects directly to servo header power pins, bypassing the IC entirely. On our custom PCB, servo 5V power goes directly from the `+5V_SERVO` rail to the servo header power pins (Step 6) — it does not pass through the PCA9685 IC at all.
 
 **VERIFY:**
-- [ ] VDD (pin 28) → `+3V3` — **NOT +5V** (PCA9685 logic runs at 3.3V)
-- [ ] VSERVO (pin 27) → **NOT yet connected** — will go to +5V servo power rail
-- [ ] SDA (pin 23) → `I2C_SDA`, SCL (pin 24) → `I2C_SCL`
-- [ ] All address pins (A0-A5) → GND → I2C address = **0x40**
-- [ ] OE (pin 22) → GND (enabled)
-- [ ] EXTCLK (pin 25) → GND (internal clock)
-- [ ] If using crystal: Y1 between OSC_IN (pin 26) and OSC_OUT (pin 16)
-- [ ] If no crystal: OSC_IN (pin 26) → GND
+- [ ] VDD (**pin 28**) → `+3V3` — **NOT +5V**
+- [ ] VSS (**pin 14**) → GND
+- [ ] SDA (**pin 27**) → `I2C_SDA` — **NOT pin 23** (pin 23 is OE)
+- [ ] SCL (**pin 26**) → `I2C_SCL` — **NOT pin 24** (pin 24 is A5)
+- [ ] A0-A4 (**pins 1-5**) → GND — **NOT pins 17-21** (those are LED10-LED14)
+- [ ] A5 (**pin 24**) → GND
+- [ ] OE (**pin 23**) → GND (enabled) — **NOT pin 22** (pin 22 is LED15)
+- [ ] EXTCLK (**pin 25**) → GND (internal oscillator, no crystal needed)
+- [ ] **No crystal (Y1) needed** — PCA9685 has internal 25MHz oscillator. ±10% is fine for 50Hz servo PWM.
+- [ ] **No "VSERVO" connection to the IC** — servo power goes to headers directly
 - [ ] C6 (100nF) + C7 (10µF) decoupling on VDD
-- [ ] Open PCA9685.pdf page 5 — verify every pin assignment matches
-- [ ] Component count: 5 (U3, Y1 optional, C6, C7 + servo headers in Step 7)
+- [ ] Cross-check EVERY pin against PCA9685.pdf Table 4 (page 6)
+- [ ] Component count: 3 (U3, C6, C7)
 
-**EXPECTED RESULT:** PCA9685 connected to ESP32-S3 via I2C at address 0x40. 16 PWM outputs available. Logic at 3.3V, servo power not yet connected.
+**EXPECTED RESULT:** PCA9685 connected to ESP32-S3 via I2C at address 0x40. 16 PWM outputs available. Logic at 3.3V. No crystal. Servo power handled separately in Step 6.
 
 ---
 
@@ -322,18 +346,20 @@ CONTROL:
 **PURPOSE:** Separate 5V high-current power rail for servos. This is critical — servos can draw 2A+ at stall and must NOT be powered through the LDO.
 
 **DO:**
-1. Wire: U3 VSERVO (pin 27) → label `+5V_SERVO`
+1. Create net label `+5V_SERVO`
 2. Wire: `+5V` (from USB-C, post-fuse) → `+5V_SERVO` (direct connection, no regulator)
+   - **NOTE:** `+5V_SERVO` does NOT connect to any PCA9685 pin — it goes directly to servo header power pins (Step 7)
 3. Place C8: `Device:C_Polarized` → `470uF`, electrolytic, ⌀8×10mm or larger
    - Wire: `+5V_SERVO` → C8+ → C8- → GND
    - **PURPOSE:** Absorbs servo inrush current spikes. Without this, servos will brown out the ESP32.
 4. Place C9: `Device:C` → `100uF`, 1206, ceramic
-   - Wire: `+5V_SERVO` → C9 → GND (close to PCA9685 VSERVO pin)
+   - Wire: `+5V_SERVO` → C9 → GND (close to servo headers)
 5. Place C10: `Device:C` → `100nF`, 0402, C1525
    - Wire: `+5V_SERVO` → C10 → GND (high-frequency bypass)
 
 **VERIFY:**
-- [ ] `+5V_SERVO` connects to BOTH PCA9685 VSERVO (pin 27) AND `+5V` (USB power)
+- [ ] `+5V_SERVO` connects to `+5V` (USB power) — direct, no regulator
+- [ ] `+5V_SERVO` does NOT connect to any PCA9685 pin — it only goes to servo header power pins
 - [ ] `+5V_SERVO` does NOT connect through the AP2112K LDO — it's direct from USB
 - [ ] C8 (470µF electrolytic) is the bulk cap — largest cap on the board
 - [ ] C9 (100µF ceramic) for mid-frequency filtering
@@ -406,7 +432,7 @@ CONTROL:
 | 1 | DIN | ESP32 GPIO6 → label `I2S_DOUT` | I2S serial data |
 | 2 | GAIN | GND | 9dB gain (for 4Ω speaker) |
 | 3 | GND | GND | |
-| 4 | ~SD | `+3V3` (via 10k pull-up) or direct | Shutdown active LOW — tie HIGH to enable |
+| 4 | SD_MODE | `+3V3` (direct or via 100k pull-up) | Shutdown + channel select. HIGH = left channel + enabled. LOW = shutdown. See pin 15 note. |
 | 5-6 | OUT+ / OUT- | → Speaker connector J_SPK | Differential speaker output |
 | 7 | GND | GND | |
 | 8 | BCLK | ESP32 GPIO4 → label `I2S_BCLK` | I2S bit clock |
@@ -416,7 +442,7 @@ CONTROL:
 | 12 | GND | GND | Exposed pad |
 | 13 | DVDD | `+3V3` | Digital power (1.8V internal LDO, 3.3V input OK) |
 | 14 | LRCLK | ESP32 GPIO5 → label `I2S_LRCLK` | I2S word select |
-| 15 | SD_MODE | `+3V3` (or via resistor to select L/R) | Channel select — HIGH = left, tied to 3V3 |
+| 15 | SD_MODE | Same pin as pin 4 — see above | **Pin 4 and pin 15 are the SAME function.** Wire once. |
 | 16 | GND | GND | |
 
 3. Place FB2: `Device:FerriteBead` → Value: `600R@100MHz`, 0603, LCSC: C85834
@@ -498,8 +524,8 @@ All components in this section have pads on the PCB but are NOT populated for Sp
 | 3 | GND | GND |
 | 4 | VCC | `+5V` |
 | 5 | BAT | Label `VBAT` |
-| 6 | STDBY | R9 (1k, C11702) → D3 (GREEN LED) anode → `+5V` |
-| 7 | CHRG | R8 (1k, C11702) → D2 (RED LED) anode → `+5V` |
+| 6 | STDBY | `+5V` → D3 anode (GREEN LED) → D3 cathode → R9 (1k) → U6 pin 6 |
+| 7 | CHRG | `+5V` → D2 anode (RED LED) → D2 cathode → R8 (1k) → U6 pin 7 |
 | 8 | CE | `+5V` (always enabled) |
 | 9 | EP | GND |
 
@@ -515,7 +541,7 @@ All components in this section have pads on the PCB but are NOT populated for Sp
 - [ ] R7 = 2k → charge current = 1000/2000 = **500mA**
 - [ ] Pin 7 (CHRG) drives RED LED (active-low, sinks current)
 - [ ] Pin 6 (STDBY) drives GREEN LED
-- [ ] LED wiring: TP4056 pin → R → LED → +5V (TP4056 sinks current)
+- [ ] LED wiring: `+5V` → LED anode → LED cathode → R → TP4056 pin (TP4056 sinks current, pins are active-LOW open-drain)
 - [ ] CE (pin 8) tied to VCC (always enabled)
 - [ ] C13 on VCC, C14 on BAT — both to GND
 - [ ] Component count: 9 (U6, R7, R8, R9, D2, D3, C13, C14, J_BAT)
@@ -652,6 +678,7 @@ Wire Q1 (FS8205A SOT-23-6):
    - LCSC: C24112
 2. Wire:
    - U8 VDD → `+3V3`
+   - U8 VLOGIC → `+3V3` (**CRITICAL** — sets I2C voltage level, must match bus voltage)
    - U8 GND → GND
    - U8 SDA → `I2C_SDA` (shared with PCA9685)
    - U8 SCL → `I2C_SCL` (shared with PCA9685)
@@ -661,19 +688,22 @@ Wire Q1 (FS8205A SOT-23-6):
    - U8 CLKIN → leave unconnected
    - U8 AUX_SDA, AUX_SCL → leave unconnected (no auxiliary I2C devices)
    - U8 REGOUT → C17 (100nF) → GND (internal regulator bypass)
-   - U8 CPOUT → C_CPOUT (10nF) → GND (charge pump cap)
+   - U8 CPOUT → C19 (10nF) → GND (charge pump cap — **required**)
 3. Place C17: 100nF, 0402, C1525 → U8 REGOUT to GND
 4. Place C18: 100nF, 0402, C1525 → U8 VDD to GND (decoupling)
+5. Place C19: 10nF, 0402, C15195 → U8 CPOUT to GND (charge pump)
 
 **VERIFY:**
 - [ ] VDD → `+3V3`, GND → GND
+- [ ] **VLOGIC → `+3V3`** (if left floating, I2C may not work)
 - [ ] SDA/SCL on same I2C bus as PCA9685
 - [ ] AD0 → GND → I2C address = **0x68** (no conflict with PCA9685 at 0x40)
 - [ ] FSYNC → GND
-- [ ] REGOUT → 100nF → GND
-- [ ] Component count: 2 (C17, C18 + U8)
+- [ ] REGOUT → C17 (100nF) → GND
+- [ ] CPOUT → C19 (10nF) → GND (**required** for internal charge pump)
+- [ ] Component count: 4 (C17, C18, C19 + U8)
 
-**EXPECTED RESULT:** IMU on shared I2C bus at address 0x68. Provides tilt and acceleration data for walking balance.
+**EXPECTED RESULT:** IMU on shared I2C bus at address 0x68. VLOGIC at 3.3V for correct I2C levels. Provides tilt and acceleration data for walking balance.
 
 ---
 
@@ -709,23 +739,33 @@ Wire Q1 (FS8205A SOT-23-6):
 1. Place J_CAM: FPC connector, 24-pin, 0.5mm pitch (e.g., FH12-24S-0.5SH)
 2. Wire DVP signals to ESP32 GPIOs:
 
-| J_CAM Pin | Signal | ESP32 GPIO |
-|-----------|--------|------------|
-| Various | D0-D7 | GPIO10-13, 35-38 |
-| — | XCLK | GPIO39 |
-| — | PCLK | GPIO40 |
-| — | VSYNC | GPIO41 |
-| — | HREF | GPIO42 |
-| — | SIOD (I2C) | GPIO47 |
-| — | SIOC (I2C) | GPIO48 |
-| — | 3V3 | `+3V3` |
-| — | GND | GND |
+**CRITICAL: GPIO35, 36, 37 are NOT available on the N16R8 variant — they are used internally for Octal SPI PSRAM. Use only GPIOs that are free on N16R8.**
 
-**NOTE:** Camera DVP uses 14+ GPIO pins. Exact pinout depends on the camera module FPC layout. Verify against your specific OV2640 module before wiring. Camera I2C (SIOD/SIOC) is a SEPARATE I2C bus from the main bus (GPIO47/48, not GPIO8/9).
+| J_CAM Pin | Signal | ESP32 GPIO | Notes |
+|-----------|--------|------------|-------|
+| — | D0 | GPIO10 | Shared with FSR on Spark — OK because camera is Pro-only |
+| — | D1 | GPIO13 | |
+| — | D2 | GPIO14 | |
+| — | D3 | GPIO16 | Freed by PDM mic (only uses 2 pins) |
+| — | D4 | GPIO21 | |
+| — | D5 | GPIO38 | Safe on N16R8 |
+| — | D6 | GPIO39 | |
+| — | D7 | GPIO40 | |
+| — | XCLK | GPIO41 | Camera master clock |
+| — | PCLK | GPIO42 | Pixel clock |
+| — | VSYNC | GPIO45 | **Strapping pin** — acceptable for camera (not read at boot if pulled to default) |
+| — | HREF | GPIO46 | Input-only on some variants — OK for camera input |
+| — | SIOD (I2C) | GPIO47 | Camera config I2C (separate bus) |
+| — | SIOC (I2C) | GPIO48 | Camera config I2C (separate bus) |
+| — | 3V3 | `+3V3` | |
+| — | GND | GND | |
+
+**NOTE:** Camera DVP uses 14 GPIO pins. This assignment avoids GPIO35-37 (PSRAM), GPIO3 (strapping), and does not conflict with Spark-tier functions. Camera I2C (SIOD/SIOC) is on a SEPARATE I2C bus (GPIO47/48, not GPIO8/9). Exact FPC pinout depends on camera module — verify against your specific OV2640 module before wiring.
 
 **VERIFY:**
 - [ ] Camera I2C on GPIO47/48 — **NOT on the main I2C bus** (GPIO8/9)
-- [ ] DVP data pins do not conflict with other functions
+- [ ] **GPIO35, 36, 37 are NOT used** (reserved for PSRAM on N16R8)
+- [ ] DVP data pins do not conflict with Spark-tier functions (Spark has no camera)
 - [ ] 3V3 and GND connected
 
 **EXPECTED RESULT:** Camera connector footprint on PCB, DNP for Spark.
@@ -753,12 +793,14 @@ Wire Q1 (FS8205A SOT-23-6):
 |-----|-----------|----------|------|-----------|
 | Left front | J_FSR1 | R13 | GPIO1 | `FSR_LF` |
 | Left rear | J_FSR2 | R14 | GPIO2 | `FSR_LR` |
-| Right front | J_FSR3 | R15 | GPIO3 | `FSR_RF` |
-| Right rear | J_FSR4 | R16 | GPIO10 | `FSR_RR` |
+| Right front | J_FSR3 | R15 | GPIO11 | `FSR_RF` |
+| Right rear | J_FSR4 | R16 | GPIO12 | `FSR_RR` |
 
 **VERIFY:**
 - [ ] Each FSR has a 10K pull-down resistor forming a voltage divider
-- [ ] ADC GPIOs (1, 2, 3, 10) are all ADC-capable on ESP32-S3
+- [ ] ADC GPIOs (1, 2, 11, 12) are all ADC-capable on ESP32-S3 and NOT strapping pins
+- [ ] GPIO3 is NOT used (strapping pin)
+- [ ] GPIO10 is NOT used here (reserved for camera DVP on Pro)
 - [ ] FSR connectors are 2-pin (signal + GND)
 - [ ] Component count: 8 (4 connectors + 4 resistors)
 
@@ -799,13 +841,13 @@ Wire Q1 (FS8205A SOT-23-6):
 | 7 | J_SPK | Speaker JST-PH 2-pin | C131337 | Step 8 |
 | 8 | J_SRV0-6 | Servo headers ×7 | — | Step 7 |
 | 9 | SW1 | Boot button | C318884 | Step 3 |
-| 10 | F1 | PTC fuse 1.5A | TBD | Step 1 |
-| 11 | D1 | TVS ESD5Z5.0T1G | C82044 | Step 1 |
-| 12 | FB2 | Ferrite 600R | C85834 | Step 8 |
-| 13 | Y1 | 25MHz crystal (optional) | TBD | Step 5 |
+| 10 | SW2 | Reset button | C318884 | Step 3 |
+| 11 | F1 | PTC fuse 1.5A | TBD | Step 1 |
+| 12 | D1 | TVS ESD5Z5.0T1G | C82044 | Step 1 |
+| 13 | FB2 | Ferrite 600R | C85834 | Step 8 |
 | 14 | R1-R2 | 5.1k ×2 (CC) | C25905 | Step 1 |
 | 15 | R3-R4 | 10k ×2 (EN/BOOT) | C25744 | Step 3 |
-| 16 | R5-R6 | 4.7k ×2 (I2C) | C25900 | Step 4 |
+| 16 | R5-R6 | 4.7k ×2 (I2C) | C25900 (both) | Step 4 |
 | 17 | C1,C5,C6,C10,C12 | 100nF ×5 | C1525 | Various |
 | 18 | C2,C3,C4,C7,C11 | 10µF ×5 | C15850 | Various |
 | 19 | C8 | 470µF electrolytic | TBD | Step 6 |
@@ -884,7 +926,9 @@ Zero DRC errors required before Gerber export.
 
 | Decision | Rationale |
 |----------|-----------|
-| PCA9685 internal oscillator (no crystal) | ±10% is fine for 50Hz servo PWM. Saves 1 component + 2 load caps. Add crystal later if precision needed. |
+| PCA9685 internal oscillator (no crystal) | PCA9685 has NO external oscillator pins (TSSOP-28). Internal 25MHz is ±10%, fine for 50Hz servo PWM. |
+| GPIO35-37 reserved for PSRAM | N16R8 uses Octal SPI PSRAM on GPIO35-37. Camera DVP reassigned to avoid these. |
+| Reset button (SW2) added | Standard ESP32 practice. Simplifies boot mode entry (hold BOOT + press RESET). Without it, must power-cycle. |
 | Single-cell LiPo (not 2S) | TP4056 only charges single-cell. Simplifies power. Servos run fine on 5V from USB. |
 | SPH0641 PDM mic (not INMP441 I2S) | INMP441 unavailable at LCSC. SPH0641 proven on Pod, cheaper, smaller, saves 1 GPIO pin. |
 | AP2112K LDO (not AMS1117) | Proven on Pod. Lower dropout (250mV vs 1V). Same SOT-23-5 footprint. |

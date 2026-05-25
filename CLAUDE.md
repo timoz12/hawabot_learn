@@ -17,7 +17,7 @@ A character-driven physical AI robotics platform that teaches systems engineerin
 - **FSRs:** Force Sensitive Resistors in feet (Pro only, required for walking)
 - **Camera:** OV2640 DVP (Pro only)
 - **Servos:** SG90 (low-load), MG90S (waist/shoulders), XL330 (shoulders+legs on Pro)
-- **Custom PCB:** ~55x35mm 2-layer, same board for Spark and Pro (Pro populates more components)
+- **Custom PCB:** ~60x40mm 2-layer, same board for Spark and Pro (Pro populates more components)
 - **Dev board for prototyping:** ESP32-S3-DevKitC-1
 
 ### Robot Hardware (Max — future flagship, 400-500mm)
