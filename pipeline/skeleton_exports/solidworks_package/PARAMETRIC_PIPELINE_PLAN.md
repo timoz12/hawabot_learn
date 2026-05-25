@@ -131,7 +131,7 @@ One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and P
 
 #### PCB Size and Layout
 
-**Estimated size: ~55 x 35 x 8 mm** (about the size of a PCA9685 board)
+**Estimated size: ~60 x 40 x 8 mm** (about the size of a PCA9685 board)
 
 The ESP32-S3-WROOM-1-N16R8 module is only 18x25.5mm. Board size is driven by the 9 servo connectors and peripheral ICs.
 
@@ -507,7 +507,7 @@ A comprehensive servo survey was conducted. Key findings:
 For prototyping, use bounding-box placeholders based on dimensions above. Download real STEP files when available:
 | File | Dimensions (placeholder) | Source |
 |---|---|---|
-| Custom PCB (ESP32-S3 version) | 55 x 35 x 8 mm | Model as block for now |
+| Custom PCB (ESP32-S3 version) | 60 x 40 x 8 mm | Model as block for now |
 | Custom PCB (CM4 version) | 65 x 45 x 15 mm | Model as block for now |
 | Speaker | dia28 x 12 mm cylinder | Model as cylinder |
 | Battery | 40 x 30 x 8 mm | Model as block |

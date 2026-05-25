@@ -218,7 +218,7 @@ CONTROL:
 
 ---
 
-## Step 3: ESP32-S3 Module + Support (5 components)
+## Step 3: ESP32-S3 Module + Support (6 components)
 
 **PURPOSE:** Place the MCU module with boot/reset circuitry.
 
@@ -690,7 +690,7 @@ Wire Q1 (FS8205A SOT-23-6):
 
 ---
 
-## Step 13b: Boost Converter — TPS61023 (7 components)
+## Step 13b: Boost Converter — TPS61023 (6 components)
 
 **PURPOSE:** Boost battery voltage (3.7V) to 5.1V for servo power when running on battery. Without this, servos cannot operate untethered.
 
@@ -781,7 +781,7 @@ VBAT ──[L3 1µH]── SW (pin 5)
 - [ ] Component count: **5** (U9, L3, C_BIN, C_BOUT, R17, R18 = 6 parts... but R17/R18 counted as 2)
 - [ ] Total: 6 components (U9, L3, C_BIN, C_BOUT, R17, R18)
 
-**EXPECTED RESULT:** When on battery (3.7V), synchronous boost converter produces ~5.06V for servos. No external diode needed. Current capability: ~2A continuous at 5V output from 3.7V input (efficiency ~94% per datasheet Figure 7-3).
+**EXPECTED RESULT:** When on battery (3.7V), synchronous boost converter produces ~5.06V for servos. No external diode needed. Current capability: ~1.5A continuous at 5V output from 3.7V input (2A+ in bursts with bulk caps). Efficiency ~94% at 1.5A per datasheet Figure 7-3.
 
 ---
 
@@ -816,7 +816,7 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 - [ ] `+5V_SERVO` is now the main 5V bus (feeds LDO input too — change U2 VIN from `+5V` to `+5V_SERVO`)
 - [ ] Component count: 2 (D_OR1, D_OR2)
 
-**NOTE:** SS34 Schottky forward drop is ~0.4-0.6V at operating currents (0.85V max at 3A per datasheet). Servo rail voltage:
+**NOTE:** SS34 Schottky forward drop is ~0.4-0.55V at operating currents (0.70V max at 3A per datasheet). Servo rail voltage:
 - From USB (5.0V): `+5V_SERVO` ≈ 4.4-4.6V — marginal for SG90 (rated 4.8V min)
 - From boost (5.06V): `+5V_SERVO` ≈ 4.5-4.7V — same concern
 
@@ -998,7 +998,7 @@ VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
 - [ ] Each FSR has a 10K pull-down resistor forming a voltage divider
 - [ ] All 4 FSR GPIOs are **ADC1** channels (GPIO1, 2, 3, 10) — works with WiFi active
 - [ ] GPIO3 is a strapping pin but safe: 10K pull-down reads ~0V at boot (default JTAG source, no impact)
-- [ ] GPIO10 is shared with camera D0 — acceptable since both are Pro-only and firmware manages pin muxing
+- [ ] GPIO10 is FSR_RF (ADC1). Camera D0 is on GPIO11 (separate pin, no conflict)
 - [ ] FSR connectors are 2-pin (signal + GND)
 - [ ] Component count: 8 (4 connectors + 4 resistors)
 

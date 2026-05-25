@@ -110,7 +110,7 @@
 | Task | Duration | Dependency |
 |------|----------|------------|
 | Source servos, sensors, ESP32-S3 in bulk (100-unit MOQ) | 2 weeks | Phase 0 validated |
-| Design custom PCB (ESP32-S3 + PCA9685 + MAX98357A, ~55x35mm 2-layer) | 3 weeks | Schematic finalized |
+| Design custom PCB (ESP32-S3 + PCA9685 + MAX98357A, ~60x40mm 2-layer) | 3 weeks | Schematic finalized |
 | Establish 3D print workflow (in-house Bambu Lab or partner) | 2 weeks | Shell pipeline proven |
 | Design packaging (box, foam inserts, instruction card) | 2 weeks | Parallel |
 | Assembly documentation (photo + video) | 1 week | Physical prototype |

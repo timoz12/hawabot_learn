@@ -22,7 +22,7 @@ Upper-body humanoid on a flat base. Entry point for the curriculum.
 | Neodymium magnets (6x3mm N52) | ~20 | — | Snap-on shell attachment to skeleton |
 | M2x5mm self-tapping screws | ~10 | — | Servo mounting to skeleton frame |
 | WS2812B RGB status LED | 1 | GPIO48 (NEOPIXEL) | System status: boot, WiFi, OTA, errors |
-| Custom PCB (~55x35mm, 2-layer) | 1 | — | Integrates ESP32-S3 + PCA9685 + MAX98357A + power reg |
+| Custom PCB (~60x40mm, 2-layer) | 1 | — | Integrates ESP32-S3 + PCA9685 + MAX98357A + power reg |
 | 3D printed skeleton (PLA/PETG) | 1 | — | Structural frame: head, torso, arms, base |
 | 3D printed character shell (5 pcs) | 1 set | — | Cosmetic magnetic snap-on: head, torso, L arm, R arm, base |
 
