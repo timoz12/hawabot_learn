@@ -112,9 +112,10 @@ Servo allocation: L/R elbow pitch (2x SG90), L/R hand pitch (2x SG90)
 
 | Item | Qty | Source | Est. Price | Status |
 |---|---|---|---|---|
-| LiPo battery (7.4V 2S, 1000mAh) | 1 | Amazon | $12 | [ ] |
+| LiPo battery (3.7V 1S, 2000mAh) | 1 | Amazon | $12 | [ ] |
 | TP4056 charger module | 1 | Amazon | $2 | [ ] |
-| 5V buck converter (LiPo → 5V) | 1 | Amazon | $3 | [ ] |
+| TPS61023 boost module (3.7V → 5.1V) | 1 | Amazon | $3 | [ ] |
+| SS34 Schottky diodes (OR-ing) | 2 | Amazon | $1 | [ ] |
 
 ### Phase 2 Total: ~$322
 
@@ -142,7 +143,7 @@ ESP32-S3-DevKitC-1 (added to Phase 1 wiring)
   ├─ PDM (GPIO15 CLK, GPIO7 DATA)
   │    └─ SPH0641LU4H-1 ──► Mic
   │
-  ├─ ADC (GPIO1, GPIO2, GPIO3, GPIO10)
+  ├─ ADC (GPIO1, GPIO2, GPIO11, GPIO12)
   │    └─ 4x FSR 402 (via 10K voltage dividers) ──► Foot contact
   │
   ├─ DVP (GPIO10-14, GPIO38-40) — if camera used
@@ -154,9 +155,11 @@ ESP32-S3-DevKitC-1 (added to Phase 1 wiring)
        └─ Dynamixel half-duplex bus ──► 8x XL330 (daisy-chained)
 
 Power (Phase 2):
-  LiPo 7.4V ──► 5V buck converter ──► PCA9685 V+ (servos)
-                                   ──► XL330 power hub
-                                   ──► ESP32-S3 (via 5V pin)
+  LiPo 3.7V ──► TPS61023 boost (→ 5.1V) ──┐
+  USB 5V ──► SS34 Schottky diode ──────────┤ OR-ing junction
+  Boost out ──► SS34 Schottky diode ───────┘──► PCA9685 V+ (servos)
+                                              ──► XL330 power hub
+                                              ──► ESP32-S3 (via 5V pin)
 ```
 
 ---
@@ -188,6 +191,9 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | GY-521 IMU breakout (Phase 2) | MPU-6050 IC (QFN-24) or ICM-42688-P | SMD | I2C |
 | FSR voltage dividers (Phase 2) | 4x 10K resistors + ADC input traces | 0402/0603 | Analog |
 | 5V USB-C power supply | USB-C connector + AP2112K-3.3 LDO | SMD | — |
+| TPS61023 boost module (Phase 2) | TPS61023DRLR (SOT-5X3) + inductor + caps | SMD | — |
+| SS34 Schottky diodes (Phase 2) | SS34 (SMA) × 2 — OR-ing USB vs battery | SMD | — |
+| — | WS2812B RGB status LED (2020 package) | SMD | GPIO48 |
 | Soldered hookup wire | PCB traces + JST-SH servo headers | — | — |
 
 ### PCB Features
@@ -201,6 +207,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | USB-C power + programming | Yes | Yes |
 | 3.3V LDO (AP2112K-3.3) | Yes | Yes |
 | 5V servo power rail + bulk caps | Yes | Yes |
+| WS2812B RGB status LED | Yes | Yes |
 | Boot + Reset buttons | Yes | Yes |
 | SPH0641LU4H-1 PDM MEMS mic | **DNP** | Yes |
 | MPU6050 IMU | **DNP** | Yes |
@@ -209,6 +216,8 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | UART1 Dynamixel bus header | **DNP** | Yes |
 | Battery connector (JST-PH 2-pin) | **DNP** | Yes |
 | TP4056 charging circuit | **DNP** | Yes |
+| TPS61023 boost converter (3.7V → 5.1V) | **DNP** | Yes |
+| SS34 Schottky OR-ing diodes (×2) | **DNP** | Yes |
 
 DNP = Do Not Populate (pads on PCB but no component soldered — saves cost for Spark, populated for Pro)
 
@@ -239,8 +248,8 @@ DNP = Do Not Populate (pads on PCB but no component soldered — saves cost for 
 | GPIO18 | UART1 RX (Dynamixel bus) | 2 |
 | GPIO1 | ADC — FSR left front | 2 |
 | GPIO2 | ADC — FSR left rear | 2 |
-| GPIO3 | ADC — FSR right front | 2 |
-| GPIO10 | ADC — FSR right rear | 2 |
+| GPIO11 | ADC — FSR right front | 2 |
+| GPIO12 | ADC — FSR right rear | 2 |
 | GPIO43 | UART0 TX (USB debug) | 1 |
 | GPIO44 | UART0 RX (USB debug) | 1 |
 | GPIO48 | Status LED (on-board RGB) | 1 |

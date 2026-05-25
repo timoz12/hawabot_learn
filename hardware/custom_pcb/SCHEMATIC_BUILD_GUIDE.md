@@ -31,6 +31,11 @@ If something doesn't match, STOP and refer to the datasheet listed for that step
 | `datasheets/C908265_FUXINSEMI_FS8205A.pdf` | Battery MOSFET pinout (Pro only) |
 | `datasheets/C7519_USBLC6.pdf` | USB ESD protection pinout |
 | `datasheets/MPU6050.pdf` | IMU pinout (Pro only) |
+| `datasheets/TPS61023.pdf` | Boost converter pinout + reference circuit (Pro only) |
+| `datasheets/SS34_Schottky.pdf` | OR-ing diode specs (Pro only) |
+| `datasheets/WS2812B.pdf` | RGB LED timing + pinout |
+| `datasheets/OV2640.pdf` | Camera DVP pinout (Pro only) |
+| `datasheets/C77131_TH1.pdf` | NTC thermistor specs (Pro only) |
 
 ---
 

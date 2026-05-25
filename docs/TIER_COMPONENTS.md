@@ -21,6 +21,7 @@ Upper-body humanoid on a flat base. Entry point for the curriculum.
 | USB-C power supply (5V 3A) | 1 | — | Wall power for servos + logic |
 | Neodymium magnets (6x3mm N52) | ~20 | — | Snap-on shell attachment to skeleton |
 | M2x5mm self-tapping screws | ~10 | — | Servo mounting to skeleton frame |
+| WS2812B RGB status LED | 1 | GPIO48 (NEOPIXEL) | System status: boot, WiFi, OTA, errors |
 | Custom PCB (~55x35mm, 2-layer) | 1 | — | Integrates ESP32-S3 + PCA9685 + MAX98357A + power reg |
 | 3D printed skeleton (PLA/PETG) | 1 | — | Structural frame: head, torso, arms, base |
 | 3D printed character shell (5 pcs) | 1 set | — | Cosmetic magnetic snap-on: head, torso, L arm, R arm, base |
@@ -53,12 +54,13 @@ Same skeleton as Spark. Adds legs, arms, full sensor suite, and battery. Walks u
 | SG90 micro servo | +4 | PCA9685 PWM | L/R elbow pitch, L/R hand pitch |
 | SPH0641LU4H-1 PDM MEMS mic | 1 | PDM (CLK + DATA) | Audio input — voice commands, sound detection |
 | MPU6050 IMU | 1 | I2C (0x68) | Tilt + acceleration sensing for balance during walking |
-| FSR 402 | 4 | ADC (GPIO1-3, 10) | Foot ground-contact detection — required for gait control |
+| FSR 402 | 4 | ADC (GPIO1, 2, 11, 12) | Foot ground-contact detection — required for gait control |
 | 10K resistors (FSR dividers) | 4 | — | Voltage dividers for FSR analog reading |
 | OV2640 camera | 1 | DVP | Vision — face tracking, object recognition |
-| LiPo battery (7.4V 2S, 1000mAh) | 1 | — | Untethered operation (can't walk on a cable) |
+| LiPo battery (3.7V 1S, 2000mAh) | 1 | — | Untethered operation (can't walk on a cable) |
 | TP4056 charger module | 1 | USB-C | Battery charging |
-| 5V buck converter | 1 | — | Regulate LiPo 7.4V → 5V for servos + logic |
+| TPS61023 boost converter (3.7V → 5.1V) | 1 | — | Boost LiPo 3.7V → 5.1V for servos. OR-ing diodes merge USB and battery power. |
+| SS34 Schottky OR-ing diodes | 2 | — | Power path selection: USB vs battery (whichever is higher) |
 | XL330 idler frame kit (FPX330-H101) | 1 | — | Dual-shaft support for shoulder and leg joints |
 | XL330 cables (3-pin, 100mm) | 10 | — | Daisy-chain Dynamixel bus wiring |
 | 3D printed leg frame + feet | 1 | — | Leg structure with FSR mounting points |
@@ -140,7 +142,7 @@ Separate, larger robot. Not upgrade-compatible with the 250mm Spark/Pro skeleton
 | **Servo buses** | PCA9685 only | PCA9685 + Dynamixel | Dynamixel only |
 | **Audio** | Speaker out | Speaker + mic | Speaker + mic array |
 | **Sensors** | None | IMU, 4x FSR, camera | IMU, FSR, camera, LIDAR, ultrasonic |
-| **Power** | USB-C wall | Battery (7.4V 2S) | Battery (11.1V 3S) |
+| **Power** | USB-C wall | Battery (3.7V 1S + boost) | Battery (11.1V 3S) |
 | **Locomotion** | Stationary (base) | Walking biped | Advanced gait |
 | **Legs** | No | Yes | Yes |
 | **Arms** | Shoulder only | + elbows + hands | Full articulation |
