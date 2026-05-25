@@ -12,7 +12,7 @@ A character-driven physical AI robotics platform that teaches systems engineerin
 - **MCU:** ESP32-S3-WROOM-1-N16R8 (16MB flash, 8MB PSRAM, FCC modular cert, WiFi/BT)
 - **Servo control:** PCA9685 (I2C, 16-ch PWM) for SG90/MG90S; Dynamixel bus for XL330 (Pro)
 - **Audio out:** MAX98357A (I2S amp)
-- **Audio in:** INMP441 (I2S MEMS mic, Pro only)
+- **Audio in:** SPH0641LU4H-1 (PDM MEMS mic, Knowles, Pro only)
 - **IMU:** MPU6050 (I2C, Pro only)
 - **FSRs:** Force Sensitive Resistors in feet (Pro only, required for walking)
 - **Camera:** OV2640 DVP (Pro only)

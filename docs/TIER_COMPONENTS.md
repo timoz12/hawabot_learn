@@ -51,7 +51,7 @@ Same skeleton as Spark. Adds legs, arms, full sensor suite, and battery. Walks u
 |---|---|---|---|
 | XL330-M288-T servo | 10 | UART1 Dynamixel bus | Shoulders upgraded (2) + 8 leg joints. Feedback + compliance for walking. |
 | SG90 micro servo | +4 | PCA9685 PWM | L/R elbow pitch, L/R hand pitch |
-| INMP441 MEMS mic | 1 | I2S1 | Audio input — voice commands, sound detection |
+| SPH0641LU4H-1 PDM MEMS mic | 1 | PDM (CLK + DATA) | Audio input — voice commands, sound detection |
 | MPU6050 IMU | 1 | I2C (0x68) | Tilt + acceleration sensing for balance during walking |
 | FSR 402 | 4 | ADC (GPIO1-3, 10) | Foot ground-contact detection — required for gait control |
 | 10K resistors (FSR dividers) | 4 | — | Voltage dividers for FSR analog reading |

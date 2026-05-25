@@ -11,7 +11,7 @@ Every component in the Pro skeleton with exact dimensions, mounting specificatio
 ```
 HEAD:
 ├── SG90 × 2 (pan + tilt)
-├── INMP441 mic breakout (face area)               Pro only
+├── SPH0641LU4H-1 PDM mic (face area)              Pro only
 ├── HC-SR04 mini ultrasonic (front, "eyes")         Pro only
 └── WS2812B LEDs × 2 (eyes)                         Core+
 
@@ -279,16 +279,16 @@ LEGS (Pro only):
 
 ---
 
-### 3.3 INMP441 MEMS Microphone Breakout (Pro only)
+### 3.3 SPH0641LU4H-1 PDM MEMS Microphone (Pro only)
 
 | Spec | Value |
 |---|---|
-| Board L × W | 14.0 × 14.0 mm (square) |
-| Height | ~3 mm |
+| Package | LGA 3.5 × 2.65 mm, bottom-port (Knowles, LCSC C2879853, ~$1.21) |
+| Height | ~1.4 mm |
 | Sound port | Bottom-port — needs ⌀1mm hole in mounting surface |
-| Pins | 6-pin: VDD, GND, SD, WS, SCK, L/R |
-| Mounting | Adhesive or friction slot (no mounting holes) |
-| **Pocket size** | **16 × 16 × 5 mm** |
+| Pins | CLK + DATA (2 GPIO pins — PDM interface, ESP32-S3 has hardware PDM support) |
+| Mounting | Reflow solder (production PCB) or breakout board (prototype) |
+| **Pocket size** | **5 × 4 × 3 mm** (IC on custom PCB; breakout board ~14 × 14 × 3 mm) |
 | **Sound hole** | **⌀1.5 mm through frame wall** |
 
 **Placement:** Head front (face area), behind a small hole in the frame. Position at approximately mouth or chin height on the character.
@@ -455,7 +455,7 @@ LEGS (Pro only):
 | PCA9685 | [GrabCAD](https://grabcad.com/library/pca9685-pwm-servo-driver-for-arduino-1) | Download needed |
 | MPU6050 GY-521 | [GrabCAD](https://grabcad.com/library/gy-521-mpu6050-accelerometer-and-gyroscope-module-1) | Download needed |
 | MAX98357A | Model as 19.4 × 17.8 × 3mm block | Simple geometry |
-| INMP441 mic | Model as 14 × 14 × 3mm block | Simple geometry |
+| SPH0641LU4H-1 mic | Model as 3.5 × 2.65 × 1.4mm block (on PCB; or 14 × 14 × 3mm breakout for prototype) | Simple geometry |
 | TP4056 charger | Model as 25 × 17 × 4mm block | Simple geometry |
 | Speaker 28mm | Model as ⌀28 × 12mm cylinder | Simple geometry |
 | LiPo battery | Model as 40 × 30 × 8mm block | Simple geometry |

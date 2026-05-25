@@ -457,7 +457,7 @@ Phone/Tablet (app)                     ESP32-S3 (on robot)
   Voice AI    ◄── sensor streams ──        │
   Curriculum                               ├─ I2C → PCA9685 → 7-19 PWM servos
                                            ├─ I2S → MAX98357A → speaker
-                                           ├─ I2S ← INMP441 ← mic (Pro)
+                                           ├─ PDM ← SPH0641LU4H-1 ← mic (Pro)
                                            ├─ I2C → MPU6050 IMU (Pro)
                                            ├─ FSRs in feet (Pro)
                                            ├─ Camera (Pro)

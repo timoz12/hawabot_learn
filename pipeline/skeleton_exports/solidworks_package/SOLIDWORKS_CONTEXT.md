@@ -149,7 +149,7 @@ Total (foot to head top):       325mm
 - **Size:** ~55 x 35 x 8 mm
 - **Location:** Inside torso, between waist (Z=15) and shoulders (Z=140) — 125mm gap
 - **Integrates:** ESP32-S3-WROOM-1-N16R8, PCA9685, MAX98357A, power reg
-- **Pro adds:** INMP441 mic, MPU6050 IMU, camera connector, FSR inputs, battery connector
+- **Pro adds:** SPH0641LU4H-1 PDM mic, MPU6050 IMU, camera connector, FSR inputs, battery connector
 
 ### Speaker
 - 28mm diameter x 12mm cylinder

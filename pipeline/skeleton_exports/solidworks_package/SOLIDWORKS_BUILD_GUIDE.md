@@ -406,7 +406,7 @@ These components don't rotate — use **Coincident + Lock** mates to fix them at
 2. **Mate:** center → `PT_IMU`
 3. Must be level (parallel to Top Plane) and firmly mounted
 
-### 4.9 INMP441 Microphone
+### 4.9 SPH0641LU4H-1 Microphone
 
 1. **Insert Component** → 14×14×3mm block
 2. **Mate:** center → `PT_MIC`
@@ -559,7 +559,7 @@ hawabot_pro_assembly.sldasm
 ├── AUDIO + SENSORS (mate to PT_*)
 │   ├── speaker_28mm.sldprt           → PT_SPEAKER
 │   ├── max98357a.sldprt              → PT_AMP
-│   ├── inmp441_mic.sldprt            → PT_MIC
+│   ├── sph0641_mic.sldprt            → PT_MIC
 │   ├── mpu6050.sldprt                → PT_IMU
 │   ├── hcsr04_mini.sldprt            → PT_ULTRASONIC
 │   ├── led_eye_L.sldprt              → PT_LED_L_EYE

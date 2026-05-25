@@ -105,7 +105,7 @@ Servo allocation: L/R elbow pitch (2x SG90), L/R hand pitch (2x SG90)
 | GY-521 (MPU6050 IMU breakout) | 1 | Amazon | $3 | [ ] |
 | FSR 402 (force sensitive resistors) | 4 | Adafruit (#166) / Amazon | $8 | [ ] |
 | 10K resistors (for FSR voltage dividers) | 4 | Amazon (assortment) | $1 | [ ] |
-| INMP441 I2S MEMS mic breakout | 1 | Amazon | $3 | [ ] |
+| SPH0641LU4H-1 PDM MEMS mic breakout | 1 | LCSC (C2879853) | $2 | [ ] |
 | OV2640 camera module (DVP) | 1 | Amazon / AliExpress | $5 | [ ] |
 
 #### Power (Walking Needs Battery)
@@ -122,7 +122,7 @@ Servo allocation: L/R elbow pitch (2x SG90), L/R hand pitch (2x SG90)
 
 - [ ] Dynamixel bus control from ESP32-S3 UART1
 - [ ] Mixed bus: PCA9685 (SG90/MG90S) + Dynamixel (XL330) simultaneously
-- [ ] I2S audio in (mic capture + WiFi stream to phone)
+- [ ] PDM audio in (mic capture + WiFi stream to phone)
 - [ ] I2C IMU reading (tilt/acceleration)
 - [ ] FSR analog reading (foot contact detection)
 - [ ] DVP camera streaming (if applicable)
@@ -139,8 +139,8 @@ ESP32-S3-DevKitC-1 (added to Phase 1 wiring)
   ├─ I2C (shared bus, same GPIO8/9)
   │    └─ MPU6050 (addr 0x68) ──► IMU
   │
-  ├─ I2S1 (GPIO15 BCLK, GPIO16 LRCLK, GPIO7 DIN)
-  │    └─ INMP441 ──► Mic
+  ├─ PDM (GPIO15 CLK, GPIO7 DATA)
+  │    └─ SPH0641LU4H-1 ──► Mic
   │
   ├─ ADC (GPIO1, GPIO2, GPIO3, GPIO10)
   │    └─ 4x FSR 402 (via 10K voltage dividers) ──► Foot contact
@@ -184,7 +184,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | ESP32-S3-DevKitC-1 | ESP32-S3-WROOM-1-N16R8 module | Castellated SMD | — |
 | HiLetgo PCA9685 board | PCA9685PW IC (TSSOP-28) + 25MHz crystal | SMD | I2C |
 | MAX98357A breakout | MAX98357AETE+T IC (TQFN-16) | SMD | I2S |
-| INMP441 mic breakout (Phase 2) | INMP441ACEZ IC (LGA) | SMD | I2S |
+| SPH0641LU4H-1 mic (Phase 2) | SPH0641LU4H-1 IC (LGA 3.5×2.65mm, LCSC C2879853) | SMD | PDM |
 | GY-521 IMU breakout (Phase 2) | MPU-6050 IC (QFN-24) or ICM-42688-P | SMD | I2C |
 | FSR voltage dividers (Phase 2) | 4x 10K resistors + ADC input traces | 0402/0603 | Analog |
 | 5V USB-C power supply | USB-C connector + AP2112K-3.3 LDO | SMD | — |
@@ -202,7 +202,7 @@ Once Phase 1 is working with the soldered prototype, design a custom PCB (~55×3
 | 3.3V LDO (AP2112K-3.3) | Yes | Yes |
 | 5V servo power rail + bulk caps | Yes | Yes |
 | Boot + Reset buttons | Yes | Yes |
-| INMP441 MEMS mic | **DNP** | Yes |
+| SPH0641LU4H-1 PDM MEMS mic | **DNP** | Yes |
 | MPU6050 IMU | **DNP** | Yes |
 | 4× FSR analog inputs + dividers | **DNP** | Yes |
 | OV2640 camera FPC connector | **DNP** | Yes |
@@ -233,9 +233,8 @@ DNP = Do Not Populate (pads on PCB but no component soldered — saves cost for 
 | GPIO4 | I2S0 BCLK (MAX98357A) | 1 |
 | GPIO5 | I2S0 LRCLK (MAX98357A) | 1 |
 | GPIO6 | I2S0 DOUT (MAX98357A) | 1 |
-| GPIO15 | I2S1 BCLK (INMP441) | 2 |
-| GPIO16 | I2S1 LRCLK (INMP441) | 2 |
-| GPIO7 | I2S1 DIN (INMP441) | 2 |
+| GPIO15 | PDM CLK (SPH0641LU4H-1) | 2 |
+| GPIO7 | PDM DATA (SPH0641LU4H-1) | 2 |
 | GPIO17 | UART1 TX (Dynamixel bus) | 2 |
 | GPIO18 | UART1 RX (Dynamixel bus) | 2 |
 | GPIO1 | ADC — FSR left front | 2 |

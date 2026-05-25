@@ -82,7 +82,7 @@ Consumer products with WiFi/Bluetooth need FCC certification. Boards with **modu
 | CPU | Dual-core Xtensa LX7, 240 MHz |
 | RAM | 512 KB SRAM + 8 MB PSRAM (module variant) |
 | WiFi / BT | Yes / Yes (BLE 5.0) |
-| Audio | I2S (speaker + mic natively) |
+| Audio | I2S (speaker) + PDM (mic) natively |
 | Camera | DVP interface (OV2640 etc.) |
 | GPIO | 36+ pins |
 | PWM | 8 LEDC channels (hardware PWM) |
@@ -102,7 +102,7 @@ Heavy AI runs on the user's phone/tablet/computer via WiFi. The ESP32-S3 handles
   AI Tutor engine                     ESP32-S3 on custom PCB:
   Voice recognition (STT)    <-WiFi->   Servo control (PWM via PCA9685)
   Movement planning                     Speaker output (I2S)
-  Curriculum UI                         Mic input (I2S, Pro only)
+  Curriculum UI                         Mic input (PDM, Pro only)
   Character personality                 IMU reading (I2C, Pro only)
   3D viewer                             Camera stream (DVP, Pro only)
                                         OTA firmware updates
@@ -120,7 +120,7 @@ One custom PCB replaces 4-5 separate breakout boards. **Same PCB for Spark and P
 |---|---|---|---|
 | PCA9685 breakout | 16-ch PWM servo driver | PCA9685 IC (I2C) | Spark + Pro |
 | Audio amp board | Speaker amplification | MAX98357A (I2S) | Spark + Pro |
-| Mic breakout | Microphone input | INMP441 (I2S MEMS) | Pro only |
+| Mic breakout | Microphone input | SPH0641LU4H-1 (PDM MEMS) | Pro only |
 | IMU breakout | Motion sensing | MPU6050 (I2C) | Pro only |
 | Power regulation | 5V servos, 3.3V logic | Buck converter + LDO | Spark + Pro |
 | Camera connector | DVP camera interface | Header (OV2640) | Pro only |
@@ -143,7 +143,7 @@ The ESP32-S3-WROOM-1-N16R8 module is only 18x25.5mm. Board size is driven by the
 |  (18 x 25.5mm, antenna         (TSSOP-28)       |
 |   keep-out zone above)                           |
 |                                                  |
-|  [MAX98357A]  [INMP441]  [MPU6050]  [camera hdr] |
+|  [MAX98357A]  [SPH0641]  [MPU6050]  [camera hdr] |
 |  (amp)        (mic*)     (IMU*)     (DVP*)       |
 |                                                  |
 |  [buck]  [LDO]                                   |
@@ -172,7 +172,7 @@ Fits comfortably in the 250mm robot's torso cavity (125mm tall gap from waist to
 | USB-C | Yes | Yes |
 | Power regulation | Yes | Yes |
 | 9x servo headers | 7 used | 11 used (2 extra for elbows) |
-| INMP441 mic | **Not populated** | Yes |
+| SPH0641LU4H-1 PDM mic | **Not populated** | Yes |
 | MPU6050 IMU | **Not populated** | Yes |
 | Camera connector | **Not populated** | Yes |
 
@@ -183,7 +183,7 @@ One PCB design. One assembly line. Two tiers by populating different components.
 | | Spark ($199) | Pro ($599) | Max (future, $999+) |
 |---|---|---|---|
 | MCU | ESP32-S3 | ESP32-S3 (same board) | CM5 or Pi 5 (larger robot) |
-| Audio | Speaker (I2S) | Speaker + mic (I2S) | Speaker + mic array |
+| Audio | Speaker (I2S) | Speaker (I2S) + mic (PDM) | Speaker + mic array |
 | Sensors | None | IMU + FSRs + camera | Full sensor suite |
 | AI brain | Phone/tablet via WiFi | Phone/tablet via WiFi | On-board (autonomous) |
 | Power | USB-C (wall powered) | Battery | Battery (large) |

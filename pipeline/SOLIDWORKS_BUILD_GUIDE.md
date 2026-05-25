@@ -226,7 +226,7 @@ Add points for non-joint components:
 | `PT_USB_C` | (50, 0, -12.5) | USB-C power input (base edge) |
 | `PT_SPEAKER` | (0, -14, 100) | Speaker 28mm (torso front, all tiers) |
 | `PT_IMU` | (0, 0, 90) | MPU6050 IMU (torso center, Pro only) |
-| `PT_MIC` | (0, -10, 175) | INMP441 microphone (head, Pro only) |
+| `PT_MIC` | (0, -10, 175) | SPH0641LU4H-1 microphone (head, Pro only) |
 | `PT_CAMERA` | (0, -12, 180) | OV2640 camera (head front, Pro only) |
 | `PT_FSR_L` | (-20, 0, -115) | FSR left foot (Pro only) |
 | `PT_FSR_R` | (20, 0, -115) | FSR right foot (Pro only) |
@@ -408,7 +408,7 @@ These components don't rotate — use **Coincident + Lock** mates to fix them at
 2. **Mate:** center → `PT_IMU`
 3. Must be level (parallel to Top Plane) and firmly mounted
 
-### 4.7 INMP441 Microphone (Pro only)
+### 4.7 SPH0641LU4H-1 Microphone (Pro only)
 
 1. **Insert Component** → 14×14×3mm block
 2. **Mate:** center → `PT_MIC`
@@ -561,7 +561,7 @@ hawabot_pro_assembly.sldasm
 │
 ├── AUDIO + SENSORS (mate to PT_*)
 │   ├── speaker_28mm.sldprt           → PT_SPEAKER (all tiers)
-│   ├── inmp441_mic.sldprt            → PT_MIC (Pro only)
+│   ├── sph0641_mic.sldprt            → PT_MIC (Pro only)
 │   ├── mpu6050.sldprt                → PT_IMU (Pro only)
 │   ├── ov2640_camera.sldprt          → PT_CAMERA (Pro only)
 │   ├── fsr_left.sldprt               → PT_FSR_L (Pro only)

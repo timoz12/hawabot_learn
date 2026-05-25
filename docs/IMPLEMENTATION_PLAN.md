@@ -151,7 +151,7 @@
 | Implement compliance mode for teach-by-demo on real hardware | 2 weeks | Dynamixel driver working |
 | Extend shell pipeline for Pro skeleton (legs + arms) | 1 week | Pro skeleton designed |
 | Month 3 curriculum: Feedback loops, IMU balance, walking basics | 2 weeks | Pro hardware working |
-| Voice AI integration (INMP441 mic -> Claude -> MAX98357A speaker) | 2 weeks | ESP32Driver + mic |
+| Voice AI integration (SPH0641LU4H-1 mic -> Claude -> MAX98357A speaker) | 2 weeks | ESP32Driver + mic |
 | Pro beta test (5 users) | 2 weeks | All above |
 
 **Phase 2 exit criteria:**
