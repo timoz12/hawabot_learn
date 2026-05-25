@@ -39,11 +39,12 @@ If something doesn't match, STOP and refer to the datasheet listed for that step
 **Single PCB, ~60×40mm, 2-layer.** Same board for Spark and Pro — Pro populates additional components (marked DNP for Spark).
 
 ```
-POWER IN (USB-C) ──► PTC fuse ──► +5V_SERVO rail (direct to servos)
-                                  │
-                                  ├──► AP2112K LDO ──► +3V3 (ESP32, PCA9685 logic)
-                                  │
-                                  └──► TP4056 ──► LiPo (Pro only, DNP Spark)
+POWER IN (USB-C) ──► PTC fuse ──► +5V ──► D_OR1 ──►─┐
+                                   │                  ├──► +5V_SERVO ──► servos
+                                   └──► TP4056 (Pro)  │        │
+                                          ↕           │        └──► AP2112K ──► +3V3
+                                       VBAT ──► Boost │             (ESP32, PCA9685)
+                                        (Pro)  5.1V ──► D_OR2 ──►─┘
 
 CONTROL:
   ESP32-S3 ──I2C──► PCA9685 ──PWM──► 7-16 servo headers
@@ -70,6 +71,8 @@ CONTROL:
 | TP4056 charger (Pro) | 9 | Pro only (DNP Spark) |
 | DW01A/FS8205A protection (Pro) | 5 | Pro only (DNP Spark) |
 | NTC thermistor (Pro) | 2 | Pro only (DNP Spark) |
+| Boost converter TPS61023 (Pro) | 7 | Pro only (DNP Spark) |
+| OR-ing diodes (Pro) | 2 | Pro only (DNP Spark) |
 | SPH0641 mic (Pro) | 2 | Pro only (DNP Spark) |
 | MPU6050 IMU (Pro) | 4 | Pro only (DNP Spark) |
 | Dynamixel connector (Pro) | 1 | Pro only (DNP Spark) |
@@ -347,7 +350,8 @@ CONTROL:
 
 **DO:**
 1. Create net label `+5V_SERVO`
-2. Wire: `+5V` (from USB-C, post-fuse) → `+5V_SERVO` (direct connection, no regulator)
+2. **Spark (no battery):** Wire `+5V` → `+5V_SERVO` directly (or through D_OR1 if OR-ing diode pads are populated)
+   **Pro (with battery):** `+5V_SERVO` is fed through OR-ing diodes from BOTH USB and boost converter — see Step 13c. For now, wire `+5V` → `+5V_SERVO` directly. Step 13c will insert OR-ing diodes.
    - **NOTE:** `+5V_SERVO` does NOT connect to any PCA9685 pin — it goes directly to servo header power pins (Step 7)
 3. Place C8: `Device:C_Polarized` → `470uF`, electrolytic, ⌀8×10mm or larger
    - Wire: `+5V_SERVO` → C8+ → C8- → GND
@@ -467,6 +471,51 @@ CONTROL:
 - [ ] Component count: 5 (FB2, C11, C12, J_SPK + U4 already placed)
 
 **EXPECTED RESULT:** I2S audio amplifier receiving digital audio from ESP32 and driving a speaker. Powered from filtered +5V (analog) and +3V3 (digital).
+
+---
+
+## Step 8b: Status LEDs (4 components)
+
+**PURPOSE:** Power indicator + firmware-controlled RGB status LED for boot mode, WiFi status, errors, OTA progress.
+
+**DO:**
+
+**Power LED (always on when 3.3V rail is live):**
+1. Place D_PWR: `Device:LED` → GREEN, 0402, LCSC: C130723
+2. Place R_PWR: `Device:R` → `1k`, 0402, C11702
+3. Wire: `+3V3` → R_PWR → D_PWR anode → D_PWR cathode → GND
+
+**Status LED (firmware-controlled RGB):**
+4. Place D_STATUS: `LED:WS2812B` → Footprint: `LED_SMD:LED_WS2812B_PLCC4_5.0x5.0mm_P3.2mm`, LCSC: C2761795
+5. Wire:
+   - D_STATUS VDD → `+5V`
+   - D_STATUS VSS → GND
+   - D_STATUS DIN → ESP32 GPIO48 → label `NEOPIXEL`
+   - D_STATUS DOUT → No Connect marker (single LED, no chain)
+6. Place C_NEO: `Device:C` → `100nF`, 0402, C1525
+   - Wire: D_STATUS VDD → C_NEO → GND (decoupling, close to LED)
+
+**GPIO48 note:** On Pro with camera, GPIO48 is also camera SIOC (config I2C clock). Camera config happens briefly at init — LED is firmware-controlled the rest of the time. No conflict in practice.
+
+**VERIFY:**
+- [ ] D_PWR (green) lights whenever +3V3 is live — no GPIO needed
+- [ ] D_STATUS (WS2812B) on GPIO48 (`NEOPIXEL`) — addressable RGB
+- [ ] C_NEO (100nF) decoupling close to WS2812B VDD
+- [ ] WS2812B VDD → `+5V` (NOT +3V3 — WS2812B needs 5V)
+- [ ] Component count: 4 (D_PWR, R_PWR, D_STATUS, C_NEO)
+
+**Status LED firmware color map (reference for firmware team):**
+
+| Color | Meaning |
+|-------|---------|
+| Blue pulse | Booting / initializing |
+| Green solid | WiFi connected, ready |
+| Yellow pulse | OTA firmware update in progress |
+| Red solid | Error / boot failure |
+| White pulse | Bluetooth pairing mode |
+| Off | Shutdown / deep sleep |
+
+**EXPECTED RESULT:** Green power LED always on when board is powered. RGB status LED shows system state via firmware control.
 
 ---
 
@@ -627,6 +676,114 @@ Wire Q1 (FS8205A SOT-23-6):
 - [ ] Component count: 5 (U7, Q1, R11, R12, C15)
 
 **EXPECTED RESULT:** Battery protection that disconnects on over-discharge, over-charge, or overcurrent.
+
+---
+
+## Step 13b: Boost Converter — TPS61023 (7 components)
+
+**PURPOSE:** Boost battery voltage (3.7V) to 5.1V for servo power when running on battery. Without this, servos cannot operate untethered.
+
+**DATASHEET:** TPS61023 datasheet from TI (download from LCSC C919459 page)
+
+**DESIGN DECISION:** Single-cell LiPo (3.7V) + boost converter. Not 2S (7.4V) + buck. Reasoning:
+- TP4056 single-cell charger proven on Pod (reuse entire charging circuit)
+- Single cell = lower voltage = safer for ages 12-15 (CPSIA)
+- DW01A/FS8205A protection already designed for single cell
+- Trade-off: lower runtime (mitigated by using 2000mAh cell)
+
+**DO:**
+1. Place U9: `Regulator_Switching:TPS61023` (or generic boost symbol + assign footprint)
+   - Footprint: SOT-563 (1.6×1.2mm, 6-pin)
+   - LCSC: C919459
+   - Price: ~$0.14
+2. Wire per TPS61023 datasheet reference circuit:
+
+| U9 Pin | Name | Wire To |
+|--------|------|---------|
+| 1 | VIN | `VBAT` (from battery protection output) |
+| 2 | GND | GND |
+| 3 | EN | `VBAT` (tie to VIN = always enabled when battery present) |
+| 4 | SW | → L3 inductor → D_BOOST Schottky cathode → `+5V_BOOST` |
+| 5 | FB | Feedback divider midpoint (R17/R18) |
+| 6 | VOUT | `+5V_BOOST` (direct connection for internal LDO) |
+
+3. Place L3: `Device:L` → `2.2µH`, 3×3mm or 4×4mm, rated ≥4A saturation
+   - Wire: `VBAT` → L3 → U9 SW (pin 4)
+   - LCSC: Search "2.2uH inductor 4A" — e.g., C408412 or similar
+4. Place D_BOOST: `Device:D_Schottky` → `SS34` (3A/40V), SMA, LCSC: C8678
+   - Wire: anode → U9 SW (pin 4) / L3 junction, cathode → label `+5V_BOOST`
+5. Place C_BIN: `Device:C` → `10uF`, 0805, C15850 — boost input cap
+   - Wire: `VBAT` → C_BIN → GND (close to U9 VIN)
+6. Place C_BOUT: `Device:C` → `22uF`, 0805, C45783 — boost output cap
+   - Wire: `+5V_BOOST` → C_BOUT → GND
+7. Place feedback divider (sets Vout = 5.1V):
+   - R17: `750k 1%`, 0402, C137937 — top resistor
+   - R18: `100k 1%`, 0402, C25741 — bottom resistor
+   - Wire: `+5V_BOOST` → R17 → junction → R18 → GND
+   - Wire: junction → U9 FB (pin 5)
+   - Vout = 0.5V × (1 + 750k/100k) = 0.5V × 8.5 = **4.25V**... 
+
+   **CORRECTION:** TPS61023 reference voltage is 0.5V (not 0.6V like MT3608).
+   For Vout = 5.1V: R17/R18 = (5.1/0.5) - 1 = 9.2
+   Use R17 = **920k** (C25810), R18 = **100k** (C25741) → Vout = 0.5 × (1 + 920k/100k) = **5.1V**
+
+**Topology:**
+```
+VBAT ──[L3 2.2µH]──┬──[D_BOOST SS34]── +5V_BOOST
+                    │                    │
+                  SW (pin 4)           C_BOUT (22µF)
+                                        │
+                              R17 (920k) ── FB (pin 5) ── R18 (100k) ── GND
+```
+
+**VERIFY:**
+- [ ] L3 connects VBAT → SW junction (NOT between SW and diode output)
+- [ ] D_BOOST anode at SW junction, cathode at `+5V_BOOST` output
+- [ ] Feedback: R17 (920k) from +5V_BOOST to FB, R18 (100k) from FB to GND
+- [ ] Vout = 0.5V × (1 + 920k/100k) = **5.1V**
+- [ ] EN tied to VIN (always on when battery present)
+- [ ] C_BIN (10µF) on input, C_BOUT (22µF) on output
+- [ ] L3 rated ≥ 4A saturation current (TPS61023 peaks at 3.7A)
+- [ ] Component count: 7 (U9, L3, D_BOOST, C_BIN, C_BOUT, R17, R18)
+
+**EXPECTED RESULT:** When on battery (3.7V), boost converter produces 5.1V for servos. Current capability: ~2A continuous at 5.1V output from 3.7V input (efficiency ~90%).
+
+---
+
+## Step 13c: Power OR-ing Diodes (2 components)
+
+**PURPOSE:** Merge USB 5V and boosted battery 5V into the single `+5V_SERVO` rail. Diodes prevent backfeeding between sources. Whichever source is higher voltage wins.
+
+**DO:**
+1. Place D_OR1: `Device:D_Schottky` → `SS34`, SMA, LCSC: C2480
+   - Wire: anode → `+5V` (from USB input, Step 1), cathode → `+5V_SERVO`
+2. Place D_OR2: `Device:D_Schottky` → `SS34`, SMA, LCSC: C2480
+   - Wire: anode → `+5V_BOOST` (from boost converter, Step 13b), cathode → `+5V_SERVO`
+
+**Update Step 6 wiring:** The `+5V_SERVO` rail is now fed through OR-ing diodes, NOT directly from `+5V`. Go back to Step 6 and change:
+- **OLD:** `+5V` → `+5V_SERVO` (direct)
+- **NEW:** `+5V` → D_OR1 → `+5V_SERVO` (through Schottky diode)
+
+**Updated power architecture:**
+```
+USB-C (+5V) ──► D_OR1 (SS34) ──►──┐
+                                    ├──► +5V_SERVO ──► servo headers + PCA9685 logic (via LDO)
+VBAT (3.7V) ──► Boost (5.1V) ──► D_OR2 (SS34) ──►──┘
+```
+
+**VERIFY:**
+- [ ] Both D_OR1 and D_OR2 cathodes connect to the SAME net: `+5V_SERVO`
+- [ ] D_OR1 anode = `+5V` (from USB)
+- [ ] D_OR2 anode = `+5V_BOOST` (from battery boost)
+- [ ] Current flows FROM either source TO +5V_SERVO, but NOT back
+- [ ] When USB is connected: USB 5V dominates (~5V vs boost 5.1V minus diode drop)
+- [ ] When on battery only: boost 5.1V feeds servos through D_OR2
+- [ ] `+5V_SERVO` is now the main 5V bus (feeds LDO input too — change U2 VIN from `+5V` to `+5V_SERVO`)
+- [ ] Component count: 2 (D_OR1, D_OR2)
+
+**NOTE:** Schottky diode forward drop is ~0.3V. So servo rail gets ~4.7V from USB or ~4.8V from boost. SG90/MG90S work fine at 4.7V (rated 4.8-6V). XL330 works at 3.7-6V.
+
+**EXPECTED RESULT:** Seamless power switching between USB and battery. Unplug USB → battery boost takes over. Plug USB back in → USB takes over and TP4056 charges battery.
 
 ---
 
@@ -828,7 +985,7 @@ Wire Q1 (FS8205A SOT-23-6):
 
 **Complete Component Checklist:**
 
-### Core (Always Populated) — ~40 components
+### Core (Always Populated) — ~45 components
 
 | # | Ref | Value | LCSC | Section |
 |---|-----|-------|------|---------|
@@ -844,39 +1001,51 @@ Wire Q1 (FS8205A SOT-23-6):
 | 10 | SW2 | Reset button | C318884 | Step 3 |
 | 11 | F1 | PTC fuse 1.5A | TBD | Step 1 |
 | 12 | D1 | TVS ESD5Z5.0T1G | C82044 | Step 1 |
-| 13 | FB2 | Ferrite 600R | C85834 | Step 8 |
-| 14 | R1-R2 | 5.1k ×2 (CC) | C25905 | Step 1 |
-| 15 | R3-R4 | 10k ×2 (EN/BOOT) | C25744 | Step 3 |
-| 16 | R5-R6 | 4.7k ×2 (I2C) | C25900 (both) | Step 4 |
-| 17 | C1,C5,C6,C10,C12 | 100nF ×5 | C1525 | Various |
-| 18 | C2,C3,C4,C7,C11 | 10µF ×5 | C15850 | Various |
-| 19 | C8 | 470µF electrolytic | TBD | Step 6 |
-| 20 | C9 | 100µF ceramic | TBD | Step 6 |
+| 13 | D_PWR | Green power LED | C130723 | Step 8b |
+| 14 | D_STATUS | WS2812B RGB | C2761795 | Step 8b |
+| 15 | FB2 | Ferrite 600R | C85834 | Step 8 |
+| 16 | R1-R2 | 5.1k ×2 (CC) | C25905 | Step 1 |
+| 17 | R3-R4 | 10k ×2 (EN/BOOT) | C25744 | Step 3 |
+| 18 | R5-R6 | 4.7k ×2 (I2C) | C25900 (both) | Step 4 |
+| 19 | R_PWR | 1k (power LED) | C11702 | Step 8b |
+| 20 | C1,C5,C6,C10,C12,C_NEO | 100nF ×6 | C1525 | Various |
+| 21 | C2,C3,C4,C7,C11 | 10µF ×5 | C15850 | Various |
+| 22 | C8 | 470µF electrolytic | TBD | Step 6 |
+| 23 | C9 | 100µF ceramic | TBD | Step 6 |
 
-### Pro Only (DNP Spark) — ~30 components
+### Pro Only (DNP Spark) — ~40 components
 
 | # | Ref | Value | LCSC | Section |
 |---|-----|-------|------|---------|
-| 21 | U6 | TP4056 | C16581 | Step 11 |
-| 22 | U7 | DW01A | C351410 | Step 13 |
-| 23 | Q1 | FS8205A | C908265 | Step 13 |
-| 24 | U8 | MPU-6050 | C24112 | Step 15 |
-| 25 | M1 | SPH0641LU4H-1 | C2879853 | Step 14 |
-| 26 | TH1 | NTC 10K B3380 | C77131 | Step 12 |
-| 27 | J_BAT | JST-PH 2-pin | C131337 | Step 11 |
-| 28 | J_DXL | JST-PH 3-pin | C131334 | Step 16 |
-| 29 | J_CAM | FPC 24-pin | TBD | Step 17 |
-| 30 | J_FSR1-4 | JST-SH 2-pin ×4 | TBD | Step 18 |
-| 31 | J_SRV7-10 | Servo headers ×4 | — | Step 7 |
-| 32 | D2 | RED LED | C130719 | Step 11 |
-| 33 | D3 | GREEN LED | C130723 | Step 11 |
-| 34 | R7 | 2k (PROG) | C4109 | Step 11 |
-| 35 | R8-R9 | 1k ×2 (LED) | C11702 | Step 11 |
-| 36 | R10 | 10k (NTC bias) | C25744 | Step 12 |
-| 37 | R11 | 100mR (sense) | C724023 | Step 13 |
-| 38 | R12 | 100R (VCC inrush) | C25076 | Step 13 |
-| 39 | R13-R16 | 10k ×4 (FSR) | C25744 | Step 18 |
-| 40 | C13-C18 | Various decoupling | C1525/C15850 | Various |
+| 24 | U6 | TP4056 | C16581 | Step 11 |
+| 25 | U7 | DW01A | C351410 | Step 13 |
+| 26 | Q1 | FS8205A | C908265 | Step 13 |
+| 27 | U8 | MPU-6050 | C24112 | Step 15 |
+| 28 | U9 | TPS61023DRLR (boost) | C919459 | Step 13b |
+| 29 | M1 | SPH0641LU4H-1 | C2879853 | Step 14 |
+| 30 | TH1 | NTC 10K B3380 | C77131 | Step 12 |
+| 31 | J_BAT | JST-PH 2-pin | C131337 | Step 11 |
+| 32 | J_DXL | JST-PH 3-pin | C131334 | Step 16 |
+| 33 | J_CAM | FPC 24-pin | TBD | Step 17 |
+| 34 | J_FSR1-4 | JST-SH 2-pin ×4 | TBD | Step 18 |
+| 35 | J_SRV7-10 | Servo headers ×4 | — | Step 7 |
+| 36 | D2 | RED LED (charge) | C130719 | Step 11 |
+| 37 | D3 | GREEN LED (full) | C130723 | Step 11 |
+| 38 | D_OR1 | SS34 Schottky (USB) | C2480 | Step 13c |
+| 39 | D_OR2 | SS34 Schottky (boost) | C2480 | Step 13c |
+| 40 | D_BOOST | SS34 Schottky (boost rect) | C8678 | Step 13b |
+| 41 | L3 | 2.2µH inductor ≥4A | TBD | Step 13b |
+| 42 | R7 | 2k (PROG) | C4109 | Step 11 |
+| 43 | R8-R9 | 1k ×2 (charge LED) | C11702 | Step 11 |
+| 44 | R10 | 10k (NTC bias) | C25744 | Step 12 |
+| 45 | R11 | 100mR (sense) | C724023 | Step 13 |
+| 46 | R12 | 100R (VCC inrush) | C25076 | Step 13 |
+| 47 | R13-R16 | 10k ×4 (FSR) | C25744 | Step 18 |
+| 48 | R17 | 920k 1% (boost FB top) | C25810 | Step 13b |
+| 49 | R18 | 100k 1% (boost FB bottom) | C25741 | Step 13b |
+| 50 | C13-C19 | Various decoupling | C1525/C15850 | Various |
+| 51 | C_BIN | 10µF (boost input) | C15850 | Step 13b |
+| 52 | C_BOUT | 22µF (boost output) | C45783 | Step 13b |
 
 ---
 
@@ -926,6 +1095,9 @@ Zero DRC errors required before Gerber export.
 
 | Decision | Rationale |
 |----------|-----------|
+| Single-cell LiPo + boost (not 2S + buck) | TP4056 charger + DW01A protection proven on Pod. Lower voltage = safer for kids. Full reuse of Pod charging circuit. 2000mAh cell mitigates runtime. |
+| TPS61023 boost converter | 3.7A peak current, SOT-563 (tiny), $0.14 on LCSC. Handles servo loads. OR-ing diodes merge USB and battery power seamlessly. |
+| WS2812B RGB status LED | Single addressable LED on GPIO48. Provides boot/WiFi/error/OTA status via firmware color codes. Same part as Pod. |
 | PCA9685 internal oscillator (no crystal) | PCA9685 has NO external oscillator pins (TSSOP-28). Internal 25MHz is ±10%, fine for 50Hz servo PWM. |
 | GPIO35-37 reserved for PSRAM | N16R8 uses Octal SPI PSRAM on GPIO35-37. Camera DVP reassigned to avoid these. |
 | Reset button (SW2) added | Standard ESP32 practice. Simplifies boot mode entry (hold BOOT + press RESET). Without it, must power-cycle. |
