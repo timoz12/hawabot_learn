@@ -112,6 +112,85 @@ def _slice_mesh(
 
 
 MIN_ARM_ZONE_WIDTH = 15.0  # mm — minimum X-width for arm zones
+MIN_LEG_GAP = 5.0         # mm — minimum gap between legs at mid-thigh
+
+
+def _check_leg_separation(
+    mesh: trimesh.Trimesh,
+    base_z: float,
+) -> list[str]:
+    """Check that the character's legs are separated (not fused together).
+
+    Slices a thin band at mid-leg height and checks for a gap between
+    the left and right halves near X=0. If the mesh is continuous across
+    X=0 with no gap, the legs are together.
+
+    Returns a list of warnings (empty if legs are properly separated).
+    """
+    warnings = []
+    bounds = mesh.bounds
+    bottom_z = bounds[0][2]
+
+    # Mid-leg height: halfway between mesh bottom and base cut plane
+    leg_z = (bottom_z + base_z) / 2
+
+    # Only check if the mesh extends below the base cut (has legs)
+    if bottom_z >= base_z - 5:
+        return warnings  # No legs present — skip check (e.g., Spark tier)
+
+    try:
+        band_top = _slice_mesh(mesh, "Z", leg_z - 3, "above")
+        band = _slice_mesh(band_top, "Z", leg_z + 3, "below")
+
+        if band is None or len(band.vertices) == 0:
+            return warnings
+
+        band_bounds = band.bounds
+
+        # Check 1: Look for a gap at X=0 by slicing a narrow center strip
+        # If the strip is empty or very thin, legs are apart
+        try:
+            center_strip = _slice_mesh(band, "X", -MIN_LEG_GAP / 2, "above")
+            center_strip = _slice_mesh(center_strip, "X", MIN_LEG_GAP / 2, "below")
+
+            if center_strip is not None and len(center_strip.vertices) > 0:
+                # There's mesh in the center gap — legs may be fused
+                strip_volume = abs(center_strip.volume) if center_strip.is_watertight else 0
+                strip_bounds = center_strip.bounds
+                strip_height = strip_bounds[1][2] - strip_bounds[0][2]
+
+                # If the center strip has substantial geometry, legs are together
+                if strip_height > 3:
+                    warnings.append(
+                        f"Legs appear to be together — mesh is continuous "
+                        f"across X=0 at Z={leg_z:.0f}mm (mid-leg height). "
+                        f"Legs must be shoulder-width apart for clean "
+                        f"dissection into separate left/right leg zones."
+                    )
+        except Exception:
+            pass
+
+        # Check 2: Verify the band has two distinct clusters (left and right)
+        # by checking that the mesh splits into two bodies when cut at X=0
+        try:
+            left_half = _slice_mesh(band, "X", 0, "below")
+            right_half = _slice_mesh(band, "X", 0, "above")
+
+            left_exists = left_half is not None and len(left_half.vertices) > 10
+            right_exists = right_half is not None and len(right_half.vertices) > 10
+
+            if not (left_exists and right_exists):
+                warnings.append(
+                    f"Cannot identify two separate legs at Z={leg_z:.0f}mm. "
+                    f"The character should have legs slightly apart."
+                )
+        except Exception:
+            pass
+
+    except Exception:
+        pass
+
+    return warnings
 
 
 def validate_tpose(
@@ -120,12 +199,14 @@ def validate_tpose(
 ) -> tuple[bool, list[str]]:
     """Check if a character mesh appears to be in T-pose.
 
-    Validates by measuring the mesh width at the shoulder cut height.
-    In T-pose, the mesh should extend significantly beyond the arm cut planes.
+    Validates:
+    1. Arms are spread out horizontally beyond the arm cut planes
+    2. Overall width-to-height ratio is consistent with T-pose
+    3. Legs are separated (not fused together)
 
     Returns:
         (is_tpose, warnings) — is_tpose is False if arms appear to be
-        against the body.
+        against the body or legs are fused together.
     """
     warnings = []
 
@@ -134,6 +215,7 @@ def validate_tpose(
     left_x = next((c.position for c in cut_planes if c.name == "left_arm"), -28)
     right_x = next((c.position for c in cut_planes if c.name == "right_arm"), 28)
 
+    # ── Arm spread check ─────────────────────────────────────────────
     # Measure mesh width at shoulder height (midpoint of torso zone)
     shoulder_z = (head_z + base_z) / 2
     bounds = mesh.bounds
@@ -181,24 +263,23 @@ def validate_tpose(
                     f"Consider regenerating with arms out."
                 )
 
-            is_tpose = len(warnings) == 0
-            return is_tpose, warnings
-
     except Exception:
-        pass
+        # Fallback: use overall mesh bounds
+        total_width = bounds[1][0] - bounds[0][0]
+        total_height = bounds[1][2] - bounds[0][2]
 
-    # Fallback: use overall mesh bounds
-    total_width = bounds[1][0] - bounds[0][0]
-    total_height = bounds[1][2] - bounds[0][2]
+        if total_width < total_height * 0.6:
+            warnings.append(
+                f"Mesh width ({total_width:.0f}mm) is much less than height "
+                f"({total_height:.0f}mm). Character is likely NOT in T-pose."
+            )
 
-    if total_width < total_height * 0.6:
-        warnings.append(
-            f"Mesh width ({total_width:.0f}mm) is much less than height "
-            f"({total_height:.0f}mm). Character is likely NOT in T-pose."
-        )
-        return False, warnings
+    # ── Leg separation check ─────────────────────────────────────────
+    leg_warnings = _check_leg_separation(mesh, base_z)
+    warnings.extend(leg_warnings)
 
-    return True, warnings
+    is_tpose = len(warnings) == 0
+    return is_tpose, warnings
 
 
 def validate_cut_planes(

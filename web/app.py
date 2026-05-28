@@ -21,6 +21,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, send_file
 
+from pipeline.generate_3d import _enforce_tpose_prompt, TPOSE_IMAGE_GUIDANCE
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # Where we store generated models and pipeline outputs
@@ -72,6 +74,21 @@ def generate_model():
         else:
             sculpture_path = _generate_test_sculpture(design_dir)
 
+    # Validate T-pose before running the pipeline
+    tpose_ok, tpose_warnings = _validate_tpose(sculpture_path)
+    if not tpose_ok:
+        return jsonify({
+            "design_id": design_id,
+            "status": "error",
+            "error": "Model is not in T-pose",
+            "tpose_warnings": tpose_warnings,
+            "hint": (
+                "The character must be standing with arms straight out to the "
+                "sides at shoulder height and legs slightly apart. Please "
+                "regenerate or upload a model in T-pose."
+            ),
+        }), 400
+
     # Run the shell pipeline
     result = _run_pipeline(design_dir, sculpture_path)
 
@@ -83,6 +100,7 @@ def generate_model():
         "skeleton_url": f"/api/model/{design_id}/skeleton.glb",
         "sections": result.get("sections", {}),
         "metrics": result.get("metrics", {}),
+        "tpose_warnings": tpose_warnings,
     })
 
 
@@ -100,6 +118,23 @@ def serve_model(design_id, filename):
     return send_file(str(filepath), mimetype="application/octet-stream")
 
 
+def _validate_tpose(sculpture_path: Path) -> tuple[bool, list[str]]:
+    """Validate that a mesh is in T-pose before running the pipeline.
+
+    Returns (is_ok, warnings). is_ok is False if the model should be rejected.
+    """
+    try:
+        from pipeline.shell_pipeline import load_and_prepare
+        from pipeline.dissect import validate_tpose
+        from pipeline.skeleton import DEFAULT_CUT_PLANES
+
+        mesh = load_and_prepare(str(sculpture_path))
+        is_tpose, warnings = validate_tpose(mesh, DEFAULT_CUT_PLANES)
+        return is_tpose, warnings
+    except Exception as e:
+        return False, [f"Could not validate T-pose: {e}"]
+
+
 def _generate_via_meshy(api_key: str, design_dir: Path, prompt: str) -> Path:
     """Call Meshy API to generate a 3D model. Returns path to sculpture STL."""
     import time
@@ -109,21 +144,22 @@ def _generate_via_meshy(api_key: str, design_dir: Path, prompt: str) -> Path:
     image_path = design_dir / "input.png"
 
     if image_path.exists():
-        # Image to 3D
+        # Image to 3D — inject T-pose guidance text alongside image
         import base64
         with open(image_path, "rb") as f:
             image_b64 = base64.b64encode(f.read()).decode()
 
         payload = json.dumps({
             "image_url": f"data:image/png;base64,{image_b64}",
+            "prompt": TPOSE_IMAGE_GUIDANCE,
             "ai_model": "meshy-6",
             "target_formats": ["stl"],
         })
         endpoint = "https://api.meshy.ai/openapi/v1/image-to-3d"
     else:
-        # Text to 3D (preview stage)
+        # Text to 3D — enforce T-pose in prompt
         payload = json.dumps({
-            "prompt": prompt,
+            "prompt": _enforce_tpose_prompt(prompt),
             "ai_model": "meshy-6",
             "target_formats": ["stl"],
         })

@@ -52,18 +52,21 @@ DEFAULT_PROVIDER = os.environ.get("HAWABOT_3D_PROVIDER", "tripo")
 # This suffix is appended to ALL generation prompts to ensure the output
 # model has arms spread out and legs apart for clean zone dissection.
 TPOSE_PROMPT_SUFFIX = (
-    ". The character must be standing in a T-pose: arms held straight out "
-    "to the sides at shoulder height, palms facing down, legs shoulder-width "
-    "apart, feet flat on the ground, facing directly forward. "
-    "Full body visible, no accessories blocking the arms or legs."
+    ". The character must be standing in a T-pose: arms held perfectly "
+    "straight out to the sides at shoulder height, palms facing down. "
+    "Legs must be visibly separated and shoulder-width apart with a clear "
+    "gap between them — NOT touching. Feet flat on the ground, facing "
+    "directly forward. Full body visible, no accessories blocking the "
+    "arms or legs."
 )
 
 # For image-to-3D, this is used as the text guidance alongside the image
 # to steer the model toward T-pose output.
 TPOSE_IMAGE_GUIDANCE = (
     "Generate this character in a T-pose with arms straight out to the sides "
-    "at shoulder height, legs shoulder-width apart, standing upright facing "
-    "forward. Full body, centered."
+    "at shoulder height. Legs must be clearly separated and shoulder-width "
+    "apart with a visible gap between them. Standing upright facing forward. "
+    "Full body, centered."
 )
 
 
