@@ -16,13 +16,13 @@ Coordinate system: Z-up, origin at center of base plate top surface.
 +X right (robot's perspective), +Y forward.
 All dimensions in millimeters.
 
-v17 key coordinates:
-  Head top:      Z = 210      Hip:        Z = 0, X = ±20
-  Head tilt:     Z = 185      Knee:       Z = -55
-  Head pan:      Z = 155      Ankle:      Z = -110
-  Shoulder:      Z = 140      Foot bottom: Z = -115
-  Elbow:         Z = 100      Waist yaw:  Z = 15
-  Hand:          Z = 50
+STEP v1 key coordinates (SolidWorks Y-up → Pipeline Z-up):
+  Head top:      Z = 165      Hip:        Z = 0, X = ±20
+  Head pan:      Z = 155      Frame bottom: Z = 12
+  Shoulder MG90: X = ±74      Knee:       Z = -55 (Pro, future)
+  Elbow SG90:    X = ±107     Ankle:      Z = -110 (Pro, future)
+  Forearm SG90:  X = ±164     Waist MG90: Z = 15
+  Shoulder Z:    140 (all arm components horizontal at this height)
 """
 
 from __future__ import annotations
@@ -102,13 +102,13 @@ TORSO_R = 4.0   # Corner fillet radius
 # but shells only cover the visible portion — head top to base bottom)
 TOTAL_HEIGHT = 250.0
 
-# Segment lengths (verified against v17 macro)
-TORSO_GAP = 125.0    # Waist (Z=15) to shoulder (Z=140) — electronics cavity
-UPPER_ARM = 53.0     # Shoulder to elbow
-FOREARM = 54.0        # Elbow to hand
-THIGH = 55.0          # Hip to knee
-SHIN = 55.0           # Knee to ankle
-FOOT_H = 5.0          # Ankle to foot bottom
+# Segment lengths (verified against STEP v1 mockup)
+TORSO_GAP = 128.0    # Frame chest bottom (Z=12) to shoulder (Z=140)
+UPPER_ARM = 33.0     # Shoulder (X=74) to elbow (X=107) — horizontal
+FOREARM = 57.0        # Elbow (X=107) to hand (X=164) — horizontal
+THIGH = 55.0          # Hip to knee (Pro, future)
+SHIN = 55.0           # Knee to ankle (Pro, future)
+FOOT_H = 5.0          # Ankle to foot bottom (Pro, future)
 
 # Convenience aliases for importers that reference older names
 TORSO_HEIGHT = TORSO_GAP
@@ -144,51 +144,43 @@ SERVO_MOUNTS = [
                joint_name="head_tilt", joint_range_deg=(-30, 30),
                tier="spark"),
 
-    # ── Shoulders (both tiers — MG90S on Spark, XL330 on Pro) ──
-    ServoMount("left_shoulder_pitch", XL330, -40, 0, 140,
+    # ── Shoulders (both tiers — MG90S, verified from STEP v1) ──
+    ServoMount("left_shoulder_pitch", MG90S, -74, 0, 140,
                shaft_axis="X", shaft_sign=-1,
                joint_name="left_shoulder_pitch", joint_range_deg=(-90, 90),
                tier="spark"),
 
-    ServoMount("right_shoulder_pitch", XL330, 40, 0, 140,
+    ServoMount("right_shoulder_pitch", MG90S, 74, 0, 140,
                shaft_axis="X", shaft_sign=1,
                joint_name="right_shoulder_pitch", joint_range_deg=(-90, 90),
                tier="spark"),
 
-    ServoMount("left_shoulder_roll", SG90, -40, 0, 140,
-               shaft_axis="Y", shaft_sign=1,
-               joint_name="left_shoulder_roll", joint_range_deg=(-90, 90),
-               tier="spark"),
+    # NOTE: shoulder_roll not in STEP v1 mockup — add when v2 includes it
 
-    ServoMount("right_shoulder_roll", SG90, 40, 0, 140,
-               shaft_axis="Y", shaft_sign=-1,
-               joint_name="right_shoulder_roll", joint_range_deg=(-90, 90),
-               tier="spark"),
-
-    # ── Waist (both tiers — SG90 on Spark, XL330 on Pro) ──
-    ServoMount("waist_yaw", XL330, 0, 0, 15,
+    # ── Waist (both tiers — MG90S, verified from STEP v1) ──
+    ServoMount("waist_yaw", MG90S, 0, 0, 15,
                shaft_axis="Z", shaft_sign=1,
                joint_name="waist_yaw", joint_range_deg=(-90, 90),
                tier="spark"),
 
-    # ── Elbows (Pro only) ──
-    ServoMount("left_elbow_pitch", SG90, -75, 0, 100,
+    # ── Elbows (Pro only — SG90, horizontal at shoulder height) ──
+    ServoMount("left_elbow_pitch", SG90, -107, 0, 140,
                shaft_axis="X", shaft_sign=-1,
                joint_name="left_elbow_pitch", joint_range_deg=(-120, 0),
                tier="pro"),
 
-    ServoMount("right_elbow_pitch", SG90, 75, 0, 100,
+    ServoMount("right_elbow_pitch", SG90, 107, 0, 140,
                shaft_axis="X", shaft_sign=1,
                joint_name="right_elbow_pitch", joint_range_deg=(-120, 0),
                tier="pro"),
 
-    # ── Hands (Pro only) ──
-    ServoMount("left_hand_pitch", SG90, -55, 0, 50,
+    # ── Hands / forearm (Pro only — SG90, at wrist) ──
+    ServoMount("left_hand_pitch", SG90, -164, 0, 140,
                shaft_axis="X", shaft_sign=-1,
                joint_name="left_hand_pitch", joint_range_deg=(-45, 45),
                tier="pro"),
 
-    ServoMount("right_hand_pitch", SG90, 55, 0, 50,
+    ServoMount("right_hand_pitch", SG90, 164, 0, 140,
                shaft_axis="X", shaft_sign=1,
                joint_name="right_hand_pitch", joint_range_deg=(-45, 45),
                tier="pro"),
@@ -237,24 +229,26 @@ SERVO_MOUNTS = [
                tier="pro"),
 ]
 
-# Convenience lookups (v17 coordinates)
+# Convenience lookups (verified from STEP v1 mockup)
 WAIST_Z = 15.0
 SHOULDER_Z = 140.0
-SHOULDER_X = 40.0
-SHOULDER_SPREAD = SHOULDER_X * 2  # 80mm shoulder-to-shoulder
+SHOULDER_X = 74.0                 # MG90S shoulder pitch servo X (was 40)
+SHOULDER_SPREAD = SHOULDER_X * 2  # 148mm shoulder-to-shoulder
 HEAD_PAN_Z = 155.0
 HEAD_TILT_Z = 185.0
 HEAD_Z = HEAD_TILT_Z              # Alias for importers
-ELBOW_Z = 100.0
-ELBOW_X = 75.0
-HAND_Z = 50.0
-HAND_X = 55.0
+ELBOW_Z = 140.0                   # Same as shoulder — arms horizontal
+ELBOW_X = 107.0                   # SG90 elbow pitch servo X
+HAND_Z = 140.0                    # Same as shoulder — arms horizontal
+HAND_X = 164.0                    # SG90 forearm servo X
 HIP_Z = 0.0
 HIP_X = 20.0
 KNEE_Z = -55.0
 ANKLE_Z = -110.0
 FOOT_BOTTOM_Z = -115.0
-HEAD_TOP_Z = 210.0
+HEAD_TOP_Z = 165.0                # From STEP head bounds (was 210)
+# Frame chest bottom — hip cut plane
+FRAME_CHEST_BOTTOM_Z = 12.0
 
 
 def mounts_for_tier(tier: str) -> list[ServoMount]:
@@ -287,15 +281,15 @@ MAG_POCKET_D = 6.1 # Press-fit pocket diameter
 MAG_POCKET_H = 3.1 # Pocket depth
 
 MAGNET_SEATS: list[MagnetSeat] = [
-    # ── Head zone (8) — ring at Z=165 (between head pan Z=155 and head tilt Z=185) ──
-    MagnetSeat("H1", "head", 0, -14, 165, (0, -1, 0)),
-    MagnetSeat("H2", "head", 0, 14, 165, (0, 1, 0)),
-    MagnetSeat("H3", "head", -14, 0, 165, (-1, 0, 0)),
-    MagnetSeat("H4", "head", 14, 0, 165, (1, 0, 0)),
-    MagnetSeat("H5", "head", -10, -10, 165, (-1, -1, 0)),
-    MagnetSeat("H6", "head", 10, -10, 165, (1, -1, 0)),
-    MagnetSeat("H7", "head", -10, 10, 165, (-1, 1, 0)),
-    MagnetSeat("H8", "head", 10, 10, 165, (1, 1, 0)),
+    # ── Head zone (8) — ring at Z=155 (at head pan joint) ──
+    MagnetSeat("H1", "head", 0, -14, 155, (0, -1, 0)),
+    MagnetSeat("H2", "head", 0, 14, 155, (0, 1, 0)),
+    MagnetSeat("H3", "head", -14, 0, 155, (-1, 0, 0)),
+    MagnetSeat("H4", "head", 14, 0, 155, (1, 0, 0)),
+    MagnetSeat("H5", "head", -10, -10, 155, (-1, -1, 0)),
+    MagnetSeat("H6", "head", 10, -10, 155, (1, -1, 0)),
+    MagnetSeat("H7", "head", -10, 10, 155, (-1, 1, 0)),
+    MagnetSeat("H8", "head", 10, 10, 155, (1, 1, 0)),
 
     # ── Torso zone (12) — 3 rings of 4, spaced through torso cavity ──
     MagnetSeat("T1", "torso", 0, -14, 40, (0, -1, 0)),
@@ -311,21 +305,21 @@ MAGNET_SEATS: list[MagnetSeat] = [
     MagnetSeat("T11", "torso", -14, 0, 120, (-1, 0, 0)),
     MagnetSeat("T12", "torso", 14, 0, 120, (1, 0, 0)),
 
-    # ── Left arm zone (6) ──
-    MagnetSeat("LA1", "left_arm", -40, -10, 140, (0, -1, 0)),
-    MagnetSeat("LA2", "left_arm", -40, 10, 140, (0, 1, 0)),
-    MagnetSeat("LA3", "left_arm", -40, 0, 125, (0, 0, -1)),
-    MagnetSeat("LA4", "left_arm", -40, 0, 150, (0, 0, 1)),
-    MagnetSeat("LA5", "left_arm", -55, -8, 140, (-1, 0, 0)),
-    MagnetSeat("LA6", "left_arm", -55, 8, 140, (-1, 0, 0)),
+    # ── Left arm zone (6) — along horizontal arm bracket ──
+    MagnetSeat("LA1", "left_arm", -90, -10, 140, (0, -1, 0)),
+    MagnetSeat("LA2", "left_arm", -90, 10, 140, (0, 1, 0)),
+    MagnetSeat("LA3", "left_arm", -120, -10, 140, (0, -1, 0)),
+    MagnetSeat("LA4", "left_arm", -120, 10, 140, (0, 1, 0)),
+    MagnetSeat("LA5", "left_arm", -150, -8, 140, (-1, 0, 0)),
+    MagnetSeat("LA6", "left_arm", -150, 8, 140, (-1, 0, 0)),
 
     # ── Right arm zone (6) — mirror of left ──
-    MagnetSeat("RA1", "right_arm", 40, -10, 140, (0, -1, 0)),
-    MagnetSeat("RA2", "right_arm", 40, 10, 140, (0, 1, 0)),
-    MagnetSeat("RA3", "right_arm", 40, 0, 125, (0, 0, -1)),
-    MagnetSeat("RA4", "right_arm", 40, 0, 150, (0, 0, 1)),
-    MagnetSeat("RA5", "right_arm", 55, -8, 140, (1, 0, 0)),
-    MagnetSeat("RA6", "right_arm", 55, 8, 140, (1, 0, 0)),
+    MagnetSeat("RA1", "right_arm", 90, -10, 140, (0, -1, 0)),
+    MagnetSeat("RA2", "right_arm", 90, 10, 140, (0, 1, 0)),
+    MagnetSeat("RA3", "right_arm", 120, -10, 140, (0, -1, 0)),
+    MagnetSeat("RA4", "right_arm", 120, 10, 140, (0, 1, 0)),
+    MagnetSeat("RA5", "right_arm", 150, -8, 140, (1, 0, 0)),
+    MagnetSeat("RA6", "right_arm", 150, 8, 140, (1, 0, 0)),
 
     # ── Base zone (8) — perimeter at Z=-10 ──
     MagnetSeat("B1", "base", -35, -28, -10, (0, -1, 0)),
@@ -374,14 +368,14 @@ class CutPlane:
 
 
 # Head/torso cut at Z=148 — between shoulder (140) and head pan (155)
-# Torso/hip cut at Z=5 — between waist (15) and hip (0)
-# Arm cuts at X=±30 — just outside torso column (24mm wide)
+# Torso/base cut at Z=12 — bottom of frame_chest (STEP v1 verified)
+# Arm cuts at X=±74 — at shoulder MG90S servo position
 # Leg cut at X=0 — between left and right legs (Pro only)
 DEFAULT_CUT_PLANES = [
     CutPlane("head_torso", "Z", 148, 142, 153, ("head", "torso")),
-    CutPlane("torso_base", "Z", 5, -5, 12, ("torso", "base")),
-    CutPlane("left_arm", "X", -30, -38, -26, ("torso", "left_arm")),
-    CutPlane("right_arm", "X", 30, 26, 38, ("torso", "right_arm")),
+    CutPlane("torso_base", "Z", 12, 0, 20, ("torso", "base")),
+    CutPlane("left_arm", "X", -74, -80, -60, ("torso", "left_arm")),
+    CutPlane("right_arm", "X", 74, 60, 80, ("torso", "right_arm")),
 ]
 
 # Pro adds leg zone cuts (split base zone into base + left_leg + right_leg)
@@ -527,14 +521,14 @@ JOINT_SWEEPS = {
         "height": 6,
     },
     "left_shoulder_pitch": {
-        "center": (-40, 0, 140),
+        "center": (-74, 0, 140),
         "axis": "X",
         "range_deg": (-90, 90),
         "radius": 25,
         "height": 6,
     },
     "right_shoulder_pitch": {
-        "center": (40, 0, 140),
+        "center": (74, 0, 140),
         "axis": "X",
         "range_deg": (-90, 90),
         "radius": 25,
@@ -542,14 +536,14 @@ JOINT_SWEEPS = {
     },
     # ── Pro-only joint sweeps ──
     "left_elbow_pitch": {
-        "center": (-75, 0, 100),
+        "center": (-107, 0, 140),
         "axis": "X",
         "range_deg": (-120, 0),
         "radius": 18,
         "height": 6,
     },
     "right_elbow_pitch": {
-        "center": (75, 0, 100),
+        "center": (107, 0, 140),
         "axis": "X",
         "range_deg": (-120, 0),
         "radius": 18,

@@ -154,18 +154,19 @@ def _build_head_clearance() -> trimesh.Trimesh:
 def _build_torso_clearance() -> trimesh.Trimesh:
     """Clearance volume for the torso zone.
 
-    Includes: torso column, waist servo top, shoulder bracket inboard halves,
+    Includes: torso column, waist MG90S top, shoulder bracket inboard halves,
     wire channels, waist rotation sweep, shoulder rotation sweeps.
 
-    v17: torso zone from Z=5 (torso/base cut) to Z=148 (head/torso cut).
-    Waist at Z=15, shoulders at Z=140. 125mm electronics cavity.
+    STEP v1: torso zone from Z=12 (frame_chest bottom) to Z=148 (head/torso cut).
+    Waist MG90S at Z=15, shoulders MG90S at X=±74 Z=140.
+    Frame_chest extends to X=±76.
     """
     C = CLEARANCE_EXPANSION
     parts = []
 
     # Torso column (full height of torso zone)
     col_size = TORSO_D + 2 * C
-    torso_bottom = 5     # Torso/base cut
+    torso_bottom = 12    # Frame_chest bottom (STEP v1)
     torso_top = 148      # Head/torso cut
     torso_h = torso_top - torso_bottom
     parts.append(_make_box(
@@ -173,24 +174,23 @@ def _build_torso_clearance() -> trimesh.Trimesh:
         [col_size, col_size, torso_h],
     ))
 
-    # Waist servo upper portion (XL330 on Pro, sticks into torso zone)
-    waist_top = WAIST_Z + XL330.body_h / 2 + C
+    # Waist servo upper portion (MG90S, sticks into torso zone)
+    waist_top = WAIST_Z + MG90S.body_h / 2 + C
     if waist_top > torso_bottom:
         parts.append(_make_box(
             [0, 0, (torso_bottom + waist_top) / 2],
-            [XL330.body_w + 2 * C_WALL_XL + 2 * C,
-             XL330.body_l + 2 * C_WALL_XL + 2 * C,
+            [MG90S.body_w + 2 * C_WALL + 2 * C,
+             MG90S.body_l + 2 * C_WALL + 2 * C,
              waist_top - torso_bottom],
         ))
 
     # Shoulder brackets (inboard portions within torso zone)
-    # XL330 at shoulders on Pro — larger envelope than MG90S
-    bracket_d = XL330.body_l + 2 * C_WALL_XL + 2 * C
-    bracket_h = XL330.body_w + 2 * C_WALL_XL + 2 * C
+    # MG90S at shoulders — bracket from torso edge to arm cut plane
+    bracket_d = MG90S.body_l + 2 * C_WALL + 2 * C
+    bracket_h = MG90S.total_h + 2 * C
     for sign in [-1, 1]:
-        # Bracket from torso edge to arm cut plane
         inner_edge = sign * (TORSO_D / 2)
-        arm_cut = sign * 30  # Default arm cut plane (v17)
+        arm_cut = sign * SHOULDER_X  # Arm cut at shoulder servo X
         mid_x = (inner_edge + arm_cut) / 2
         width = abs(arm_cut - inner_edge) + 2 * C
         parts.append(_make_box(
@@ -205,12 +205,12 @@ def _build_torso_clearance() -> trimesh.Trimesh:
         wire_r, torso_h + 4, "Z",
     ))
 
-    # Wire channels (horizontal to shoulders — XL330 daisy-chain)
-    xl_wire_r = D_WIRE_XL / 2 + C
+    # Wire channels (horizontal to shoulders — servo cables)
+    wire_ch_r = D_WIRE_XL / 2 + C
     for sign in [-1, 1]:
         parts.append(_make_cylinder(
             [sign * SHOULDER_X / 2, 0, SHOULDER_Z],
-            xl_wire_r, SHOULDER_X, "X",
+            wire_ch_r, SHOULDER_X, "X",
         ))
 
     # Waist rotation sweep
@@ -234,63 +234,59 @@ def _build_torso_clearance() -> trimesh.Trimesh:
 
 
 def _build_arm_clearance(side: str) -> trimesh.Trimesh:
-    """Clearance volume for an arm zone.
+    """Clearance volume for an arm zone (horizontal bracket layout).
 
-    Includes: shoulder servo housing (XL330), shoulder roll servo (SG90),
-    upper arm column, elbow servo (SG90, Pro), forearm column, hand servo
-    (SG90, Pro), shaft tube, rotation sweeps.
+    Arms extend horizontally along X at SHOULDER_Z. Includes: shoulder
+    MG90S housing, upper arm column, elbow SG90, forearm column, hand
+    SG90, and rotation sweeps.
 
-    v17: shoulder at Z=140 X=±40, elbow at Z=100 X=±75, hand at Z=50 X=±55.
+    STEP v1: shoulder MG90S at X=±74, elbow SG90 at X=±107,
+    forearm SG90 at X=±164 — all at Z=140.
     """
     C = CLEARANCE_EXPANSION
     sign = -1 if side == "left" else 1
     parts = []
 
-    # Shoulder XL330 housing (Pro envelope — accommodates MG90S too)
-    housing_d = XL330.body_l + 2 * C_WALL_XL + 2 * C
-    housing_h = XL330.body_w + 2 * C_WALL_XL + 2 * C
-
-    # From arm cut plane outward past shoulder
-    arm_cut = sign * 30  # v17 arm cut
-    outer_x = sign * (SHOULDER_X + 20)
-    mid_x = (arm_cut + outer_x) / 2
-    width = abs(outer_x - arm_cut)
-
+    # Shoulder MG90S housing
+    sh_housing_l = MG90S.body_l + 2 * C_WALL + 2 * C  # Front-back (Y)
+    sh_housing_w = MG90S.body_w + 2 * C_WALL + 2 * C   # Side (along X)
+    sh_housing_h = MG90S.total_h + 2 * C                # Vertical (Z)
     parts.append(_make_box(
-        [mid_x, 0, SHOULDER_Z],
-        [width, housing_d, housing_h],
+        [sign * SHOULDER_X, 0, SHOULDER_Z],
+        [sh_housing_w, sh_housing_l, sh_housing_h],
     ))
 
-    # Upper arm column (shoulder to elbow)
-    arm_col_w = 14 + 2 * C  # Slim structural column
-    arm_mid_z = (SHOULDER_Z + ELBOW_Z) / 2
-    arm_h = SHOULDER_Z - ELBOW_Z + 2 * C
+    # Upper arm column (shoulder X=74 to elbow X=107, horizontal at Z=140)
+    arm_col_d = 14 + 2 * C   # Front-back depth (Y)
+    arm_col_h = 20 + 2 * C   # Vertical height (Z) — bracket cross section
+    arm_mid_x = sign * (SHOULDER_X + ELBOW_X) / 2
+    arm_len = abs(ELBOW_X - SHOULDER_X) + 2 * C  # Length along X
     parts.append(_make_box(
-        [sign * ((SHOULDER_X + ELBOW_X) / 2), 0, arm_mid_z],
-        [arm_col_w, arm_col_w, arm_h],
+        [arm_mid_x, 0, SHOULDER_Z],
+        [arm_len, arm_col_d, arm_col_h],
     ))
 
-    # Elbow servo housing (SG90, Pro only — still include in clearance)
-    elbow_w = SG90.body_l + 2 * C_WALL + 2 * C
-    elbow_d = SG90.body_w + 2 * C_WALL + 2 * C
+    # Elbow servo housing (SG90)
+    elbow_l = SG90.body_l + 2 * C_WALL + 2 * C
+    elbow_w = SG90.body_w + 2 * C_WALL + 2 * C
     elbow_h = SG90.total_h + 2 * C
     parts.append(_make_box(
-        [sign * ELBOW_X, 0, ELBOW_Z],
-        [elbow_w, elbow_d, elbow_h],
+        [sign * ELBOW_X, 0, SHOULDER_Z],
+        [elbow_w, elbow_l, elbow_h],
     ))
 
-    # Forearm column (elbow to hand)
-    fore_mid_z = (ELBOW_Z + HAND_Z) / 2
-    fore_h = ELBOW_Z - HAND_Z + 2 * C
+    # Forearm column (elbow X=107 to hand X=164, horizontal at Z=140)
+    fore_mid_x = sign * (ELBOW_X + HAND_X) / 2
+    fore_len = abs(HAND_X - ELBOW_X) + 2 * C
     parts.append(_make_box(
-        [sign * ((ELBOW_X + HAND_X) / 2), 0, fore_mid_z],
-        [arm_col_w, arm_col_w, fore_h],
+        [fore_mid_x, 0, SHOULDER_Z],
+        [fore_len, arm_col_d, arm_col_h],
     ))
 
-    # Hand servo housing (SG90, Pro only)
+    # Hand servo housing (SG90)
     parts.append(_make_box(
-        [sign * HAND_X, 0, HAND_Z],
-        [elbow_w, elbow_d, elbow_h],
+        [sign * HAND_X, 0, SHOULDER_Z],
+        [elbow_w, elbow_l, elbow_h],
     ))
 
     # Shoulder rotation sweep
@@ -318,8 +314,8 @@ def _build_base_clearance() -> trimesh.Trimesh:
     Includes: base plate body, waist servo lower portion, USB access slot,
     hip servo tops (Pro — hips at Z=0 protrude into base zone).
 
-    v17: base zone from Z=-20 (base bottom) to Z=5 (torso/base cut).
-    Waist at Z=15, hips at Z=0.
+    STEP v1: base zone from Z=-20 (base bottom) to Z=12 (frame_chest bottom).
+    Waist MG90S at Z=15, hips at Z=0.
     """
     C = CLEARANCE_EXPANSION
     parts = []
@@ -330,15 +326,15 @@ def _build_base_clearance() -> trimesh.Trimesh:
         [BASE_W + 2 * C, BASE_D + 2 * C, BASE_H + 2 * C],
     ))
 
-    # Waist servo lower portion (XL330 on Pro, straddles torso/base boundary)
-    waist_bottom = WAIST_Z - XL330.body_h / 2 - C
-    cut_z = 5  # Torso/base cut
+    # Waist servo lower portion (MG90S, straddles torso/base boundary)
+    waist_bottom = WAIST_Z - MG90S.body_h / 2 - C
+    cut_z = 12  # Frame_chest bottom (STEP v1)
     if waist_bottom < cut_z:
         waist_in_base = cut_z - waist_bottom
         parts.append(_make_box(
             [0, 0, cut_z - waist_in_base / 2],
-            [XL330.body_w + 2 * C_WALL_XL + 2 * C,
-             XL330.body_l + 2 * C_WALL_XL + 2 * C,
+            [MG90S.body_w + 2 * C_WALL + 2 * C,
+             MG90S.body_l + 2 * C_WALL + 2 * C,
              waist_in_base],
         ))
 
