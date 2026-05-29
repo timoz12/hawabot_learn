@@ -327,7 +327,8 @@ def dissect_character(
         DissectResult with zone meshes and any warnings.
     """
     if cut_planes is None:
-        cut_planes = list(DEFAULT_CUT_PLANES)
+        from pipeline.landmarks import adaptive_cut_planes
+        cut_planes = adaptive_cut_planes(mesh)
 
     warnings = validate_cut_planes(cut_planes)
 

@@ -229,26 +229,160 @@ SERVO_MOUNTS = [
                tier="pro"),
 ]
 
-# Convenience lookups (verified from STEP v1 mockup)
-WAIST_Z = 15.0
-SHOULDER_Z = 140.0
-SHOULDER_X = 74.0                 # MG90S shoulder pitch servo X (was 40)
-SHOULDER_SPREAD = SHOULDER_X * 2  # 148mm shoulder-to-shoulder
-HEAD_PAN_Z = 155.0
-HEAD_TILT_Z = 185.0
+# ── Skeleton Variant Spec ─────────────────────────────────────────────────
+#
+# The skeleton is a family of variants, not one fixed frame. The user authors
+# STEP variants (different torso/arm/leg dimensions) to cover body types —
+# humanoid, animal, mystic creature, etc. SkeletonSpec captures the dimensions
+# that CHANGE per variant; the servo pockets, fixtures, clearance tolerances,
+# and magnet seats stay STANDARD across all variants (same servos, same
+# mounting). Joint positions are derived from the variable segment lengths.
+#
+# To make a variant:  dataclasses.replace(DEFAULT_SPEC, torso_gap=150, ...)
+
+@dataclass(frozen=True)
+class SkeletonSpec:
+    """Per-variant dimensions. Standard servo/fixture geometry lives elsewhere."""
+    name: str
+    body_type: str                 # "humanoid" | "animal" | "creature"
+    total_height: float
+
+    # Torso column
+    frame_chest_bottom_z: float    # torso/base boundary (hip cut)
+    torso_gap: float               # frame_chest_bottom_z -> shoulder line
+    torso_d: float                 # torso depth (Y)
+    waist_z: float                 # waist servo height
+
+    # Shoulders / arms (horizontal in T-pose, all at shoulder_z)
+    shoulder_x: float              # shoulder pitch servo X (half-spread)
+    upper_arm: float               # shoulder -> elbow (X)
+    forearm: float                 # elbow -> hand (X)
+
+    # Head
+    head_pan_z: float
+    head_tilt_z: float
+    head_top_z: float
+
+    # Legs (Pro/Max; ignored for Spark)
+    leg_hip_z: float
+    leg_hip_x: float
+    thigh: float
+    shin: float
+    foot_h: float
+
+    # Base / stand
+    base_w: float
+    base_d: float
+    base_h: float
+
+    # ── Derived joint positions ──
+    @property
+    def shoulder_z(self) -> float:
+        return self.frame_chest_bottom_z + self.torso_gap
+
+    @property
+    def shoulder_spread(self) -> float:
+        return self.shoulder_x * 2
+
+    @property
+    def elbow_x(self) -> float:
+        return self.shoulder_x + self.upper_arm
+
+    @property
+    def hand_x(self) -> float:
+        return self.elbow_x + self.forearm
+
+    @property
+    def knee_z(self) -> float:
+        return self.leg_hip_z - self.thigh
+
+    @property
+    def ankle_z(self) -> float:
+        return self.knee_z - self.shin
+
+    @property
+    def foot_bottom_z(self) -> float:
+        return self.ankle_z - self.foot_h
+
+    def cut_planes(self, pro: bool = False) -> list["CutPlane"]:
+        """Skeleton-driven cut planes (joints fixed by this variant).
+
+        The character-driven alternative is landmarks.adaptive_cut_planes().
+        """
+        head_torso_z = (self.shoulder_z + self.head_pan_z) / 2
+        planes = [
+            CutPlane("head_torso", "Z", head_torso_z,
+                     self.shoulder_z + 2, self.head_pan_z, ("head", "torso")),
+            CutPlane("torso_base", "Z", self.frame_chest_bottom_z,
+                     self.frame_chest_bottom_z - 8, self.frame_chest_bottom_z + 8,
+                     ("torso", "base")),
+            CutPlane("left_arm", "X", -self.shoulder_x,
+                     -self.shoulder_x - 8, -self.shoulder_x + 8, ("torso", "left_arm")),
+            CutPlane("right_arm", "X", self.shoulder_x,
+                     self.shoulder_x - 8, self.shoulder_x + 8, ("torso", "right_arm")),
+        ]
+        if pro:
+            split = self.leg_hip_x * 0.25
+            planes += [
+                CutPlane("left_leg", "X", -split, -self.leg_hip_x, 0, ("base", "left_leg")),
+                CutPlane("right_leg", "X", split, 0, self.leg_hip_x, ("base", "right_leg")),
+            ]
+        return planes
+
+
+# The current STEP v1 250mm humanoid — baseline variant.
+DEFAULT_SPEC = SkeletonSpec(
+    name="spark_pro_250",
+    body_type="humanoid",
+    total_height=TOTAL_HEIGHT,
+    frame_chest_bottom_z=12.0,
+    torso_gap=TORSO_GAP,
+    torso_d=TORSO_D,
+    waist_z=15.0,
+    shoulder_x=74.0,
+    upper_arm=UPPER_ARM,
+    forearm=FOREARM,
+    head_pan_z=155.0,
+    head_tilt_z=185.0,
+    head_top_z=165.0,
+    leg_hip_z=0.0,
+    leg_hip_x=20.0,
+    thigh=THIGH,
+    shin=SHIN,
+    foot_h=FOOT_H,
+    base_w=BASE_W,
+    base_d=BASE_D,
+    base_h=BASE_H,
+)
+
+
+# The three planned variants (SKELETON_SPEC.md "Future Skeleton Variants").
+# Only Spark Humanoid is in production. Spark Stumpy (creatures: wider base,
+# shorter torso, 4 limb mounts) and Max Humanoid (400-500mm, XL330+XL430) are
+# future — register them here once their dimensions are confirmed.
+SPARK_HUMANOID = DEFAULT_SPEC
+SKELETON_VARIANTS = {"spark_humanoid": SPARK_HUMANOID}
+
+
+# Convenience lookups — derived from DEFAULT_SPEC (single source of truth).
+WAIST_Z = DEFAULT_SPEC.waist_z
+SHOULDER_Z = DEFAULT_SPEC.shoulder_z
+SHOULDER_X = DEFAULT_SPEC.shoulder_x
+SHOULDER_SPREAD = DEFAULT_SPEC.shoulder_spread  # shoulder-to-shoulder
+HEAD_PAN_Z = DEFAULT_SPEC.head_pan_z
+HEAD_TILT_Z = DEFAULT_SPEC.head_tilt_z
 HEAD_Z = HEAD_TILT_Z              # Alias for importers
-ELBOW_Z = 140.0                   # Same as shoulder — arms horizontal
-ELBOW_X = 107.0                   # SG90 elbow pitch servo X
-HAND_Z = 140.0                    # Same as shoulder — arms horizontal
-HAND_X = 164.0                    # SG90 forearm servo X
-HIP_Z = 0.0
-HIP_X = 20.0
-KNEE_Z = -55.0
-ANKLE_Z = -110.0
-FOOT_BOTTOM_Z = -115.0
-HEAD_TOP_Z = 165.0                # From STEP head bounds (was 210)
-# Frame chest bottom — hip cut plane
-FRAME_CHEST_BOTTOM_Z = 12.0
+ELBOW_Z = DEFAULT_SPEC.shoulder_z  # Same as shoulder — arms horizontal
+ELBOW_X = DEFAULT_SPEC.elbow_x
+HAND_Z = DEFAULT_SPEC.shoulder_z   # Same as shoulder — arms horizontal
+HAND_X = DEFAULT_SPEC.hand_x
+HIP_Z = DEFAULT_SPEC.leg_hip_z
+HIP_X = DEFAULT_SPEC.leg_hip_x
+KNEE_Z = DEFAULT_SPEC.knee_z
+ANKLE_Z = DEFAULT_SPEC.ankle_z
+FOOT_BOTTOM_Z = DEFAULT_SPEC.foot_bottom_z
+HEAD_TOP_Z = DEFAULT_SPEC.head_top_z
+FRAME_CHEST_BOTTOM_Z = DEFAULT_SPEC.frame_chest_bottom_z
 
 
 def mounts_for_tier(tier: str) -> list[ServoMount]:
