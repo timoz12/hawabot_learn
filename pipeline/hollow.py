@@ -32,8 +32,10 @@ from pipeline.skeleton import (
     TORSO_D, TORSO_R,
     WAIST_Z, SHOULDER_Z, SHOULDER_X,
     HEAD_PAN_Z, HEAD_TILT_Z,
-    SG90, MG90S,
-    C_WALL, T_WALL,
+    ELBOW_Z, ELBOW_X, HAND_Z, HAND_X,
+    HIP_Z, HIP_X, KNEE_Z, ANKLE_Z,
+    SG90, MG90S, XL330,
+    C_WALL, C_WALL_XL, T_WALL, D_WIRE_XL,
     CLEARANCE_EXPANSION,
     REMOVAL_SPECS,
     JOINT_SWEEPS,
@@ -96,12 +98,14 @@ def _build_head_clearance() -> trimesh.Trimesh:
     """Clearance volume for the head zone.
 
     Includes: head pan servo, head tilt servo, neck post,
-    head magnet ring, pan rotation sweep.
+    pan rotation sweep, tilt rotation sweep.
+
+    v17: head pan at Z=155, head tilt at Z=185, cut at Z=148.
     """
     C = CLEARANCE_EXPANSION
     parts = []
 
-    # Head pan servo body + clearance
+    # Head pan servo body + clearance (at Z=155)
     pan_w = SG90.body_l + 2 * C_WALL + 2 * C
     pan_d = SG90.body_w + 2 * C_WALL + 2 * C
     pan_h = SG90.total_h + 2 * C
@@ -110,30 +114,31 @@ def _build_head_clearance() -> trimesh.Trimesh:
         [pan_w, pan_d, pan_h],
     ))
 
-    # Head tilt servo (rotated: shaft → +Y)
-    tilt_w = SG90.body_w + 2 * C_WALL + 2 * C   # Along X
-    tilt_d = SG90.body_h + 2 * C_WALL + 2 * C    # Along Y (shaft axis)
+    # Head tilt servo (rotated: shaft → +X, at Z=185)
+    tilt_w = SG90.body_w + 2 * C_WALL + 2 * C   # Along X (shaft axis)
+    tilt_d = SG90.body_h + 2 * C_WALL + 2 * C    # Along Y
     tilt_h = SG90.body_l + 2 * C_WALL + 2 * C    # Along Z
     parts.append(_make_box(
         [0, 0, HEAD_TILT_Z],
         [tilt_w, tilt_d, tilt_h],
     ))
 
-    # Connecting column from cut plane up to pan servo
-    connect_h = HEAD_PAN_Z - 113  # From just below cut plane
+    # Connecting column from cut plane (Z=148) up to pan servo (Z=155)
+    cut_z = 148
+    connect_h = HEAD_PAN_Z - cut_z + 4  # Slight overlap
     parts.append(_make_box(
-        [0, 0, 113 + connect_h / 2],
-        [TORSO_D + 2 * C, TORSO_D + 2 * C, connect_h + 2],
+        [0, 0, cut_z + connect_h / 2],
+        [TORSO_D + 2 * C, TORSO_D + 2 * C, connect_h],
     ))
 
     # Pan rotation sweep at the neck boundary
-    sweep = JOINT_SWEEPS["head_pan_yaw"]
+    sweep = JOINT_SWEEPS["head_pan"]
     parts.append(_make_cylinder(
         sweep["center"], sweep["radius"], sweep["height"], sweep["axis"],
     ))
 
     # Tilt rotation sweep
-    sweep = JOINT_SWEEPS["head_tilt_pitch"]
+    sweep = JOINT_SWEEPS["head_tilt"]
     parts.append(_make_cylinder(
         sweep["center"], sweep["radius"], sweep["height"], sweep["axis"],
     ))
@@ -151,35 +156,41 @@ def _build_torso_clearance() -> trimesh.Trimesh:
 
     Includes: torso column, waist servo top, shoulder bracket inboard halves,
     wire channels, waist rotation sweep, shoulder rotation sweeps.
+
+    v17: torso zone from Z=5 (torso/base cut) to Z=148 (head/torso cut).
+    Waist at Z=15, shoulders at Z=140. 125mm electronics cavity.
     """
     C = CLEARANCE_EXPANSION
     parts = []
 
     # Torso column (full height of torso zone)
     col_size = TORSO_D + 2 * C
-    torso_bottom = 10   # Just above base cut
-    torso_top = 115     # Just below head cut
+    torso_bottom = 5     # Torso/base cut
+    torso_top = 148      # Head/torso cut
     torso_h = torso_top - torso_bottom
     parts.append(_make_box(
         [0, 0, torso_bottom + torso_h / 2],
         [col_size, col_size, torso_h],
     ))
 
-    # Waist servo upper portion (sticks into torso zone)
-    waist_top = WAIST_Z + SG90.total_h + C
+    # Waist servo upper portion (XL330 on Pro, sticks into torso zone)
+    waist_top = WAIST_Z + XL330.body_h / 2 + C
     if waist_top > torso_bottom:
         parts.append(_make_box(
             [0, 0, (torso_bottom + waist_top) / 2],
-            [SG90.tab_l + 2 * C, SG90.body_w + 2 * C_WALL + 2 * C, waist_top - torso_bottom],
+            [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+             XL330.body_l + 2 * C_WALL_XL + 2 * C,
+             waist_top - torso_bottom],
         ))
 
     # Shoulder brackets (inboard portions within torso zone)
-    bracket_d = MG90S.body_l + 2 * C_WALL + 2 * C
-    bracket_h = MG90S.body_w + 2 * C_WALL + 2 * C
+    # XL330 at shoulders on Pro — larger envelope than MG90S
+    bracket_d = XL330.body_l + 2 * C_WALL_XL + 2 * C
+    bracket_h = XL330.body_w + 2 * C_WALL_XL + 2 * C
     for sign in [-1, 1]:
         # Bracket from torso edge to arm cut plane
         inner_edge = sign * (TORSO_D / 2)
-        arm_cut = sign * 28  # Default arm cut plane
+        arm_cut = sign * 30  # Default arm cut plane (v17)
         mid_x = (inner_edge + arm_cut) / 2
         width = abs(arm_cut - inner_edge) + 2 * C
         parts.append(_make_box(
@@ -187,18 +198,19 @@ def _build_torso_clearance() -> trimesh.Trimesh:
             [width, bracket_d, bracket_h],
         ))
 
-    # Wire channels (vertical)
+    # Wire channels (vertical — servo cables + power)
     wire_r = 3.0 + C  # D_wire/2 + expansion
     parts.append(_make_cylinder(
         [TORSO_D / 2 - 2, 0, torso_bottom + torso_h / 2],
         wire_r, torso_h + 4, "Z",
     ))
 
-    # Wire channels (horizontal to shoulders)
+    # Wire channels (horizontal to shoulders — XL330 daisy-chain)
+    xl_wire_r = D_WIRE_XL / 2 + C
     for sign in [-1, 1]:
         parts.append(_make_cylinder(
             [sign * SHOULDER_X / 2, 0, SHOULDER_Z],
-            wire_r, SHOULDER_X, "X",
+            xl_wire_r, SHOULDER_X, "X",
         ))
 
     # Waist rotation sweep
@@ -224,19 +236,22 @@ def _build_torso_clearance() -> trimesh.Trimesh:
 def _build_arm_clearance(side: str) -> trimesh.Trimesh:
     """Clearance volume for an arm zone.
 
-    Includes: shoulder servo housing, shaft tube, rotation sweep.
+    Includes: shoulder servo housing (XL330), shoulder roll servo (SG90),
+    upper arm column, elbow servo (SG90, Pro), forearm column, hand servo
+    (SG90, Pro), shaft tube, rotation sweeps.
+
+    v17: shoulder at Z=140 X=±40, elbow at Z=100 X=±75, hand at Z=50 X=±55.
     """
     C = CLEARANCE_EXPANSION
     sign = -1 if side == "left" else 1
     parts = []
 
-    # Servo housing block
-    housing_l = 35 + 2 * C  # Outward extent
-    housing_d = MG90S.body_l + 2 * C_WALL + 2 * C
-    housing_h = MG90S.body_w + 2 * C_WALL + 2 * C
+    # Shoulder XL330 housing (Pro envelope — accommodates MG90S too)
+    housing_d = XL330.body_l + 2 * C_WALL_XL + 2 * C
+    housing_h = XL330.body_w + 2 * C_WALL_XL + 2 * C
 
-    # From arm cut plane outward
-    arm_cut = sign * 28
+    # From arm cut plane outward past shoulder
+    arm_cut = sign * 30  # v17 arm cut
     outer_x = sign * (SHOULDER_X + 20)
     mid_x = (arm_cut + outer_x) / 2
     width = abs(outer_x - arm_cut)
@@ -246,15 +261,46 @@ def _build_arm_clearance(side: str) -> trimesh.Trimesh:
         [width, housing_d, housing_h],
     ))
 
-    # Shaft tube extending outward
-    parts.append(_make_cylinder(
-        [sign * (SHOULDER_X + 10), 0, SHOULDER_Z],
-        MG90S.spline_od / 2 + 3 + C, 25, "X",
+    # Upper arm column (shoulder to elbow)
+    arm_col_w = 14 + 2 * C  # Slim structural column
+    arm_mid_z = (SHOULDER_Z + ELBOW_Z) / 2
+    arm_h = SHOULDER_Z - ELBOW_Z + 2 * C
+    parts.append(_make_box(
+        [sign * ((SHOULDER_X + ELBOW_X) / 2), 0, arm_mid_z],
+        [arm_col_w, arm_col_w, arm_h],
     ))
 
-    # Rotation sweep at the shoulder joint
-    sweep_name = f"{side}_shoulder_pitch"
-    sweep = JOINT_SWEEPS[sweep_name]
+    # Elbow servo housing (SG90, Pro only — still include in clearance)
+    elbow_w = SG90.body_l + 2 * C_WALL + 2 * C
+    elbow_d = SG90.body_w + 2 * C_WALL + 2 * C
+    elbow_h = SG90.total_h + 2 * C
+    parts.append(_make_box(
+        [sign * ELBOW_X, 0, ELBOW_Z],
+        [elbow_w, elbow_d, elbow_h],
+    ))
+
+    # Forearm column (elbow to hand)
+    fore_mid_z = (ELBOW_Z + HAND_Z) / 2
+    fore_h = ELBOW_Z - HAND_Z + 2 * C
+    parts.append(_make_box(
+        [sign * ((ELBOW_X + HAND_X) / 2), 0, fore_mid_z],
+        [arm_col_w, arm_col_w, fore_h],
+    ))
+
+    # Hand servo housing (SG90, Pro only)
+    parts.append(_make_box(
+        [sign * HAND_X, 0, HAND_Z],
+        [elbow_w, elbow_d, elbow_h],
+    ))
+
+    # Shoulder rotation sweep
+    sweep = JOINT_SWEEPS[f"{side}_shoulder_pitch"]
+    parts.append(_make_cylinder(
+        sweep["center"], sweep["radius"], sweep["height"], sweep["axis"],
+    ))
+
+    # Elbow rotation sweep
+    sweep = JOINT_SWEEPS[f"{side}_elbow_pitch"]
     parts.append(_make_cylinder(
         sweep["center"], sweep["radius"], sweep["height"], sweep["axis"],
     ))
@@ -269,8 +315,11 @@ def _build_arm_clearance(side: str) -> trimesh.Trimesh:
 def _build_base_clearance() -> trimesh.Trimesh:
     """Clearance volume for the base zone.
 
-    Includes: base plate body, Pico cavity area, waist servo lower portion,
-    USB access slot.
+    Includes: base plate body, waist servo lower portion, USB access slot,
+    hip servo tops (Pro — hips at Z=0 protrude into base zone).
+
+    v17: base zone from Z=-20 (base bottom) to Z=5 (torso/base cut).
+    Waist at Z=15, hips at Z=0.
     """
     C = CLEARANCE_EXPANSION
     parts = []
@@ -281,18 +330,103 @@ def _build_base_clearance() -> trimesh.Trimesh:
         [BASE_W + 2 * C, BASE_D + 2 * C, BASE_H + 2 * C],
     ))
 
-    # Waist servo lower portion (below the torso/base cut)
-    waist_h = min(SG90.body_h + 2 * C, 20)  # Capped at base zone height
-    parts.append(_make_box(
-        [0, 0, WAIST_Z + waist_h / 2],
-        [SG90.tab_l + 2 * C, SG90.body_w + 2 * C_WALL + 2 * C, waist_h],
-    ))
+    # Waist servo lower portion (XL330 on Pro, straddles torso/base boundary)
+    waist_bottom = WAIST_Z - XL330.body_h / 2 - C
+    cut_z = 5  # Torso/base cut
+    if waist_bottom < cut_z:
+        waist_in_base = cut_z - waist_bottom
+        parts.append(_make_box(
+            [0, 0, cut_z - waist_in_base / 2],
+            [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+             XL330.body_l + 2 * C_WALL_XL + 2 * C,
+             waist_in_base],
+        ))
+
+    # Hip servos (XL330, Pro only — at Z=0, straddle into base zone)
+    for sign in [-1, 1]:
+        parts.append(_make_box(
+            [sign * HIP_X, 0, HIP_Z],
+            [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+             XL330.body_l + 2 * C_WALL_XL + 2 * C,
+             XL330.body_h + 2 * C],
+        ))
 
     # USB access opening on +X side
     parts.append(_make_box(
         [BASE_W / 2, 0, -BASE_H / 2],
         [10 + 2 * C, 16 + 2 * C, BASE_H + 2 * C],
     ))
+
+    result = _trimesh_to_manifold(parts[0])
+    for p in parts[1:]:
+        result = result + _trimesh_to_manifold(p)
+
+    return _manifold_to_trimesh(result)
+
+
+def _build_leg_clearance(side: str) -> trimesh.Trimesh:
+    """Clearance volume for a leg zone (Pro only).
+
+    Includes: hip servo housing, thigh column, knee servo, shin column,
+    ankle servo, foot plate, rotation sweeps.
+
+    v17: hip at Z=0 X=±20, knee at Z=-55, ankle at Z=-110.
+    """
+    C = CLEARANCE_EXPANSION
+    sign = -1 if side == "left" else 1
+    parts = []
+
+    hip_x = sign * HIP_X
+
+    # Hip servo housing (XL330)
+    parts.append(_make_box(
+        [hip_x, 0, HIP_Z],
+        [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+         XL330.body_l + 2 * C_WALL_XL + 2 * C,
+         XL330.body_h + 2 * C],
+    ))
+
+    # Thigh column (hip to knee)
+    thigh_mid_z = (HIP_Z + KNEE_Z) / 2
+    thigh_h = abs(HIP_Z - KNEE_Z) + 2 * C
+    leg_col_w = 14 + 2 * C
+    parts.append(_make_box(
+        [hip_x, 0, thigh_mid_z],
+        [leg_col_w, leg_col_w, thigh_h],
+    ))
+
+    # Knee servo housing (XL330)
+    parts.append(_make_box(
+        [hip_x, 0, KNEE_Z],
+        [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+         XL330.body_l + 2 * C_WALL_XL + 2 * C,
+         XL330.body_h + 2 * C],
+    ))
+
+    # Shin column (knee to ankle)
+    shin_mid_z = (KNEE_Z + ANKLE_Z) / 2
+    shin_h = abs(KNEE_Z - ANKLE_Z) + 2 * C
+    parts.append(_make_box(
+        [hip_x, 0, shin_mid_z],
+        [leg_col_w, leg_col_w, shin_h],
+    ))
+
+    # Ankle servo housing (XL330)
+    parts.append(_make_box(
+        [hip_x, 0, ANKLE_Z],
+        [XL330.body_w + 2 * C_WALL_XL + 2 * C,
+         XL330.body_l + 2 * C_WALL_XL + 2 * C,
+         XL330.body_h + 2 * C],
+    ))
+
+    # Rotation sweeps
+    for joint in [f"{side}_hip_yaw", f"{side}_hip_pitch",
+                  f"{side}_knee_pitch", f"{side}_ankle_pitch"]:
+        if joint in JOINT_SWEEPS:
+            sweep = JOINT_SWEEPS[joint]
+            parts.append(_make_cylinder(
+                sweep["center"], sweep["radius"], sweep["height"], sweep["axis"],
+            ))
 
     result = _trimesh_to_manifold(parts[0])
     for p in parts[1:]:
@@ -313,6 +447,8 @@ def build_clearance_volume(zone: str) -> trimesh.Trimesh:
         "left_arm": lambda: _build_arm_clearance("left"),
         "right_arm": lambda: _build_arm_clearance("right"),
         "base": _build_base_clearance,
+        "left_leg": lambda: _build_leg_clearance("left"),
+        "right_leg": lambda: _build_leg_clearance("right"),
     }
 
     if zone not in builders:

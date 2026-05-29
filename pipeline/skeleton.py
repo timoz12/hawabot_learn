@@ -1,6 +1,6 @@
-"""Spark skeleton frame — dimensions, positions, and magnet grid.
+"""250mm Pro skeleton frame — dimensions, positions, and magnet grid.
 
-Central reference module for the 200mm Spark humanoid skeleton.
+Central reference module for the 250mm humanoid skeleton (v17 geometry).
 All pipeline modules import from here rather than hardcoding dimensions.
 
 This module defines the skeleton as a MECHANICAL FRAME — not a subtract
@@ -8,9 +8,21 @@ volume. The frame has servo positions, magnet seats, clearance envelopes,
 and cut plane defaults. Shell pipeline modules use these to validate and
 process character shells.
 
+Spark and Pro share this 250mm skeleton — Spark is a subset (7 DOF,
+no legs). The pipeline uses Pro geometry for all calculations; Spark
+simply ignores leg zones.
+
 Coordinate system: Z-up, origin at center of base plate top surface.
 +X right (robot's perspective), +Y forward.
 All dimensions in millimeters.
+
+v17 key coordinates:
+  Head top:      Z = 210      Hip:        Z = 0, X = ±20
+  Head tilt:     Z = 185      Knee:       Z = -55
+  Head pan:      Z = 155      Ankle:      Z = -110
+  Shoulder:      Z = 140      Foot bottom: Z = -115
+  Elbow:         Z = 100      Waist yaw:  Z = 15
+  Hand:          Z = 50
 """
 
 from __future__ import annotations
@@ -49,19 +61,33 @@ MG90S = ServoSpec(
     spline_od=4.8, weight_g=13.4,
 )
 
+XL330 = ServoSpec(
+    name="XL330-M288-T",
+    body_l=26.0, body_w=20.0, body_h=34.0, total_h=34.0,
+    tab_l=20.0, tab_t=0.0, tab_z=0.0,  # No tabs — M2 bolt mounting
+    spline_od=8.0, weight_g=18.0,       # 20-tooth cross horn
+)
+
+# Convenience aliases for importers
+SERVO_SG90 = SG90
+SERVO_MG90S = MG90S
+SERVO_XL330 = XL330
+
 
 # ── Global Tolerances ─────────────────────────────────────────────────────
 
-C_WALL = 0.3         # Servo-to-pocket clearance per side
+C_WALL = 0.3         # Servo-to-pocket clearance per side (SG90/MG90S)
+C_WALL_XL = 0.5      # Servo-to-pocket clearance per side (XL330, tighter housing)
 T_WALL = 2.5         # Minimum structural wall thickness
 D_WIRE = 6.0         # Wire channel diameter
+D_WIRE_XL = 8.0      # XL330 daisy-chain cable channel diameter
 D_SCREW = 2.0        # M2 screw pilot hole diameter
 SHELL_MIN_WALL = 2.0 # Minimum shell wall thickness
 
 
-# ── Frame Dimensions (200mm Spark Humanoid) ───────────────────────────────
+# ── Frame Dimensions (250mm Pro Humanoid, v17) ───────────────────────────
 
-# Base plate
+# Base plate (Spark: flat base, Pro: removed when legs added)
 BASE_W = 90.0
 BASE_D = 70.0
 BASE_H = 20.0
@@ -71,11 +97,25 @@ BASE_R = 6.0
 TORSO_D = 24.0
 TORSO_R = 4.0   # Corner fillet radius
 
-# Total skeleton height (base bottom to tilt servo top)
-TOTAL_HEIGHT = 200.0
+# Total skeleton height for shell scaling
+# This is the shell target height (foot bottom to head top = 325mm,
+# but shells only cover the visible portion — head top to base bottom)
+TOTAL_HEIGHT = 250.0
+
+# Segment lengths (verified against v17 macro)
+TORSO_GAP = 125.0    # Waist (Z=15) to shoulder (Z=140) — electronics cavity
+UPPER_ARM = 53.0     # Shoulder to elbow
+FOREARM = 54.0        # Elbow to hand
+THIGH = 55.0          # Hip to knee
+SHIN = 55.0           # Knee to ankle
+FOOT_H = 5.0          # Ankle to foot bottom
+
+# Convenience aliases for importers that reference older names
+TORSO_HEIGHT = TORSO_GAP
+BASE_HEIGHT = BASE_H
 
 
-# ── Servo Positions ───────────────────────────────────────────────────────
+# ── Servo Positions (v17 geometry) ────────────────────────────────────────
 
 @dataclass(frozen=True)
 class ServoMount:
@@ -84,41 +124,147 @@ class ServoMount:
     servo: ServoSpec
     x: float
     y: float
-    z: float           # Z of servo bottom edge
+    z: float           # Z of servo center / joint axis
     shaft_axis: str    # "Z", "Y", or "X"
     shaft_sign: int    # +1 or -1 along the shaft axis
     joint_name: str
     joint_range_deg: tuple[float, float]  # (min, max) degrees
+    tier: str          # "spark" = both tiers, "pro" = Pro only
 
 
 SERVO_MOUNTS = [
-    ServoMount("waist", SG90, 0, 0, 10,
+    # ── Head (both tiers) ──
+    ServoMount("head_pan", SG90, 0, 0, 155,
                shaft_axis="Z", shaft_sign=1,
-               joint_name="waist_yaw", joint_range_deg=(-90, 90)),
+               joint_name="head_pan", joint_range_deg=(-90, 90),
+               tier="spark"),
 
-    ServoMount("left_shoulder", MG90S, -40, 0, 110,
-               shaft_axis="X", shaft_sign=-1,
-               joint_name="left_shoulder_pitch", joint_range_deg=(-90, 90)),
-
-    ServoMount("right_shoulder", MG90S, 40, 0, 110,
+    ServoMount("head_tilt", SG90, 0, 0, 185,
                shaft_axis="X", shaft_sign=1,
-               joint_name="right_shoulder_pitch", joint_range_deg=(-90, 90)),
+               joint_name="head_tilt", joint_range_deg=(-30, 30),
+               tier="spark"),
 
-    ServoMount("head_pan", SG90, 0, 0, 120,
-               shaft_axis="Z", shaft_sign=1,
-               joint_name="head_pan_yaw", joint_range_deg=(-90, 90)),
+    # ── Shoulders (both tiers — MG90S on Spark, XL330 on Pro) ──
+    ServoMount("left_shoulder_pitch", XL330, -40, 0, 140,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_shoulder_pitch", joint_range_deg=(-90, 90),
+               tier="spark"),
 
-    ServoMount("head_tilt", SG90, 0, 0, 148,
+    ServoMount("right_shoulder_pitch", XL330, 40, 0, 140,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_shoulder_pitch", joint_range_deg=(-90, 90),
+               tier="spark"),
+
+    ServoMount("left_shoulder_roll", SG90, -40, 0, 140,
                shaft_axis="Y", shaft_sign=1,
-               joint_name="head_tilt_pitch", joint_range_deg=(-30, 30)),
+               joint_name="left_shoulder_roll", joint_range_deg=(-90, 90),
+               tier="spark"),
+
+    ServoMount("right_shoulder_roll", SG90, 40, 0, 140,
+               shaft_axis="Y", shaft_sign=-1,
+               joint_name="right_shoulder_roll", joint_range_deg=(-90, 90),
+               tier="spark"),
+
+    # ── Waist (both tiers — SG90 on Spark, XL330 on Pro) ──
+    ServoMount("waist_yaw", XL330, 0, 0, 15,
+               shaft_axis="Z", shaft_sign=1,
+               joint_name="waist_yaw", joint_range_deg=(-90, 90),
+               tier="spark"),
+
+    # ── Elbows (Pro only) ──
+    ServoMount("left_elbow_pitch", SG90, -75, 0, 100,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_elbow_pitch", joint_range_deg=(-120, 0),
+               tier="pro"),
+
+    ServoMount("right_elbow_pitch", SG90, 75, 0, 100,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_elbow_pitch", joint_range_deg=(-120, 0),
+               tier="pro"),
+
+    # ── Hands (Pro only) ──
+    ServoMount("left_hand_pitch", SG90, -55, 0, 50,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_hand_pitch", joint_range_deg=(-45, 45),
+               tier="pro"),
+
+    ServoMount("right_hand_pitch", SG90, 55, 0, 50,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_hand_pitch", joint_range_deg=(-45, 45),
+               tier="pro"),
+
+    # ── Hips (Pro only) ──
+    ServoMount("left_hip_yaw", XL330, -20, 0, 0,
+               shaft_axis="Z", shaft_sign=1,
+               joint_name="left_hip_yaw", joint_range_deg=(-30, 30),
+               tier="pro"),
+
+    ServoMount("right_hip_yaw", XL330, 20, 0, 0,
+               shaft_axis="Z", shaft_sign=1,
+               joint_name="right_hip_yaw", joint_range_deg=(-30, 30),
+               tier="pro"),
+
+    ServoMount("left_hip_pitch", XL330, -20, 0, 0,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_hip_pitch", joint_range_deg=(-90, 45),
+               tier="pro"),
+
+    ServoMount("right_hip_pitch", XL330, 20, 0, 0,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_hip_pitch", joint_range_deg=(-90, 45),
+               tier="pro"),
+
+    # ── Knees (Pro only) ──
+    ServoMount("left_knee_pitch", XL330, -20, 0, -55,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_knee_pitch", joint_range_deg=(0, 120),
+               tier="pro"),
+
+    ServoMount("right_knee_pitch", XL330, 20, 0, -55,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_knee_pitch", joint_range_deg=(0, 120),
+               tier="pro"),
+
+    # ── Ankles (Pro only) ──
+    ServoMount("left_ankle_pitch", XL330, -20, 0, -110,
+               shaft_axis="X", shaft_sign=-1,
+               joint_name="left_ankle_pitch", joint_range_deg=(-30, 30),
+               tier="pro"),
+
+    ServoMount("right_ankle_pitch", XL330, 20, 0, -110,
+               shaft_axis="X", shaft_sign=1,
+               joint_name="right_ankle_pitch", joint_range_deg=(-30, 30),
+               tier="pro"),
 ]
 
-# Convenience lookups
-WAIST_Z = 10.0
-SHOULDER_Z = 110.0
+# Convenience lookups (v17 coordinates)
+WAIST_Z = 15.0
+SHOULDER_Z = 140.0
 SHOULDER_X = 40.0
-HEAD_PAN_Z = 120.0
-HEAD_TILT_Z = 148.0
+SHOULDER_SPREAD = SHOULDER_X * 2  # 80mm shoulder-to-shoulder
+HEAD_PAN_Z = 155.0
+HEAD_TILT_Z = 185.0
+HEAD_Z = HEAD_TILT_Z              # Alias for importers
+ELBOW_Z = 100.0
+ELBOW_X = 75.0
+HAND_Z = 50.0
+HAND_X = 55.0
+HIP_Z = 0.0
+HIP_X = 20.0
+KNEE_Z = -55.0
+ANKLE_Z = -110.0
+FOOT_BOTTOM_Z = -115.0
+HEAD_TOP_Z = 210.0
+
+
+def mounts_for_tier(tier: str) -> list[ServoMount]:
+    """Return servo mounts for a given tier ('spark' or 'pro')."""
+    if tier == "pro":
+        return list(SERVO_MOUNTS)
+    elif tier == "spark":
+        return [m for m in SERVO_MOUNTS if m.tier == "spark"]
+    else:
+        raise ValueError(f"Unknown tier: {tier}. Must be 'spark' or 'pro'.")
 
 
 # ── Magnet Positions ──────────────────────────────────────────────────────
@@ -127,7 +273,8 @@ HEAD_TILT_Z = 148.0
 class MagnetSeat:
     """A magnet pocket position on the skeleton frame."""
     id: str
-    zone: str       # "head", "torso", "left_arm", "right_arm", "base"
+    zone: str       # "head", "torso", "left_arm", "right_arm", "base",
+                    # "left_leg", "right_leg"
     x: float
     y: float
     z: float
@@ -140,45 +287,45 @@ MAG_POCKET_D = 6.1 # Press-fit pocket diameter
 MAG_POCKET_H = 3.1 # Pocket depth
 
 MAGNET_SEATS: list[MagnetSeat] = [
-    # ── Head zone (8) — ring at Z=125 ──
-    MagnetSeat("H1", "head", 0, -14, 125, (0, -1, 0)),
-    MagnetSeat("H2", "head", 0, 14, 125, (0, 1, 0)),
-    MagnetSeat("H3", "head", -14, 0, 125, (-1, 0, 0)),
-    MagnetSeat("H4", "head", 14, 0, 125, (1, 0, 0)),
-    MagnetSeat("H5", "head", -10, -10, 125, (-1, -1, 0)),
-    MagnetSeat("H6", "head", 10, -10, 125, (1, -1, 0)),
-    MagnetSeat("H7", "head", -10, 10, 125, (-1, 1, 0)),
-    MagnetSeat("H8", "head", 10, 10, 125, (1, 1, 0)),
+    # ── Head zone (8) — ring at Z=165 (between head pan Z=155 and head tilt Z=185) ──
+    MagnetSeat("H1", "head", 0, -14, 165, (0, -1, 0)),
+    MagnetSeat("H2", "head", 0, 14, 165, (0, 1, 0)),
+    MagnetSeat("H3", "head", -14, 0, 165, (-1, 0, 0)),
+    MagnetSeat("H4", "head", 14, 0, 165, (1, 0, 0)),
+    MagnetSeat("H5", "head", -10, -10, 165, (-1, -1, 0)),
+    MagnetSeat("H6", "head", 10, -10, 165, (1, -1, 0)),
+    MagnetSeat("H7", "head", -10, 10, 165, (-1, 1, 0)),
+    MagnetSeat("H8", "head", 10, 10, 165, (1, 1, 0)),
 
-    # ── Torso zone (12) — 3 rings of 4 ──
-    MagnetSeat("T1", "torso", 0, -14, 30, (0, -1, 0)),
-    MagnetSeat("T2", "torso", 0, 14, 30, (0, 1, 0)),
-    MagnetSeat("T3", "torso", 0, -14, 70, (0, -1, 0)),
-    MagnetSeat("T4", "torso", 0, 14, 70, (0, 1, 0)),
-    MagnetSeat("T5", "torso", 0, -14, 100, (0, -1, 0)),
-    MagnetSeat("T6", "torso", 0, 14, 100, (0, 1, 0)),
-    MagnetSeat("T7", "torso", -14, 0, 30, (-1, 0, 0)),
-    MagnetSeat("T8", "torso", 14, 0, 30, (1, 0, 0)),
-    MagnetSeat("T9", "torso", -14, 0, 70, (-1, 0, 0)),
-    MagnetSeat("T10", "torso", 14, 0, 70, (1, 0, 0)),
-    MagnetSeat("T11", "torso", -14, 0, 100, (-1, 0, 0)),
-    MagnetSeat("T12", "torso", 14, 0, 100, (1, 0, 0)),
+    # ── Torso zone (12) — 3 rings of 4, spaced through torso cavity ──
+    MagnetSeat("T1", "torso", 0, -14, 40, (0, -1, 0)),
+    MagnetSeat("T2", "torso", 0, 14, 40, (0, 1, 0)),
+    MagnetSeat("T3", "torso", 0, -14, 80, (0, -1, 0)),
+    MagnetSeat("T4", "torso", 0, 14, 80, (0, 1, 0)),
+    MagnetSeat("T5", "torso", 0, -14, 120, (0, -1, 0)),
+    MagnetSeat("T6", "torso", 0, 14, 120, (0, 1, 0)),
+    MagnetSeat("T7", "torso", -14, 0, 40, (-1, 0, 0)),
+    MagnetSeat("T8", "torso", 14, 0, 40, (1, 0, 0)),
+    MagnetSeat("T9", "torso", -14, 0, 80, (-1, 0, 0)),
+    MagnetSeat("T10", "torso", 14, 0, 80, (1, 0, 0)),
+    MagnetSeat("T11", "torso", -14, 0, 120, (-1, 0, 0)),
+    MagnetSeat("T12", "torso", 14, 0, 120, (1, 0, 0)),
 
     # ── Left arm zone (6) ──
-    MagnetSeat("LA1", "left_arm", -40, -10, 110, (0, -1, 0)),
-    MagnetSeat("LA2", "left_arm", -40, 10, 110, (0, 1, 0)),
-    MagnetSeat("LA3", "left_arm", -40, 0, 100, (0, 0, -1)),
-    MagnetSeat("LA4", "left_arm", -40, 0, 120, (0, 0, 1)),
-    MagnetSeat("LA5", "left_arm", -52, -8, 110, (-1, 0, 0)),
-    MagnetSeat("LA6", "left_arm", -52, 8, 110, (-1, 0, 0)),
+    MagnetSeat("LA1", "left_arm", -40, -10, 140, (0, -1, 0)),
+    MagnetSeat("LA2", "left_arm", -40, 10, 140, (0, 1, 0)),
+    MagnetSeat("LA3", "left_arm", -40, 0, 125, (0, 0, -1)),
+    MagnetSeat("LA4", "left_arm", -40, 0, 150, (0, 0, 1)),
+    MagnetSeat("LA5", "left_arm", -55, -8, 140, (-1, 0, 0)),
+    MagnetSeat("LA6", "left_arm", -55, 8, 140, (-1, 0, 0)),
 
     # ── Right arm zone (6) — mirror of left ──
-    MagnetSeat("RA1", "right_arm", 40, -10, 110, (0, -1, 0)),
-    MagnetSeat("RA2", "right_arm", 40, 10, 110, (0, 1, 0)),
-    MagnetSeat("RA3", "right_arm", 40, 0, 100, (0, 0, -1)),
-    MagnetSeat("RA4", "right_arm", 40, 0, 120, (0, 0, 1)),
-    MagnetSeat("RA5", "right_arm", 52, -8, 110, (1, 0, 0)),
-    MagnetSeat("RA6", "right_arm", 52, 8, 110, (1, 0, 0)),
+    MagnetSeat("RA1", "right_arm", 40, -10, 140, (0, -1, 0)),
+    MagnetSeat("RA2", "right_arm", 40, 10, 140, (0, 1, 0)),
+    MagnetSeat("RA3", "right_arm", 40, 0, 125, (0, 0, -1)),
+    MagnetSeat("RA4", "right_arm", 40, 0, 150, (0, 0, 1)),
+    MagnetSeat("RA5", "right_arm", 55, -8, 140, (1, 0, 0)),
+    MagnetSeat("RA6", "right_arm", 55, 8, 140, (1, 0, 0)),
 
     # ── Base zone (8) — perimeter at Z=-10 ──
     MagnetSeat("B1", "base", -35, -28, -10, (0, -1, 0)),
@@ -189,6 +336,22 @@ MAGNET_SEATS: list[MagnetSeat] = [
     MagnetSeat("B6", "base", 0, 28, -10, (0, 1, 0)),
     MagnetSeat("B7", "base", -40, 0, -10, (-1, 0, 0)),
     MagnetSeat("B8", "base", 40, 0, -10, (1, 0, 0)),
+
+    # ── Left leg zone (6) — Pro only ──
+    MagnetSeat("LL1", "left_leg", -20, -10, -30, (0, -1, 0)),
+    MagnetSeat("LL2", "left_leg", -20, 10, -30, (0, 1, 0)),
+    MagnetSeat("LL3", "left_leg", -20, -10, -80, (0, -1, 0)),
+    MagnetSeat("LL4", "left_leg", -20, 10, -80, (0, 1, 0)),
+    MagnetSeat("LL5", "left_leg", -28, 0, -55, (-1, 0, 0)),
+    MagnetSeat("LL6", "left_leg", -12, 0, -55, (1, 0, 0)),
+
+    # ── Right leg zone (6) — Pro only, mirror of left ──
+    MagnetSeat("RL1", "right_leg", 20, -10, -30, (0, -1, 0)),
+    MagnetSeat("RL2", "right_leg", 20, 10, -30, (0, 1, 0)),
+    MagnetSeat("RL3", "right_leg", 20, -10, -80, (0, -1, 0)),
+    MagnetSeat("RL4", "right_leg", 20, 10, -80, (0, 1, 0)),
+    MagnetSeat("RL5", "right_leg", 28, 0, -55, (1, 0, 0)),
+    MagnetSeat("RL6", "right_leg", -12, 0, -55, (-1, 0, 0)),
 ]
 
 
@@ -210,14 +373,26 @@ class CutPlane:
     zones: tuple[str, str]  # (zone_above/right, zone_below/left)
 
 
+# Head/torso cut at Z=148 — between shoulder (140) and head pan (155)
+# Torso/hip cut at Z=5 — between waist (15) and hip (0)
+# Arm cuts at X=±30 — just outside torso column (24mm wide)
+# Leg cut at X=0 — between left and right legs (Pro only)
 DEFAULT_CUT_PLANES = [
-    CutPlane("head_torso", "Z", 115, 105, 130, ("head", "torso")),
-    CutPlane("torso_base", "Z", 10, 0, 20, ("torso", "base")),
-    CutPlane("left_arm", "X", -28, -35, -24, ("torso", "left_arm")),
-    CutPlane("right_arm", "X", 28, 24, 35, ("torso", "right_arm")),
+    CutPlane("head_torso", "Z", 148, 142, 153, ("head", "torso")),
+    CutPlane("torso_base", "Z", 5, -5, 12, ("torso", "base")),
+    CutPlane("left_arm", "X", -30, -38, -26, ("torso", "left_arm")),
+    CutPlane("right_arm", "X", 30, 26, 38, ("torso", "right_arm")),
+]
+
+# Pro adds leg zone cuts (split base zone into base + left_leg + right_leg)
+PRO_CUT_PLANES = DEFAULT_CUT_PLANES + [
+    CutPlane("left_leg", "X", -5, -15, 0, ("base", "left_leg")),
+    CutPlane("right_leg", "X", 5, 0, 15, ("base", "right_leg")),
 ]
 
 BODY_ZONES = ["head", "torso", "left_arm", "right_arm", "base"]
+PRO_BODY_ZONES = ["head", "torso", "left_arm", "right_arm", "base",
+                   "left_leg", "right_leg"]
 
 
 # ── Clearance Envelopes ──────────────────────────────────────────────────
@@ -238,6 +413,8 @@ CLEARANCE_ENVELOPES = [
     ClearanceEnvelope("left_arm", 2.0, 20.0, 0.0, 15.0),
     ClearanceEnvelope("right_arm", 2.0, 20.0, 0.0, 15.0),
     ClearanceEnvelope("base", 2.0, 0.0, 0.0, 100.0),
+    ClearanceEnvelope("left_leg", 2.0, 0.0, 0.0, 20.0),
+    ClearanceEnvelope("right_leg", 2.0, 0.0, 0.0, 20.0),
 ]
 
 
@@ -257,6 +434,8 @@ MAGNET_MIN_COUNT = {
     "left_arm": 2,
     "right_arm": 2,
     "base": 3,
+    "left_leg": 2,
+    "right_leg": 2,
 }
 
 MAGNET_MAX_COUNT = {
@@ -265,6 +444,8 @@ MAGNET_MAX_COUNT = {
     "left_arm": 6,
     "right_arm": 6,
     "base": 8,
+    "left_leg": 6,
+    "right_leg": 6,
 }
 
 MAGNET_PULL_FORCE_KG = 0.5  # Per 6×3mm neodymium disc magnet
@@ -304,6 +485,12 @@ REMOVAL_SPECS = {
 
     "base": RemovalSpec("base", (0, 0, -1), 1.5, False, None),
     # Base lifts off downward (flip robot, pull off).
+
+    "left_leg": RemovalSpec("left_leg", (0, -1, 0), 1.5, True, "XZ"),
+    # Left leg is clamshell (wraps around XL330 servos).
+
+    "right_leg": RemovalSpec("right_leg", (0, -1, 0), 1.5, True, "XZ"),
+    # Right leg is clamshell (wraps around XL330 servos).
 }
 
 
@@ -319,38 +506,109 @@ CLEARANCE_EXPANSION = 1.5  # mm per side beyond the physical frame
 # Joint rotation sweep volumes
 JOINT_SWEEPS = {
     "waist_yaw": {
-        "center": (0, 0, 10),
+        "center": (0, 0, 15),
         "axis": "Z",
         "range_deg": (-90, 90),
         "radius": 50,  # Sweep radius — must clear torso shell at waist
         "height": 6,   # Thin disc at the joint boundary
     },
-    "head_pan_yaw": {
-        "center": (0, 0, 115),  # At head/torso cut boundary
+    "head_pan": {
+        "center": (0, 0, 148),  # At head/torso cut boundary
         "axis": "Z",
         "range_deg": (-90, 90),
         "radius": 25,
         "height": 6,
     },
-    "head_tilt_pitch": {
-        "center": (0, 0, 148),
-        "axis": "Y",
+    "head_tilt": {
+        "center": (0, 0, 185),
+        "axis": "X",
         "range_deg": (-30, 30),
         "radius": 20,
         "height": 6,
     },
     "left_shoulder_pitch": {
-        "center": (-40, 0, 110),
+        "center": (-40, 0, 140),
         "axis": "X",
         "range_deg": (-90, 90),
         "radius": 25,
         "height": 6,
     },
     "right_shoulder_pitch": {
-        "center": (40, 0, 110),
+        "center": (40, 0, 140),
         "axis": "X",
         "range_deg": (-90, 90),
         "radius": 25,
+        "height": 6,
+    },
+    # ── Pro-only joint sweeps ──
+    "left_elbow_pitch": {
+        "center": (-75, 0, 100),
+        "axis": "X",
+        "range_deg": (-120, 0),
+        "radius": 18,
+        "height": 6,
+    },
+    "right_elbow_pitch": {
+        "center": (75, 0, 100),
+        "axis": "X",
+        "range_deg": (-120, 0),
+        "radius": 18,
+        "height": 6,
+    },
+    "left_hip_yaw": {
+        "center": (-20, 0, 0),
+        "axis": "Z",
+        "range_deg": (-30, 30),
+        "radius": 22,
+        "height": 6,
+    },
+    "right_hip_yaw": {
+        "center": (20, 0, 0),
+        "axis": "Z",
+        "range_deg": (-30, 30),
+        "radius": 22,
+        "height": 6,
+    },
+    "left_hip_pitch": {
+        "center": (-20, 0, 0),
+        "axis": "X",
+        "range_deg": (-90, 45),
+        "radius": 22,
+        "height": 6,
+    },
+    "right_hip_pitch": {
+        "center": (20, 0, 0),
+        "axis": "X",
+        "range_deg": (-90, 45),
+        "radius": 22,
+        "height": 6,
+    },
+    "left_knee_pitch": {
+        "center": (-20, 0, -55),
+        "axis": "X",
+        "range_deg": (0, 120),
+        "radius": 22,
+        "height": 6,
+    },
+    "right_knee_pitch": {
+        "center": (20, 0, -55),
+        "axis": "X",
+        "range_deg": (0, 120),
+        "radius": 22,
+        "height": 6,
+    },
+    "left_ankle_pitch": {
+        "center": (-20, 0, -110),
+        "axis": "X",
+        "range_deg": (-30, 30),
+        "radius": 22,
+        "height": 6,
+    },
+    "right_ankle_pitch": {
+        "center": (20, 0, -110),
+        "axis": "X",
+        "range_deg": (-30, 30),
+        "radius": 22,
         "height": 6,
     },
 }
